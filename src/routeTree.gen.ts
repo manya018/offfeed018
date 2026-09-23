@@ -10,33 +10,115 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AboutRouteImport } from './routes/about'
+import { Route as CreateRouteImport } from './routes/create'
+import { Route as DiscoverRouteImport } from './routes/discover'
+import { Route as ExploreRouteImport } from './routes/explore'
+import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as LookLookIdRouteImport } from './routes/look.$lookId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AboutRoute = AboutRouteImport.update({
+  id: '/about',
+  path: '/about',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CreateRoute = CreateRouteImport.update({
+  id: '/create',
+  path: '/create',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DiscoverRoute = DiscoverRouteImport.update({
+  id: '/discover',
+  path: '/discover',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ExploreRoute = ExploreRouteImport.update({
+  id: '/explore',
+  path: '/explore',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LookLookIdRoute = LookLookIdRouteImport.update({
+  id: '/look/$lookId',
+  path: '/look/$lookId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
+  '/create': typeof CreateRoute
+  '/discover': typeof DiscoverRoute
+  '/explore': typeof ExploreRoute
+  '/profile': typeof ProfileRoute
+  '/look/$lookId': typeof LookLookIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
+  '/create': typeof CreateRoute
+  '/discover': typeof DiscoverRoute
+  '/explore': typeof ExploreRoute
+  '/profile': typeof ProfileRoute
+  '/look/$lookId': typeof LookLookIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
+  '/create': typeof CreateRoute
+  '/discover': typeof DiscoverRoute
+  '/explore': typeof ExploreRoute
+  '/profile': typeof ProfileRoute
+  '/look/$lookId': typeof LookLookIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/about'
+    | '/create'
+    | '/discover'
+    | '/explore'
+    | '/profile'
+    | '/look/$lookId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/about'
+    | '/create'
+    | '/discover'
+    | '/explore'
+    | '/profile'
+    | '/look/$lookId'
+  id:
+    | '__root__'
+    | '/'
+    | '/about'
+    | '/create'
+    | '/discover'
+    | '/explore'
+    | '/profile'
+    | '/look/$lookId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AboutRoute: typeof AboutRoute
+  CreateRoute: typeof CreateRoute
+  DiscoverRoute: typeof DiscoverRoute
+  ExploreRoute: typeof ExploreRoute
+  ProfileRoute: typeof ProfileRoute
+  LookLookIdRoute: typeof LookLookIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +130,59 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/about': {
+      id: '/about'
+      path: '/about'
+      fullPath: '/about'
+      preLoaderRoute: typeof AboutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/create': {
+      id: '/create'
+      path: '/create'
+      fullPath: '/create'
+      preLoaderRoute: typeof CreateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/discover': {
+      id: '/discover'
+      path: '/discover'
+      fullPath: '/discover'
+      preLoaderRoute: typeof DiscoverRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/explore': {
+      id: '/explore'
+      path: '/explore'
+      fullPath: '/explore'
+      preLoaderRoute: typeof ExploreRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/look/$lookId': {
+      id: '/look/$lookId'
+      path: '/look/$lookId'
+      fullPath: '/look/$lookId'
+      preLoaderRoute: typeof LookLookIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AboutRoute: AboutRoute,
+  CreateRoute: CreateRoute,
+  DiscoverRoute: DiscoverRoute,
+  ExploreRoute: ExploreRoute,
+  ProfileRoute: ProfileRoute,
+  LookLookIdRoute: LookLookIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -34,7 +34,10 @@ function Index() {
           <div className="absolute left-[3%] top-[13%] w-[43%] rotate-[-4deg] overflow-hidden rounded-[1.5rem] shadow-soft"><img src={oldMoney} alt="Old money campus outfit" width={912} height={1200} className="aspect-[3/4] object-cover" /></div>
           <div className="absolute right-[3%] top-[2%] w-[46%] rotate-[3deg] overflow-hidden rounded-[1.5rem] shadow-soft"><img src={coquette} alt="Coquette outfit in Paris" width={912} height={1200} className="aspect-[3/4] object-cover" /></div>
           <div className="absolute bottom-[1%] left-[30%] w-[39%] rotate-[1deg] overflow-hidden rounded-[1.5rem] border-[6px] border-background shadow-soft"><img src={minimal} alt="Minimal model off duty outfit" width={912} height={1200} loading="lazy" className="aspect-[3/4] object-cover" /></div>
-          {[["coquette","4%","5%"],["old money","5%","72%"],["café core","72%","57%"],["minimal","73%","87%"]].map(([label,left,top]) => <span key={label} className="absolute z-10 rounded-full border border-border bg-card/90 px-3 py-1.5 text-xs shadow-sm backdrop-blur" style={{left,top}}>{label}</span>)}
+          <span className="absolute left-[4%] top-[5%] z-10 rounded-full border border-border bg-card/90 px-3 py-1.5 text-xs shadow-sm backdrop-blur">coquette</span>
+          <span className="absolute left-[5%] top-[72%] z-10 rounded-full border border-border bg-card/90 px-3 py-1.5 text-xs shadow-sm backdrop-blur">old money</span>
+          <span className="absolute left-[72%] top-[57%] z-10 rounded-full border border-border bg-card/90 px-3 py-1.5 text-xs shadow-sm backdrop-blur">café core</span>
+          <span className="absolute left-[73%] top-[87%] z-10 rounded-full border border-border bg-card/90 px-3 py-1.5 text-xs shadow-sm backdrop-blur">minimal</span>
         </div>
       </section>
       <section className="bg-secondary px-5 py-20 text-center"><p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">A softer way to discover</p><h2 className="mx-auto mt-4 max-w-3xl font-display text-4xl sm:text-5xl">Follow your taste, not the crowd.</h2><Button className="mt-8" variant="outline" asChild><Link to="/discover">Find your next look</Link></Button></section>
