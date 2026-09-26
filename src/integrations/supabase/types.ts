@@ -14,7 +14,60 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      brand_applications: {
+        Row: {
+          brand_description: string
+          brand_name: string
+          category: string
+          contact_name: string
+          cover_path: string
+          created_at: string
+          email: string
+          id: string
+          logo_path: string
+          proof_path: string | null
+          social_handle: string | null
+          status: string
+          updated_at: string
+          user_id: string
+          website_url: string
+        }
+        Insert: {
+          brand_description: string
+          brand_name: string
+          category: string
+          contact_name: string
+          cover_path: string
+          created_at?: string
+          email: string
+          id?: string
+          logo_path: string
+          proof_path?: string | null
+          social_handle?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+          website_url: string
+        }
+        Update: {
+          brand_description?: string
+          brand_name?: string
+          category?: string
+          contact_name?: string
+          cover_path?: string
+          created_at?: string
+          email?: string
+          id?: string
+          logo_path?: string
+          proof_path?: string | null
+          social_handle?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+          website_url?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
