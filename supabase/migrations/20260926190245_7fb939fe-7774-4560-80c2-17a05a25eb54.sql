@@ -1,0 +1,1 @@
+CREATE POLICY "Applicants can remove their own brand application files" ON storage.objects FOR DELETE TO authenticated USING (bucket_id = 'brand-applications' AND (storage.foldername(name))[1] = auth.uid()::text);
