@@ -1,7 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { zodValidator } from "@tanstack/zod-adapter";
-import { ArrowLeft, ArrowRight, BadgeCheck, Building2, Check, CheckCircle2, ChevronRight, CircleHelp, FileCheck2, ImagePlus, LoaderCircle, LockKeyhole, MailCheck, ShieldCheck, Sparkles, Upload, X } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { ArrowLeft, ArrowRight, Check, CheckCircle2, CircleHelp, FileCheck2, ImagePlus, LoaderCircle, LockKeyhole, MailCheck, ShieldCheck, Sparkles, X } from "lucide-react";
+import { useEffect, useRef, useState, type ReactNode, type RefObject } from "react";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,15 +28,24 @@ const defaultValues: ApplicationValues = {
   contactName: "", email: "", brandName: "", category: "", description: "", website: "https://", socialHandle: "",
 };
 
-const formSchema = z.object({
+const accountSchema = z.object({
   contactName: z.string().trim().min(2, "Please enter your full name.").max(120),
   email: z.string().trim().email("Enter a valid email address.").max(255),
   password: z.string().min(8, "Use at least 8 characters.").max(128),
+});
+
+const applicationFormSchema = z.object({
+  contactName: z.string().trim().min(2, "Please enter your full name.").max(120),
+  email: z.string().trim().email("Enter a valid email address.").max(255),
   brandName: z.string().trim().min(2, "Please enter your brand name.").max(120),
   category: z.string().min(1, "Choose a category."),
   description: z.string().trim().min(20, "Add at least 20 characters about your brand.").max(1000, "Keep your introduction under 1,000 characters."),
   website: z.string().trim().url("Enter a full website address, starting with https://").max(2048),
   socialHandle: z.string().trim().max(120, "Keep your social handle under 120 characters."),
+});
+const draftSchema = z.object({
+  contactName: z.string().max(120), email: z.string().max(255), brandName: z.string().max(120),
+  category: z.string().max(80), description: z.string().max(1000), website: z.string().max(2048), socialHandle: z.string().max(120),
 });
 
 export const Route = createFileRoute("/for-brands/apply")({
@@ -74,11 +82,23 @@ function BrandApplicationPage() {
   useEffect(() => {
     let alive = true;
     const syncApplication = async () => {
+      try {
+        const savedDraft = window.sessionStorage.getItem("offfeed-brand-application-draft");
+        if (savedDraft) {
+          const parsedDraft = draftSchema.safeParse(JSON.parse(savedDraft));
+          if (parsedDraft.success) setValues((current) => ({ ...current, ...parsedDraft.data }));
+          window.sessionStorage.removeItem("offfeed-brand-application-draft");
+        }
+      } catch {
+        window.sessionStorage.removeItem("offfeed-brand-application-draft");
+      }
       const { data } = await supabase.auth.getSession();
       const session = data.session;
       if (!alive) return;
       setUserId(session?.user.id ?? null);
       if (session?.user.email) setValues((current) => ({ ...current, email: session.user.email ?? current.email }));
+      const fullName = session?.user.user_metadata?.full_name;
+      if (typeof fullName === "string" && fullName.trim()) setValues((current) => ({ ...current, contactName: current.contactName || fullName.trim() }));
       if (session) {
         try {
           const application = await getMyBrandApplication();
@@ -86,6 +106,7 @@ function BrandApplicationPage() {
         } catch {
           if (alive) setNotice("We couldn't check your application yet. You can continue and try again shortly.");
         }
+        if (alive) setStep(2);
       }
       if (alive) setAuthReady(true);
     };
@@ -94,6 +115,8 @@ function BrandApplicationPage() {
       if (!alive) return;
       setUserId(session?.user.id ?? null);
       if (session?.user.email) setValues((current) => ({ ...current, email: session.user.email ?? current.email }));
+      const fullName = session?.user.user_metadata?.full_name;
+      if (typeof fullName === "string" && fullName.trim()) setValues((current) => ({ ...current, contactName: current.contactName || fullName.trim() }));
     });
     return () => {
       alive = false;
@@ -135,15 +158,17 @@ function BrandApplicationPage() {
   const validateStep = () => {
     const nextErrors: Record<string, string> = {};
     if (step === 1) {
-      const parsed = formSchema.pick({ contactName: true, email: true, password: true }).safeParse({ ...values, password });
+      const parsed = userId
+        ? applicationFormSchema.pick({ contactName: true, email: true }).safeParse(values)
+        : accountSchema.safeParse({ contactName: values.contactName, email: values.email, password });
       if (!parsed.success) for (const issue of parsed.error.issues) nextErrors[issue.path[0]?.toString() ?? "form"] = issue.message;
     }
     if (step === 2) {
-      const parsed = formSchema.pick({ brandName: true, category: true, description: true }).safeParse(values);
+        const parsed = applicationFormSchema.pick({ brandName: true, category: true, description: true }).safeParse(values);
       if (!parsed.success) for (const issue of parsed.error.issues) nextErrors[issue.path[0]?.toString() ?? "form"] = issue.message;
     }
     if (step === 3) {
-      const parsed = formSchema.pick({ website: true, socialHandle: true }).safeParse(values);
+        const parsed = applicationFormSchema.pick({ website: true, socialHandle: true }).safeParse(values);
       if (!parsed.success) for (const issue of parsed.error.issues) nextErrors[issue.path[0]?.toString() ?? "form"] = issue.message;
       if (!uploads.logo) nextErrors.logo = "Add a logo so people can recognize you.";
       if (!uploads.cover) nextErrors.cover = "Add a cover image for your brand.";
@@ -153,7 +178,14 @@ function BrandApplicationPage() {
   };
 
   const authenticate = async () => {
-    if (userId) { setNotice(""); setStep(2); return; }
+    if (userId) {
+      const parsed = applicationFormSchema.pick({ contactName: true, email: true }).safeParse(values);
+      if (!parsed.success) {
+        setErrors(Object.fromEntries(parsed.error.issues.map((issue) => [issue.path[0]?.toString() ?? "form", issue.message])));
+        return;
+      }
+      setNotice(""); setStep(2); return;
+    }
     if (!validateStep()) return;
     setBusy(true); setNotice("");
     try {
@@ -183,9 +215,14 @@ function BrandApplicationPage() {
   };
 
   const signInWithGoogle = async () => {
-    if (!validateStep()) return;
+    const parsed = applicationFormSchema.pick({ contactName: true, email: true }).safeParse(values);
+    if (!parsed.success) {
+      setErrors(Object.fromEntries(parsed.error.issues.map((issue) => [issue.path[0]?.toString() ?? "form", issue.message])));
+      return;
+    }
     setBusy(true); setNotice("");
     try {
+      window.sessionStorage.setItem("offfeed-brand-application-draft", JSON.stringify(values));
       const { error } = await lovable.auth.signInWithOAuth("google", { redirect_uri: `${window.location.origin}/for-brands/apply` });
       if (error) setNotice("Google sign-in couldn't start. Please try email instead.");
     } catch { setNotice("Google sign-in couldn't start. Please try email instead."); }
@@ -193,7 +230,7 @@ function BrandApplicationPage() {
   };
 
   const submitApplication = async () => {
-    const parsed = formSchema.safeParse({ ...values, password });
+    const parsed = applicationFormSchema.safeParse(values);
     if (!parsed.success || !userId || !uploads.logo || !uploads.cover) {
       setNotice("Please complete the required details and uploads before sending.");
       return;
@@ -245,7 +282,6 @@ function BrandApplicationPage() {
   if (confirmation) return <ReviewConfirmation brandName={confirmation.brandName} confirmed={confirmed} setConfirmed={setConfirmed} />;
 
   const fieldClass = "mt-2 h-12 rounded-lg border-border/80 bg-card px-4";
-  const labelClass = "text-sm font-medium";
 
   return (
     <main className="min-h-[calc(100svh-5rem)] px-4 py-8 sm:px-6 sm:py-12">
@@ -274,17 +310,17 @@ function BrandApplicationPage() {
 
           <div className="border-t border-border/70 pt-7">
             {step === 1 && <div>
-              <div className="mb-7"><h2 className="font-display text-3xl">Let’s start with you.</h2><p className="mt-2 text-sm text-muted-foreground">Create an account to keep your application safe.</p></div>
+              <div className="mb-7"><h2 className="font-display text-3xl">Let’s start with you.</h2><p className="mt-2 text-sm text-muted-foreground">{userId ? "Your account is ready. Confirm your contact details to continue." : "Create an account to keep your application safe."}</p></div>
               <div className="grid gap-5 sm:grid-cols-2">
                 <Field label="Your name" error={errors.contactName}><Input autoComplete="name" value={values.contactName} onChange={(event) => update("contactName", event.target.value)} placeholder="Alex Morgan" className={fieldClass} maxLength={120} aria-invalid={Boolean(errors.contactName)} /></Field>
                 <Field label="Work email" error={errors.email}><Input type="email" autoComplete="email" value={values.email} onChange={(event) => update("email", event.target.value)} placeholder="you@yourbrand.com" className={fieldClass} maxLength={255} aria-invalid={Boolean(errors.email)} /></Field>
-                <div className="sm:col-span-2"><Field label={authMode === "signup" ? "Create a password" : "Password"} error={errors.password}><Input type="password" autoComplete={authMode === "signup" ? "new-password" : "current-password"} value={password} onChange={(event) => { setPassword(event.target.value); setErrors((current) => ({ ...current, password: "" })); }} placeholder="At least 8 characters" className={fieldClass} maxLength={128} aria-invalid={Boolean(errors.password)} /></Field></div>
+                {!userId && <div className="sm:col-span-2"><Field label={authMode === "signup" ? "Create a password" : "Password"} error={errors.password}><Input type="password" autoComplete={authMode === "signup" ? "new-password" : "current-password"} value={password} onChange={(event) => { setPassword(event.target.value); setErrors((current) => ({ ...current, password: "" })); }} placeholder="At least 8 characters" className={fieldClass} maxLength={128} aria-invalid={Boolean(errors.password)} /></Field></div>}</div>
               </div>
               <div className="mt-7 flex flex-wrap items-center gap-3">
-                <Button onClick={() => void authenticate()} disabled={busy}>{busy && <LoaderCircle className="animate-spin"/>}{authMode === "signup" ? "Create account & continue" : "Sign in & continue"}<ArrowRight/></Button>
-                <Button variant="outline" onClick={() => void signInWithGoogle()} disabled={busy}><span className="font-semibold">G</span> Continue with Google</Button>
+                <Button onClick={() => void authenticate()} disabled={busy}>{busy && <LoaderCircle className="animate-spin"/>}{userId ? "Continue" : authMode === "signup" ? "Create account & continue" : "Sign in & continue"}<ArrowRight/></Button>
+                {!userId && <Button variant="outline" onClick={() => void signInWithGoogle()} disabled={busy}><span className="font-semibold">G</span> Continue with Google</Button>}
               </div>
-              <p className="mt-4 text-xs text-muted-foreground">{authMode === "signup" ? <>Already have an account? <button type="button" onClick={() => { setAuthMode("signin"); setNotice(""); }} className="font-medium text-primary underline underline-offset-4">Sign in</button></> : <>New to OFFFEED? <button type="button" onClick={() => { setAuthMode("signup"); setNotice(""); }} className="font-medium text-primary underline underline-offset-4">Create an account</button></>}</p>
+              {!userId && <p className="mt-4 text-xs text-muted-foreground">{authMode === "signup" ? <>Already have an account? <button type="button" onClick={() => { setAuthMode("signin"); setNotice(""); }} className="font-medium text-primary underline underline-offset-4">Sign in</button></> : <>New to OFFFEED? <button type="button" onClick={() => { setAuthMode("signup"); setNotice(""); }} className="font-medium text-primary underline underline-offset-4">Create an account</button></>}</p>}
               {notice && <p role="status" className="mt-4 rounded-md border border-primary/25 bg-secondary px-4 py-3 text-sm leading-6">{notice}</p>}
             </div>}
 
@@ -336,7 +372,7 @@ function BrandApplicationPage() {
   );
 }
 
-function Field({ label, error, children }: { label: string; error?: string; children: React.ReactNode }) {
+function Field({ label, error, children }: { label: string; error?: string; children: ReactNode }) {
   return <div className="min-w-0"><label className="text-sm font-medium">{label}</label>{children}{error && <p role="alert" className="mt-1 text-xs text-destructive">{error}</p>}</div>;
 }
 
@@ -346,7 +382,7 @@ function StepButtons({ onBack, onNext }: { onBack: () => void; onNext: () => voi
 
 function UploadCard({ title, detail, item, error, inputRef, onPick, onRemove, required = false }: {
   title: string; detail: string; item: UploadItem | null; error?: string;
-  inputRef: React.RefObject<HTMLInputElement | null>; onPick: (file?: File) => void; onRemove: () => void; required?: boolean;
+  inputRef: RefObject<HTMLInputElement | null>; onPick: (file?: File) => void; onRemove: () => void; required?: boolean;
 }) {
   return <div className="min-w-0">
     <div className="mb-2 flex items-center justify-between gap-2"><p className="text-sm font-medium">{title}{required && <span className="ml-1 text-primary">*</span>}</p>{item && <Button type="button" variant="ghost" size="icon" aria-label={`Remove ${title.toLowerCase()}`} onClick={onRemove}><X/></Button>}</div>
@@ -363,18 +399,18 @@ function ReviewRow({ label, value, onEdit }: { label: string; value: string; onE
   return <div className="flex items-center justify-between gap-4 py-4"><div className="min-w-0"><p className="text-xs text-muted-foreground">{label}</p><p className="mt-1 truncate text-sm">{value}</p></div><Button variant="ghost" size="sm" onClick={onEdit}>Edit</Button></div>;
 }
 
-function ReviewConfirmation({ brandName, confirmed, setConfirmed }: { brandName: string; confirmed: boolean; setConfirmed: (value: boolean) => void }) {
+function ReviewConfirmation({ brandName, status }: { brandName: string; status: string }) {
+  const alreadySubmitted = status === "under_review";
   return <main className="grid min-h-[calc(100svh-5rem)] place-items-center px-5 py-14">
     <section className="w-full max-w-xl text-center">
       <div className="mx-auto grid size-16 place-items-center rounded-full bg-secondary text-primary"><MailCheck className="size-8"/></div>
       <p className="mt-8 text-xs font-semibold uppercase tracking-[0.2em] text-primary">OFFFEED · FOR BRANDS</p>
-      <h1 className="mt-4 font-display text-5xl leading-tight">{confirmed ? "Your application is with us." : "You’re on our list."}</h1>
-      <p className="mx-auto mt-5 max-w-md text-sm leading-7 text-muted-foreground">{confirmed ? `Thanks for introducing ${brandName} to OFFFEED. Our team will review your application and follow up by email.` : `${brandName} already has an application under review. We’ll be in touch by email when there’s an update.`}</p>
+      <h1 className="mt-4 font-display text-5xl leading-tight">{alreadySubmitted ? "Your application is with us." : "You’re on our list."}</h1>
+      <p className="mx-auto mt-5 max-w-md text-sm leading-7 text-muted-foreground">{alreadySubmitted ? `Thanks for introducing ${brandName} to OFFFEED. Our team will review your application and follow up by email.` : `${brandName} has already been reviewed. We’ll be in touch by email with an update.`}</p>
       <div className="mt-9 border-y border-border/70 py-5 text-left">
         <div className="flex items-start gap-4 py-2"><span className="grid size-8 shrink-0 place-items-center rounded-full bg-secondary text-primary"><Check className="size-4"/></span><div><p className="text-sm font-medium">Application received</p><p className="mt-1 text-xs leading-5 text-muted-foreground">Your brand details are safely with our review team.</p></div></div>
         <div className="flex items-start gap-4 py-2"><span className="grid size-8 shrink-0 place-items-center rounded-full bg-secondary text-primary"><CircleHelp className="size-4"/></span><div><p className="text-sm font-medium">We’ll take a closer look</p><p className="mt-1 text-xs leading-5 text-muted-foreground">Every application is reviewed by a person before any brand is featured.</p></div></div>
       </div>
-      <Button variant="outline" className="mt-7" onClick={() => setConfirmed(true)}>Got it</Button>
     </section>
   </main>;
 }
