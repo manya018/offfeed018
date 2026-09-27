@@ -1,7 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { zodValidator } from "@tanstack/zod-adapter";
-import { ArrowLeft, ArrowRight, BadgeCheck, Building2, Check, CheckCircle2, ChevronRight, CircleHelp, FileCheck2, ImagePlus, LoaderCircle, LockKeyhole, MailCheck, ShieldCheck, Sparkles, Upload, X } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { ArrowLeft, ArrowRight, Check, CheckCircle2, CircleHelp, FileCheck2, ImagePlus, LoaderCircle, LockKeyhole, MailCheck, ShieldCheck, Sparkles, X } from "lucide-react";
+import { useEffect, useRef, useState, type ReactNode, type RefObject } from "react";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,10 +28,15 @@ const defaultValues: ApplicationValues = {
   contactName: "", email: "", brandName: "", category: "", description: "", website: "https://", socialHandle: "",
 };
 
-const formSchema = z.object({
+const accountSchema = z.object({
   contactName: z.string().trim().min(2, "Please enter your full name.").max(120),
   email: z.string().trim().email("Enter a valid email address.").max(255),
   password: z.string().min(8, "Use at least 8 characters.").max(128),
+});
+
+const applicationFormSchema = z.object({
+  contactName: z.string().trim().min(2, "Please enter your full name.").max(120),
+  email: z.string().trim().email("Enter a valid email address.").max(255),
   brandName: z.string().trim().min(2, "Please enter your brand name.").max(120),
   category: z.string().min(1, "Choose a category."),
   description: z.string().trim().min(20, "Add at least 20 characters about your brand.").max(1000, "Keep your introduction under 1,000 characters."),
@@ -63,7 +67,6 @@ function BrandApplicationPage() {
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
   const [confirmation, setConfirmation] = useState<{ brandName: string; status: string } | null>(null);
-  const [confirmed, setConfirmed] = useState(false);
   const [authReady, setAuthReady] = useState(false);
   const fileRefs = {
     logo: useRef<HTMLInputElement>(null),
@@ -79,6 +82,8 @@ function BrandApplicationPage() {
       if (!alive) return;
       setUserId(session?.user.id ?? null);
       if (session?.user.email) setValues((current) => ({ ...current, email: session.user.email ?? current.email }));
+      const fullName = session?.user.user_metadata?.full_name;
+      if (typeof fullName === "string" && fullName.trim()) setValues((current) => ({ ...current, contactName: current.contactName || fullName.trim() }));
       if (session) {
         try {
           const application = await getMyBrandApplication();
@@ -86,6 +91,7 @@ function BrandApplicationPage() {
         } catch {
           if (alive) setNotice("We couldn't check your application yet. You can continue and try again shortly.");
         }
+        if (alive) setStep(2);
       }
       if (alive) setAuthReady(true);
     };
@@ -94,6 +100,8 @@ function BrandApplicationPage() {
       if (!alive) return;
       setUserId(session?.user.id ?? null);
       if (session?.user.email) setValues((current) => ({ ...current, email: session.user.email ?? current.email }));
+      const fullName = session?.user.user_metadata?.full_name;
+      if (typeof fullName === "string" && fullName.trim()) setValues((current) => ({ ...current, contactName: current.contactName || fullName.trim() }));
     });
     return () => {
       alive = false;
@@ -135,7 +143,9 @@ function BrandApplicationPage() {
   const validateStep = () => {
     const nextErrors: Record<string, string> = {};
     if (step === 1) {
-      const parsed = formSchema.pick({ contactName: true, email: true, password: true }).safeParse({ ...values, password });
+      const parsed = userId
+        ? applicationFormSchema.pick({ contactName: true, email: true }).safeParse(values)
+        : accountSchema.safeParse({ contactName: values.contactName, email: values.email, password });
       if (!parsed.success) for (const issue of parsed.error.issues) nextErrors[issue.path[0]?.toString() ?? "form"] = issue.message;
     }
     if (step === 2) {
@@ -153,7 +163,14 @@ function BrandApplicationPage() {
   };
 
   const authenticate = async () => {
-    if (userId) { setNotice(""); setStep(2); return; }
+    if (userId) {
+      const parsed = applicationFormSchema.pick({ contactName: true, email: true }).safeParse(values);
+      if (!parsed.success) {
+        setErrors(Object.fromEntries(parsed.error.issues.map((issue) => [issue.path[0]?.toString() ?? "form", issue.message])));
+        return;
+      }
+      setNotice(""); setStep(2); return;
+    }
     if (!validateStep()) return;
     setBusy(true); setNotice("");
     try {
@@ -186,6 +203,7 @@ function BrandApplicationPage() {
     if (!validateStep()) return;
     setBusy(true); setNotice("");
     try {
+      window.sessionStorage.setItem("offfeed-brand-application-draft", JSON.stringify(values));
       const { error } = await lovable.auth.signInWithOAuth("google", { redirect_uri: `${window.location.origin}/for-brands/apply` });
       if (error) setNotice("Google sign-in couldn't start. Please try email instead.");
     } catch { setNotice("Google sign-in couldn't start. Please try email instead."); }
@@ -193,7 +211,7 @@ function BrandApplicationPage() {
   };
 
   const submitApplication = async () => {
-    const parsed = formSchema.safeParse({ ...values, password });
+    const parsed = applicationFormSchema.safeParse(values);
     if (!parsed.success || !userId || !uploads.logo || !uploads.cover) {
       setNotice("Please complete the required details and uploads before sending.");
       return;
@@ -274,17 +292,17 @@ function BrandApplicationPage() {
 
           <div className="border-t border-border/70 pt-7">
             {step === 1 && <div>
-              <div className="mb-7"><h2 className="font-display text-3xl">Let’s start with you.</h2><p className="mt-2 text-sm text-muted-foreground">Create an account to keep your application safe.</p></div>
+              <div className="mb-7"><h2 className="font-display text-3xl">Let’s start with you.</h2><p className="mt-2 text-sm text-muted-foreground">{userId ? "Your account is ready. Confirm your contact details to continue." : "Create an account to keep your application safe."}</p></div>
               <div className="grid gap-5 sm:grid-cols-2">
                 <Field label="Your name" error={errors.contactName}><Input autoComplete="name" value={values.contactName} onChange={(event) => update("contactName", event.target.value)} placeholder="Alex Morgan" className={fieldClass} maxLength={120} aria-invalid={Boolean(errors.contactName)} /></Field>
                 <Field label="Work email" error={errors.email}><Input type="email" autoComplete="email" value={values.email} onChange={(event) => update("email", event.target.value)} placeholder="you@yourbrand.com" className={fieldClass} maxLength={255} aria-invalid={Boolean(errors.email)} /></Field>
-                <div className="sm:col-span-2"><Field label={authMode === "signup" ? "Create a password" : "Password"} error={errors.password}><Input type="password" autoComplete={authMode === "signup" ? "new-password" : "current-password"} value={password} onChange={(event) => { setPassword(event.target.value); setErrors((current) => ({ ...current, password: "" })); }} placeholder="At least 8 characters" className={fieldClass} maxLength={128} aria-invalid={Boolean(errors.password)} /></Field></div>
+                {!userId && <Field label={authMode === "signup" ? "Create a password" : "Password"} error={errors.password}><Input type="password" autoComplete={authMode === "signup" ? "new-password" : "current-password"} value={password} onChange={(event) => { setPassword(event.target.value); setErrors((current) => ({ ...current, password: "" })); }} placeholder="At least 8 characters" className={fieldClass} maxLength={128} aria-invalid={Boolean(errors.password)} /></Field>}</div>
               </div>
               <div className="mt-7 flex flex-wrap items-center gap-3">
-                <Button onClick={() => void authenticate()} disabled={busy}>{busy && <LoaderCircle className="animate-spin"/>}{authMode === "signup" ? "Create account & continue" : "Sign in & continue"}<ArrowRight/></Button>
-                <Button variant="outline" onClick={() => void signInWithGoogle()} disabled={busy}><span className="font-semibold">G</span> Continue with Google</Button>
+                <Button onClick={() => void authenticate()} disabled={busy}>{busy && <LoaderCircle className="animate-spin"/>}{userId ? "Continue" : authMode === "signup" ? "Create account & continue" : "Sign in & continue"}<ArrowRight/></Button>
+                {!userId && <Button variant="outline" onClick={() => void signInWithGoogle()} disabled={busy}><span className="font-semibold">G</span> Continue with Google</Button>}
               </div>
-              <p className="mt-4 text-xs text-muted-foreground">{authMode === "signup" ? <>Already have an account? <button type="button" onClick={() => { setAuthMode("signin"); setNotice(""); }} className="font-medium text-primary underline underline-offset-4">Sign in</button></> : <>New to OFFFEED? <button type="button" onClick={() => { setAuthMode("signup"); setNotice(""); }} className="font-medium text-primary underline underline-offset-4">Create an account</button></>}</p>
+              {!userId && <p className="mt-4 text-xs text-muted-foreground">{authMode === "signup" ? <>Already have an account? <button type="button" onClick={() => { setAuthMode("signin"); setNotice(""); }} className="font-medium text-primary underline underline-offset-4">Sign in</button></> : <>New to OFFFEED? <button type="button" onClick={() => { setAuthMode("signup"); setNotice(""); }} className="font-medium text-primary underline underline-offset-4">Create an account</button></>}</p>}
               {notice && <p role="status" className="mt-4 rounded-md border border-primary/25 bg-secondary px-4 py-3 text-sm leading-6">{notice}</p>}
             </div>}
 
