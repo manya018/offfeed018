@@ -279,7 +279,7 @@ function BrandApplicationPage() {
   };
 
   if (!authReady) return <main className="grid min-h-[70vh] place-items-center"><LoaderCircle className="size-6 animate-spin text-primary" aria-label="Loading application" /></main>;
-  if (confirmation) return <ReviewConfirmation brandName={confirmation.brandName} confirmed={confirmed} setConfirmed={setConfirmed} />;
+  if (confirmation) return <ReviewConfirmation brandName={confirmation.brandName} status={confirmation.status} />;
 
   const fieldClass = "mt-2 h-12 rounded-lg border-border/80 bg-card px-4";
 
