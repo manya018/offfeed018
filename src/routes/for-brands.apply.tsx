@@ -312,9 +312,9 @@ function BrandApplicationPage() {
             {step === 1 && <div>
               <div className="mb-7"><h2 className="font-display text-3xl">Let’s start with you.</h2><p className="mt-2 text-sm text-muted-foreground">{userId ? "Your account is ready. Confirm your contact details to continue." : "Create an account to keep your application safe."}</p></div>
               <div className="grid gap-5 sm:grid-cols-2">
-                <Field label="Your name" error={errors["contactName"]}><Input autoComplete="name" value={values.contactName} onChange={(event) => update("contactName", event.target.value)} placeholder="Alex Morgan" className={fieldClass} maxLength={120} aria-invalid={Boolean(errors["contactName"])} /></Field>
-                <Field label="Work email" error={errors["email"]}><Input type="email" autoComplete="email" value={values.email} onChange={(event) => update("email", event.target.value)} placeholder="you@yourbrand.com" className={fieldClass} maxLength={255} aria-invalid={Boolean(errors["email"])} /></Field>
-                {!userId && <div className="sm:col-span-2"><Field label={authMode === "signup" ? "Create a password" : "Password"} error={errors["password"]}><Input type="password" autoComplete={authMode === "signup" ? "new-password" : "current-password"} value={password} onChange={(event) => { setPassword(event.target.value); setErrors((current) => ({ ...current, password: "" })); }} placeholder="At least 8 characters" className={fieldClass} maxLength={128} aria-invalid={Boolean(errors["password"])} /></Field></div>}</div>
+                <Field label="Your name" htmlFor="contact-name" error={errors["contactName"]}><Input id="contact-name" autoComplete="name" value={values.contactName} onChange={(event) => update("contactName", event.target.value)} placeholder="Alex Morgan" className={fieldClass} maxLength={120} aria-invalid={Boolean(errors["contactName"])} /></Field>
+                <Field label="Work email" htmlFor="contact-email" error={errors["email"]}><Input id="contact-email" type="email" autoComplete="email" value={values.email} onChange={(event) => update("email", event.target.value)} placeholder="you@yourbrand.com" className={fieldClass} maxLength={255} aria-invalid={Boolean(errors["email"])} /></Field>
+                {!userId && <div className="sm:col-span-2"><Field label={authMode === "signup" ? "Create a password" : "Password"} htmlFor="account-password" error={errors["password"]}><Input id="account-password" type="password" autoComplete={authMode === "signup" ? "new-password" : "current-password"} value={password} onChange={(event) => { setPassword(event.target.value); setErrors((current) => ({ ...current, password: "" })); }} placeholder="At least 8 characters" className={fieldClass} maxLength={128} aria-invalid={Boolean(errors["password"])} /></Field></div>}</div>
               <div className="mt-7 flex flex-wrap items-center gap-3">
                 <Button onClick={() => void authenticate()} disabled={busy}>{busy && <LoaderCircle className="animate-spin"/>}{userId ? "Continue" : authMode === "signup" ? "Create account & continue" : "Sign in & continue"}<ArrowRight/></Button>
                 {!userId && <Button variant="outline" onClick={() => void signInWithGoogle()} disabled={busy}><span className="font-semibold">G</span> Continue with Google</Button>}
@@ -326,9 +326,9 @@ function BrandApplicationPage() {
             {step === 2 && <div>
               <div className="mb-7"><h2 className="font-display text-3xl">Tell us what you make.</h2><p className="mt-2 text-sm text-muted-foreground">A little context helps us understand where your brand belongs.</p></div>
               <div className="grid gap-5 sm:grid-cols-2">
-                <Field label="Brand name" error={errors["brandName"]}><Input value={values.brandName} onChange={(event) => update("brandName", event.target.value)} placeholder="The name people know you by" className={fieldClass} maxLength={120} aria-invalid={Boolean(errors["brandName"])} /></Field>
-                <Field label="Category" error={errors["category"]}><select value={values.category} onChange={(event) => update("category", event.target.value)} className={`${fieldClass} w-full rounded-lg border px-4 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring`} aria-invalid={Boolean(errors["category"])}><option value="">Choose a category</option>{brandCategories.map((category) => <option key={category} value={category}>{category}</option>)}</select></Field>
-                <div className="sm:col-span-2"><Field label="A short introduction" error={errors["description"]}><Textarea value={values.description} onChange={(event) => update("description", event.target.value)} placeholder="What inspires your work? Who is it for?" className="mt-2 min-h-36 resize-y rounded-lg border-border/80 bg-card px-4 py-3" maxLength={1000} aria-invalid={Boolean(errors["description"])} /><p className="mt-1 text-right text-xs text-muted-foreground">{values.description.length} / 1,000</p></Field></div>
+                <Field label="Brand name" htmlFor="brand-name" error={errors["brandName"]}><Input id="brand-name" value={values.brandName} onChange={(event) => update("brandName", event.target.value)} placeholder="The name people know you by" className={fieldClass} maxLength={120} aria-invalid={Boolean(errors["brandName"])} /></Field>
+                <Field label="Category" htmlFor="brand-category" error={errors["category"]}><select id="brand-category" value={values.category} onChange={(event) => update("category", event.target.value)} className={`${fieldClass} w-full rounded-lg border px-4 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring`} aria-invalid={Boolean(errors["category"])}><option value="">Choose a category</option>{brandCategories.map((category) => <option key={category} value={category}>{category}</option>)}</select></Field>
+                <div className="sm:col-span-2"><Field label="A short introduction" htmlFor="brand-description" error={errors["description"]}><Textarea id="brand-description" value={values.description} onChange={(event) => update("description", event.target.value)} placeholder="What inspires your work? Who is it for?" className="mt-2 min-h-36 resize-y rounded-lg border-border/80 bg-card px-4 py-3" maxLength={1000} aria-invalid={Boolean(errors["description"])} /><p className="mt-1 text-right text-xs text-muted-foreground">{values.description.length} / 1,000</p></Field></div>
               </div>
               <StepButtons onBack={() => setStep(1)} onNext={() => { if (validateStep()) setStep(3); }} />
             </div>}
@@ -336,8 +336,8 @@ function BrandApplicationPage() {
             {step === 3 && <div>
               <div className="mb-7"><h2 className="font-display text-3xl">Show us your world.</h2><p className="mt-2 text-sm text-muted-foreground">These images help our team get a feel for your identity.</p></div>
               <div className="grid gap-5 sm:grid-cols-2">
-                <Field label="Website" error={errors["website"]}><Input type="url" inputMode="url" value={values.website} onChange={(event) => update("website", event.target.value)} placeholder="https://yourbrand.com" className={fieldClass} maxLength={2048} aria-invalid={Boolean(errors["website"])} /></Field>
-                <Field label="Instagram or social handle" error={errors["socialHandle"]}><Input value={values.socialHandle} onChange={(event) => update("socialHandle", event.target.value)} placeholder="@yourbrand" className={fieldClass} maxLength={120} aria-invalid={Boolean(errors["socialHandle"])} /></Field>
+                <Field label="Website" htmlFor="brand-website" error={errors["website"]}><Input id="brand-website" type="url" inputMode="url" value={values.website} onChange={(event) => update("website", event.target.value)} placeholder="https://yourbrand.com" className={fieldClass} maxLength={2048} aria-invalid={Boolean(errors["website"])} /></Field>
+                <Field label="Instagram or social handle" htmlFor="brand-social" error={errors["socialHandle"]}><Input id="brand-social" value={values.socialHandle} onChange={(event) => update("socialHandle", event.target.value)} placeholder="@yourbrand" className={fieldClass} maxLength={120} aria-invalid={Boolean(errors["socialHandle"])} /></Field>
               </div>
               <div className="mt-6 grid gap-4 sm:grid-cols-2">
                 <UploadCard title="Brand logo" detail="JPG, PNG or WebP · up to 20 MB" item={uploads.logo} error={errors["logo"]} inputRef={fileRefs.logo} onPick={(file) => setUpload("logo", file)} onRemove={() => removeUpload("logo")} required />
@@ -371,8 +371,8 @@ function BrandApplicationPage() {
   );
 }
 
-function Field({ label, error, children }: { label: string; error?: string | undefined; children: ReactNode }) {
-  return <div className="min-w-0"><label className="text-sm font-medium">{label}</label>{children}{error && <p role="alert" className="mt-1 text-xs text-destructive">{error}</p>}</div>;
+function Field({ label, error, children, htmlFor }: { label: string; error?: string | undefined; children: ReactNode; htmlFor?: string }) {
+  return <div className="min-w-0"><label htmlFor={htmlFor} className="text-sm font-medium">{label}</label>{children}{error && <p role="alert" className="mt-1 text-xs text-destructive">{error}</p>}</div>;
 }
 
 function StepButtons({ onBack, onNext }: { onBack: () => void; onNext: () => void }) {
