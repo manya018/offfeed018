@@ -57,5 +57,20 @@ export const submitBrandApplication = createServerFn({ method: "POST" })
       if (error.code === "23505") throw new Error("An application has already been submitted for this account.");
       throw new Error("Your application couldn't be submitted. Please try again.");
     }
+    try {
+      const { sendBrandApplicationEmail } = await import("./brand-notification.server");
+      await sendBrandApplicationEmail({
+        brandName: data.brandName,
+        contactName: data.contactName,
+        email: data.email,
+        category: data.category,
+        description: data.description,
+        website: data.website,
+        socialHandle: data.socialHandle || null,
+        hasProof: Boolean(data.proofPath),
+      });
+    } catch (notifyError) {
+      console.error("[brand-applications] Notification email failed", notifyError);
+    }
     return application;
   });

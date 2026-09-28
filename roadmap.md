@@ -1,7 +1,7 @@
 # OFFFEED brand registration
 
 - [x] Create private, applicant-scoped upload storage and protected application records.
-- [ ] Build validated four-step account and brand application flow with uploads.
-- [ ] Submit applications for review and show the pending confirmation state.
-- [ ] Verify the registration experience and preview health.
-- [ ] Email each new brand application to offfeeed@gmail.com.
+- [x] Build validated four-step account and brand application flow with uploads.
+- [x] Submit applications for review and show the pending confirmation state.
+- [x] Verify the registration experience and preview health.
+- [x] Email each new brand application to offfeeed@gmail.com.
