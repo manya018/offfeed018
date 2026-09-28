@@ -98,7 +98,8 @@ function BrandApplicationPage() {
       setUserId(session?.user.id ?? null);
       if (session?.user.email) setValues((current) => ({ ...current, email: session.user.email ?? current.email }));
       const fullName = session?.user.user_metadata?.["full_name"];
-      if (typeof fullName === "string" && fullName.trim()) setValues((current) => ({ ...current, contactName: current.contactName || fullName.trim() }));
+      const knownName = typeof fullName === "string" && fullName.trim() ? fullName.trim() : "";
+      if (knownName) setValues((current) => ({ ...current, contactName: current.contactName || knownName }));
       if (session) {
         try {
           const application = await getMyBrandApplication();
@@ -106,7 +107,8 @@ function BrandApplicationPage() {
         } catch {
           if (alive) setNotice("We couldn't check your application yet. You can continue and try again shortly.");
         }
-        if (alive) setStep(2);
+        // Skip the account step only when we already know who they are.
+        if (alive && knownName) setStep(2);
       }
       if (alive) setAuthReady(true);
     };
