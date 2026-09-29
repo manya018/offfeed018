@@ -19,6 +19,8 @@ export type Database = {
           brand_description: string
           brand_name: string
           category: string
+          commission_agreed_at: string | null
+          commission_rate: number
           contact_name: string
           cover_path: string
           created_at: string
@@ -36,6 +38,8 @@ export type Database = {
           brand_description: string
           brand_name: string
           category: string
+          commission_agreed_at?: string | null
+          commission_rate?: number
           contact_name: string
           cover_path: string
           created_at?: string
@@ -53,6 +57,8 @@ export type Database = {
           brand_description?: string
           brand_name?: string
           category?: string
+          commission_agreed_at?: string | null
+          commission_rate?: number
           contact_name?: string
           cover_path?: string
           created_at?: string

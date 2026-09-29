@@ -8,6 +8,7 @@ const escapeHtml = (value: string) =>
   value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
 export type BrandApplicationEmail = {
+  applicationId: string;
   brandName: string;
   contactName: string;
   email: string;
@@ -16,6 +17,7 @@ export type BrandApplicationEmail = {
   website: string;
   socialHandle: string | null;
   hasProof: boolean;
+  commissionRate: number;
 };
 
 export async function sendBrandApplicationEmail(application: BrandApplicationEmail): Promise<void> {
@@ -34,7 +36,11 @@ export async function sendBrandApplicationEmail(application: BrandApplicationEma
     ["Website", application.website],
     ["Social", application.socialHandle || "—"],
     ["Proof of business", application.hasProof ? "Attached in the application files" : "Not provided"],
+    ["OFFFEED commission", `${application.commissionRate * 100}% on completed sales · brand receives ${100 - application.commissionRate * 100}%`],
   ];
+
+  const { createBrandApprovalToken, getBrandReviewUrl } = await import("./brand-approval.server");
+  const reviewUrl = getBrandReviewUrl(await createBrandApprovalToken(application.applicationId));
 
   const html = `<div style="font-family:Helvetica,Arial,sans-serif;font-size:15px;line-height:1.6;color:#2b1c18">
 <h2 style="font-weight:600">New brand application — ${escapeHtml(application.brandName)}</h2>
@@ -43,10 +49,12 @@ export async function sendBrandApplicationEmail(application: BrandApplicationEma
     .join("")}</table>
 <p style="margin-top:18px;color:#8a6f68">About the brand</p>
 <p style="white-space:pre-wrap">${escapeHtml(application.description)}</p>
+ <p style="margin:24px 0 10px"><a href="${reviewUrl}" style="display:inline-block;background:#9e5f69;color:#fff;text-decoration:none;padding:12px 18px;border-radius:6px;font-weight:600">Review &amp; decide</a></p>
+ <p style="font-size:12px;color:#8a6f68">This private review link expires in 7 days and lets you approve or decline the application.</p>
 <p style="margin-top:18px;color:#8a6f68">Logo and cover images are stored privately with the application.</p>
 </div>`;
 
-  const text = `${rows.map(([label, value]) => `${label}: ${value}`).join("\n")}\n\nAbout the brand:\n${application.description}`;
+  const text = `${rows.map(([label, value]) => `${label}: ${value}`).join("\n")}\n\nAbout the brand:\n${application.description}\n\nReview and decide: ${reviewUrl}`;
 
   const message = [
     `To: ${NOTIFY_ADDRESS}`,

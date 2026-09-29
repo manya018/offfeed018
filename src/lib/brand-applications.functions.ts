@@ -13,6 +13,7 @@ const applicationSchema = z.object({
   logoPath: z.string().min(1).max(500),
   coverPath: z.string().min(1).max(500),
   proofPath: z.string().max(500).optional().nullable(),
+  commissionAgreed: z.literal(true),
 });
 
 export const getMyBrandApplication = createServerFn({ method: "GET" })
@@ -49,6 +50,8 @@ export const submitBrandApplication = createServerFn({ method: "POST" })
         logo_path: data.logoPath,
         cover_path: data.coverPath,
         proof_path: data.proofPath || null,
+        commission_rate: 0.18,
+        commission_agreed_at: new Date().toISOString(),
         status: "under_review",
       })
       .select("id, brand_name, status, created_at")
@@ -60,6 +63,7 @@ export const submitBrandApplication = createServerFn({ method: "POST" })
     try {
       const { sendBrandApplicationEmail } = await import("./brand-notification.server");
       await sendBrandApplicationEmail({
+        applicationId: application.id,
         brandName: data.brandName,
         contactName: data.contactName,
         email: data.email,
@@ -68,6 +72,7 @@ export const submitBrandApplication = createServerFn({ method: "POST" })
         website: data.website,
         socialHandle: data.socialHandle || null,
         hasProof: Boolean(data.proofPath),
+        commissionRate: 0.18,
       });
     } catch (notifyError) {
       console.error("[brand-applications] Notification email failed", notifyError);
