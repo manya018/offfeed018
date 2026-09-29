@@ -233,7 +233,7 @@ function BrandApplicationPage() {
 
   const submitApplication = async () => {
     const parsed = applicationFormSchema.safeParse(values);
-    if (!parsed.success || !userId || !uploads.logo || !uploads.cover) {
+    if (!parsed.success || !userId || !uploads.logo || !uploads.cover || !confirmed) {
       setNotice("Please complete the required details and uploads before sending.");
       return;
     }
@@ -263,6 +263,7 @@ function BrandApplicationPage() {
         logoPath,
         coverPath,
         proofPath,
+         commissionAgreed: true,
       } });
       setConfirmation({ brandName: application.brand_name, status: application.status });
     } catch (error) {
@@ -361,7 +362,8 @@ function BrandApplicationPage() {
                 <ReviewRow label="Website" value={values.website || "Not added yet"} onEdit={() => setStep(3)} />
                 <div className="flex items-center justify-between gap-4 py-4"><div className="min-w-0"><p className="text-xs text-muted-foreground">Brand identity</p><p className="mt-1 text-sm">{uploads.logo ? "Logo added" : "Logo missing"} · {uploads.cover ? "Cover added" : "Cover missing"}{uploads.proof ? " · Proof added" : ""}</p></div><Button variant="ghost" size="sm" onClick={() => setStep(3)}>Edit</Button></div>
               </div>
-              <label className="mt-6 flex cursor-pointer items-start gap-3 text-sm leading-6"><input type="checkbox" checked={confirmed} onChange={(event) => setConfirmed(event.target.checked)} className="mt-1 size-4 accent-primary"/><span>I confirm that these details are accurate and agree to have my brand reviewed by OFFFEED.</span></label>
+               <label className="mt-6 flex cursor-pointer items-start gap-3 text-sm leading-6"><input type="checkbox" checked={confirmed} onChange={(event) => setConfirmed(event.target.checked)} className="mt-1 size-4 accent-primary"/><span>I confirm that these details are accurate and agree to have my brand reviewed by OFFFEED.</span></label>
+               <div className="mt-4 border border-primary/20 bg-secondary/60 px-4 py-4 text-sm leading-6"><p className="font-medium">OFFFEED Brand Partner Agreement</p><p className="mt-1 text-muted-foreground">OFFFEED keeps an 18% platform commission on completed marketplace sales. Your brand receives the remaining 82%. There are no upfront subscription or listing fees.</p><label className="mt-3 flex cursor-pointer items-start gap-3"><input type="checkbox" checked={confirmed} onChange={(event) => setConfirmed(event.target.checked)} className="mt-1 size-4 accent-primary"/><span>I agree to the 18% platform commission and 82% net payout terms.</span></label></div>
               {notice && <p role="alert" className="mt-4 rounded-md border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm leading-6 text-destructive">{notice}</p>}
               <div className="mt-7 flex flex-wrap gap-3"><Button variant="outline" onClick={() => setStep(3)} disabled={busy}><ArrowLeft/>Back</Button><Button onClick={() => void submitApplication()} disabled={busy || !confirmed}>{busy ? <LoaderCircle className="animate-spin"/> : <FileCheck2/>}Send for review</Button></div>
               <p className="mt-4 text-xs leading-5 text-muted-foreground">We review every application before a brand is featured. Sending this form won’t publish your brand.</p>
