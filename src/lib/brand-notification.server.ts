@@ -98,7 +98,7 @@ export async function sendBrandDecisionEmail({ brandName, email, approved, reaso
   brandName: string;
   email: string;
   approved: boolean;
-  reason?: string;
+  reason?: string | undefined;
   commissionRate: number;
 }): Promise<void> {
   const lovableKey = process.env["LOVABLE_API_KEY"];
