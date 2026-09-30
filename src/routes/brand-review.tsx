@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { Check, ExternalLink, FileText, LoaderCircle, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -23,16 +24,18 @@ function BrandReviewPage() {
   const [decision, setDecision] = useState<"approve" | "decline" | null>(null);
   const [notice, setNotice] = useState("");
   const [reason, setReason] = useState("");
+  const loadReview = useServerFn(getBrandReview);
+  const makeDecision = useServerFn(decideBrandApplication);
 
   useEffect(() => {
     if (!token) { setNotice("This review link is missing its secure token."); setBusy(false); return; }
-    void getBrandReview({ data: { token } }).then(setApplication).catch((error: unknown) => setNotice(error instanceof Error ? error.message : "This review link could not be opened.")).finally(() => setBusy(false));
-  }, [token]);
+    void loadReview({ data: { token } }).then(setApplication).catch((error: unknown) => setNotice(error instanceof Error ? error.message : "This review link could not be opened.")).finally(() => setBusy(false));
+  }, [loadReview, token]);
 
   const decide = async (action: "approve" | "decline") => {
     setDecision(action); setNotice("");
     try {
-      const result = await decideBrandApplication({ data: { token, action, reason: reason || undefined } });
+      const result = await makeDecision({ data: { token, action, reason: reason || undefined } });
       setApplication((current) => current ? { ...current, status: result.status } : current);
     } catch (error) {
       setNotice(error instanceof Error ? error.message : "The decision could not be saved.");
