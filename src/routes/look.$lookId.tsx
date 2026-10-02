@@ -6,7 +6,7 @@ import { himLooks, looks } from "@/lib/offfeed-data";
 import { useStyleSpace } from "@/lib/style-space";
 
 export const Route = createFileRoute("/look/$lookId")({
-  loader: ({ params }) => { const look = looks.find((item) => item.id === params.lookId); if (!look) throw notFound(); return look; },
+  loader: ({ params }) => { const look = [...looks, ...himLooks].find((item) => item.id === params.lookId); if (!look) throw notFound(); return look; },
   head: ({ loaderData }) => ({ meta: [
     { title: loaderData ? `${loaderData.title} — OFFFEED` : "Look unavailable — OFFFEED" },
     { name: "description", content: loaderData?.description ?? "Explore curated fashion on OFFFEED." },
