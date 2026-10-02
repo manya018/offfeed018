@@ -100,6 +100,27 @@
   --sidebar-ring: oklch(0.704 0.04 256.788);
 }
 
+html[data-style-space="him"] {
+  --background: oklch(0.95 0.026 88);
+  --foreground: oklch(0.27 0.025 65);
+  --card: oklch(0.985 0.012 88);
+  --card-foreground: oklch(0.27 0.025 65);
+  --popover: oklch(0.985 0.012 88);
+  --popover-foreground: oklch(0.27 0.025 65);
+  --primary: oklch(0.42 0.085 150);
+  --primary-foreground: oklch(0.98 0.01 90);
+  --secondary: oklch(0.91 0.025 78);
+  --secondary-foreground: oklch(0.3 0.03 65);
+  --muted: oklch(0.89 0.022 83);
+  --muted-foreground: oklch(0.48 0.025 67);
+  --accent: oklch(0.86 0.04 83);
+  --accent-foreground: oklch(0.3 0.03 65);
+  --border: oklch(0.83 0.035 78);
+  --input: oklch(0.83 0.035 78);
+  --ring: oklch(0.42 0.085 150);
+  --shadow-soft: 0 18px 55px -28px oklch(0.3 0.035 65 / 0.3);
+}
+
 .dark {
   --background: oklch(0.129 0.042 264.695);
   --foreground: oklch(0.984 0.003 247.858);
@@ -146,6 +167,15 @@
     font-family: var(--font-sans);
     letter-spacing: 0;
     min-width: 320px;
+    transition: background-color 350ms ease, color 350ms ease;
+  }
+
+  body *,
+  body *::before,
+  body *::after {
+    transition-property: background-color, border-color, color, fill, stroke;
+    transition-duration: 220ms;
+    transition-timing-function: ease;
   }
 }
 
