@@ -20,7 +20,7 @@ export function StyleSpaceProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    document.documentElement.dataset.styleSpace = space;
+    document.documentElement.dataset["styleSpace"] = space;
     if (hydrated) window.localStorage.setItem("offfeed-style-space", space);
   }, [space, hydrated]);
 

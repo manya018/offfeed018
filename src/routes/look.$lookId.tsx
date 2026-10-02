@@ -2,6 +2,7 @@ import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { ArrowLeft, Heart, Share2 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { LookCard } from "@/components/look-card";
 import { himLooks, looks } from "@/lib/offfeed-data";
 import { useStyleSpace } from "@/lib/style-space";
 
