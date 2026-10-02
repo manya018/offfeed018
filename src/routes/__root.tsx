@@ -13,6 +13,7 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { SiteHeader } from "@/components/site-header";
+import { StyleSpaceProvider } from "@/lib/style-space";
 
 function NotFoundComponent() {
   return (
@@ -119,8 +120,10 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <SiteHeader />
-      <Outlet />
+      <StyleSpaceProvider>
+        <SiteHeader />
+        <Outlet />
+      </StyleSpaceProvider>
     </QueryClientProvider>
   );
 }
