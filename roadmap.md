@@ -7,3 +7,4 @@
 - [x] Email each new brand application to offfeeed@gmail.com.
 - [x] Require agreement to the 18% marketplace commission and record the agreement time.
 - [x] Add expiring Gmail review links with approve/decline actions and applicant decision emails.
+- [x] Add a saved Her/Him switch with distinct collections, editorial imagery, mood tags, and color themes across Home, Discover, Explore, and look details.
