@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Search, Sparkles } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { LookCard } from "@/components/look-card";
 import { himLooks, himMoodImages, himMoods, looks, moodImages, moods } from "@/lib/offfeed-data";
@@ -27,6 +27,7 @@ function DiscoverPage() {
   const [filter, setFilter] = useState("All");
   const [query, setQuery] = useState("");
   const [visible, setVisible] = useState(6);
+  useEffect(() => { setFilter("All"); setQuery(""); setVisible(6); }, [space]);
   const filtered = useMemo(() => collection.filter((look) => {
     const searchMatch = `${look.title} ${look.aesthetic} ${look.occasion} ${look.season}`.toLowerCase().includes(query.toLowerCase());
     if (!searchMatch) return false;
