@@ -153,7 +153,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_approved_brand_application: {
+        Args: { _application_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
