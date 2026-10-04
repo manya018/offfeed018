@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       brand_applications: {
         Row: {
+          audience: string[]
           brand_description: string
           brand_name: string
           category: string
@@ -35,6 +36,7 @@ export type Database = {
           website_url: string
         }
         Insert: {
+          audience?: string[]
           brand_description: string
           brand_name: string
           category: string
@@ -54,6 +56,7 @@ export type Database = {
           website_url: string
         }
         Update: {
+          audience?: string[]
           brand_description?: string
           brand_name?: string
           category?: string
@@ -73,6 +76,77 @@ export type Database = {
           website_url?: string
         }
         Relationships: []
+      }
+      brand_products: {
+        Row: {
+          audience: string[]
+          brand_application_id: string
+          category: string
+          colors: string[]
+          created_at: string
+          currency: string
+          description: string
+          id: string
+          image_path: string | null
+          price: number
+          product_name: string
+          product_url: string | null
+          sizes: string[]
+          source: string
+          status: string
+          tags: string[]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          audience: string[]
+          brand_application_id: string
+          category: string
+          colors?: string[]
+          created_at?: string
+          currency?: string
+          description: string
+          id?: string
+          image_path?: string | null
+          price: number
+          product_name: string
+          product_url?: string | null
+          sizes?: string[]
+          source?: string
+          status?: string
+          tags?: string[]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          audience?: string[]
+          brand_application_id?: string
+          category?: string
+          colors?: string[]
+          created_at?: string
+          currency?: string
+          description?: string
+          id?: string
+          image_path?: string | null
+          price?: number
+          product_name?: string
+          product_url?: string | null
+          sizes?: string[]
+          source?: string
+          status?: string
+          tags?: string[]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brand_products_brand_application_id_fkey"
+            columns: ["brand_application_id"]
+            isOneToOne: false
+            referencedRelation: "brand_applications"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
