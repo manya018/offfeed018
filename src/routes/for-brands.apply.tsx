@@ -22,10 +22,11 @@ type ApplicationValues = {
   description: string;
   website: string;
   socialHandle: string;
+  audience: Array<"her" | "him">;
 };
 
 const defaultValues: ApplicationValues = {
-  contactName: "", email: "", brandName: "", category: "", description: "", website: "https://", socialHandle: "",
+  contactName: "", email: "", brandName: "", category: "", description: "", website: "https://", socialHandle: "", audience: ["her"],
 };
 
 const accountSchema = z.object({
@@ -39,13 +40,14 @@ const applicationFormSchema = z.object({
   email: z.string().trim().email("Enter a valid email address.").max(255),
   brandName: z.string().trim().min(2, "Please enter your brand name.").max(120),
   category: z.string().min(1, "Choose a category."),
+  audience: z.array(z.enum(["her", "him"])).min(1, "Choose at least one audience."),
   description: z.string().trim().min(20, "Add at least 20 characters about your brand.").max(1000, "Keep your introduction under 1,000 characters."),
   website: z.string().trim().url("Enter a full website address, starting with https://").max(2048),
   socialHandle: z.string().trim().max(120, "Keep your social handle under 120 characters."),
 });
 const draftSchema = z.object({
   contactName: z.string().max(120), email: z.string().max(255), brandName: z.string().max(120),
-  category: z.string().max(80), description: z.string().max(1000), website: z.string().max(2048), socialHandle: z.string().max(120),
+  category: z.string().max(80), description: z.string().max(1000), website: z.string().max(2048), socialHandle: z.string().max(120), audience: z.array(z.enum(["her", "him"])).min(1).max(2),
 });
 
 export const Route = createFileRoute("/for-brands/apply")({
@@ -135,6 +137,16 @@ function BrandApplicationPage() {
     setErrors((current) => ({ ...current, [key]: "" }));
   };
 
+  const toggleAudience = (audience: "her" | "him") => {
+    setValues((current) => {
+      const next = current.audience.includes(audience)
+        ? current.audience.filter((item) => item !== audience)
+        : [...current.audience, audience];
+      return { ...current, audience: next.length ? next : current.audience };
+    });
+    setErrors((current) => ({ ...current, audience: "" }));
+  };
+
   const setUpload = (kind: UploadKind, file?: File) => {
     if (!file) return;
     if (file.size > maxUploadBytes) {
@@ -166,7 +178,7 @@ function BrandApplicationPage() {
       if (!parsed.success) for (const issue of parsed.error.issues) nextErrors[issue.path[0]?.toString() ?? "form"] = issue.message;
     }
     if (step === 2) {
-        const parsed = applicationFormSchema.pick({ brandName: true, category: true, description: true }).safeParse(values);
+        const parsed = applicationFormSchema.pick({ brandName: true, category: true, description: true, audience: true }).safeParse(values);
       if (!parsed.success) for (const issue of parsed.error.issues) nextErrors[issue.path[0]?.toString() ?? "form"] = issue.message;
     }
     if (step === 3) {
@@ -257,6 +269,7 @@ function BrandApplicationPage() {
         email: parsed.data.email,
         brandName: parsed.data.brandName,
         category: parsed.data.category as (typeof brandCategories)[number],
+        audience: parsed.data.audience,
         description: parsed.data.description,
         website: parsed.data.website,
         socialHandle: parsed.data.socialHandle || null,
@@ -331,6 +344,7 @@ function BrandApplicationPage() {
               <div className="grid gap-5 sm:grid-cols-2">
                 <Field label="Brand name" htmlFor="brand-name" error={errors["brandName"]}><Input id="brand-name" value={values.brandName} onChange={(event) => update("brandName", event.target.value)} placeholder="The name people know you by" className={fieldClass} maxLength={120} aria-invalid={Boolean(errors["brandName"])} /></Field>
                 <Field label="Category" htmlFor="brand-category" error={errors["category"]}><select id="brand-category" value={values.category} onChange={(event) => update("category", event.target.value)} className={`${fieldClass} w-full rounded-lg border px-4 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring`} aria-invalid={Boolean(errors["category"])}><option value="">Choose a category</option>{brandCategories.map((category) => <option key={category} value={category}>{category}</option>)}</select></Field>
+                <div className="sm:col-span-2"><p className="text-sm font-medium">Who is your collection for?</p><p className="mt-1 text-xs text-muted-foreground">Choose one or both spaces. This can be updated with our team after approval.</p><div className="mt-3 flex flex-wrap gap-2">{([{ value: "her", label: "Her" }, { value: "him", label: "Him" }] as const).map((option) => <Button key={option.value} type="button" size="sm" variant={values.audience.includes(option.value) ? "default" : "outline"} aria-pressed={values.audience.includes(option.value)} onClick={() => toggleAudience(option.value)}>{values.audience.includes(option.value) && <Check className="size-4"/>}{option.label}</Button>)}</div>{errors["audience"] && <p role="alert" className="mt-1 text-xs text-destructive">{errors["audience"]}</p>}</div>
                 <div className="sm:col-span-2"><Field label="A short introduction" htmlFor="brand-description" error={errors["description"]}><Textarea id="brand-description" value={values.description} onChange={(event) => update("description", event.target.value)} placeholder="What inspires your work? Who is it for?" className="mt-2 min-h-36 resize-y rounded-lg border-border/80 bg-card px-4 py-3" maxLength={1000} aria-invalid={Boolean(errors["description"])} /><p className="mt-1 text-right text-xs text-muted-foreground">{values.description.length} / 1,000</p></Field></div>
               </div>
               <StepButtons onBack={() => setStep(1)} onNext={() => { if (validateStep()) setStep(3); }} />
@@ -359,6 +373,7 @@ function BrandApplicationPage() {
                 <ReviewRow label="Your account" value={`${values.contactName} · ${values.email}`} onEdit={() => setStep(1)} />
                 <ReviewRow label="Brand" value={values.brandName || "Not added yet"} onEdit={() => setStep(2)} />
                 <ReviewRow label="Category" value={values.category || "Not selected"} onEdit={() => setStep(2)} />
+                <ReviewRow label="Style spaces" value={values.audience.map((item) => item === "her" ? "Her" : "Him").join(" · ")} onEdit={() => setStep(2)} />
                 <ReviewRow label="Website" value={values.website || "Not added yet"} onEdit={() => setStep(3)} />
                 <div className="flex items-center justify-between gap-4 py-4"><div className="min-w-0"><p className="text-xs text-muted-foreground">Brand identity</p><p className="mt-1 text-sm">{uploads.logo ? "Logo added" : "Logo missing"} · {uploads.cover ? "Cover added" : "Cover missing"}{uploads.proof ? " · Proof added" : ""}</p></div><Button variant="ghost" size="sm" onClick={() => setStep(3)}>Edit</Button></div>
               </div>
