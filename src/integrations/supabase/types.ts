@@ -81,6 +81,7 @@ export type Database = {
         Row: {
           audience: string[]
           brand_application_id: string
+          brand_approved: boolean
           category: string
           colors: string[]
           created_at: string
@@ -101,6 +102,7 @@ export type Database = {
         Insert: {
           audience: string[]
           brand_application_id: string
+          brand_approved?: boolean
           category: string
           colors?: string[]
           created_at?: string
@@ -121,6 +123,7 @@ export type Database = {
         Update: {
           audience?: string[]
           brand_application_id?: string
+          brand_approved?: boolean
           category?: string
           colors?: string[]
           created_at?: string
