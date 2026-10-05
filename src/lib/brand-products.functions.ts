@@ -1,6 +1,8 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@/integrations/supabase/types";
 
 const audienceValues = ["her", "him"] as const;
 const productSchema = z.object({
@@ -17,6 +19,19 @@ const productSchema = z.object({
 });
 
 const importSchema = z.object({ website: z.string().url().max(2048) });
+const importedProductsSchema = z.object({
+  audience: z.array(z.enum(audienceValues)).min(1),
+  products: z.array(z.object({
+    name: z.string().trim().min(2).max(160),
+    description: z.string().trim().min(10).max(2000),
+    category: z.string().trim().min(1).max(80),
+    price: z.number().positive().max(100000000),
+    productUrl: z.string().url().max(2048),
+    imageUrl: z.string().url().max(2048),
+    sizes: z.array(z.string().trim().min(1).max(40)).max(30),
+    colors: z.array(z.string().trim().min(1).max(60)).max(30),
+  })).min(1).max(25),
+});
 const shopifyFeedSchema = z.object({
   products: z.array(z.object({
     id: z.union([z.string(), z.number()]),
@@ -37,7 +52,7 @@ const shopifyFeedSchema = z.object({
 
 type ShopifyProduct = z.infer<typeof shopifyFeedSchema>["products"][number];
 
-async function getApprovedApplication(context: { supabase: any; userId: string }) {
+async function getApprovedApplication(context: { supabase: SupabaseClient<Database>; userId: string }) {
   const { data, error } = await context.supabase
     .from("brand_applications")
     .select("id, brand_name, status, audience, commission_rate, website_url")
@@ -135,7 +150,14 @@ export const getBrandWorkspace = createServerFn({ method: "GET" })
       ? await context.supabase.from("brand_products").select("id, product_name, description, category, price, product_url, image_path, sizes, colors, tags, audience, source, status, created_at").eq("user_id", context.userId).order("created_at", { ascending: false })
       : { data: [], error: null };
     if (productError) throw new Error("Your product list couldn't be loaded.");
-    return { application, products: products ?? [] };
+    const productRows = products ?? [];
+    const paths = productRows.map((product) => product.image_path).filter((path): path is string => Boolean(path && !path.startsWith("https://")));
+    const { data: signedFiles, error: signedError } = paths.length
+      ? await context.supabase.storage.from("brand-product-images").createSignedUrls(paths, 3600)
+      : { data: [], error: null };
+    if (signedError) throw new Error("Product images couldn't be loaded.");
+    const imageUrls = new Map((signedFiles ?? []).map((file) => [file.path, file.signedUrl]));
+    return { application, products: productRows.map((product) => ({ ...product, imageUrl: product.image_path?.startsWith("https://") ? product.image_path : imageUrls.get(product.image_path ?? "") ?? null })) };
   });
 
 export const importShopifyCatalog = createServerFn({ method: "POST" })
@@ -205,6 +227,70 @@ export const createBrandProduct = createServerFn({ method: "POST" })
     }).select("id, product_name, status").single();
     if (error || !product) throw new Error("This product couldn't be saved. Please check the details and try again.");
     return product;
+  });
+
+export const saveImportedShopifyProducts = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => importedProductsSchema.parse(input))
+  .handler(async ({ context, data }) => {
+    const application = await getApprovedApplication(context);
+    const registered = normalizedHost(application.website_url);
+    if (data.audience.some((audience) => !application.audience.includes(audience))) throw new Error("Choose only the audience saved on your brand application.");
+    const productOrigin = new URL(data.products[0]?.productUrl ?? "").origin;
+    if (normalizedHost(productOrigin).host !== registered.host) throw new Error("The catalog products don't match your registered store.");
+
+    const { data: currentRows, error: listError } = await context.supabase
+      .from("brand_products").select("product_url").eq("user_id", context.userId).eq("source", "shopify");
+    if (listError) throw new Error("Your existing catalog couldn't be checked.");
+    const existingUrls = new Set((currentRows ?? []).map((row: { product_url: string | null }) => row.product_url));
+    const inserted: Array<{ id: string; product_name: string; status: string }> = [];
+
+    for (const product of data.products) {
+      const productUrl = new URL(product.productUrl);
+      if (productUrl.origin !== registered.origin || existingUrls.has(productUrl.toString())) continue;
+      const imageUrl = new URL(product.imageUrl);
+      const imageHost = imageUrl.hostname.toLowerCase();
+      if (imageUrl.protocol !== "https:" || !(imageHost === "cdn.shopify.com" || imageHost.endsWith(".myshopify.com") || imageHost.endsWith(".shopifycdn.net"))) continue;
+
+      let imageResponse: Response;
+      try { imageResponse = await fetch(imageUrl, { redirect: "manual", signal: AbortSignal.timeout(8000) }); }
+      catch { continue; }
+      const contentType = (imageResponse.headers.get("content-type") ?? "").split(";")[0]?.toLowerCase();
+      if (!imageResponse.ok || imageResponse.status >= 300 || !["image/jpeg", "image/png", "image/webp"].includes(contentType ?? "")) continue;
+      const declaredSize = Number(imageResponse.headers.get("content-length") ?? 0);
+      if (declaredSize > 20 * 1024 * 1024) continue;
+      const imageBytes = new Uint8Array(await imageResponse.arrayBuffer());
+      if (!imageBytes.byteLength || imageBytes.byteLength > 20 * 1024 * 1024) continue;
+
+      const extension = contentType === "image/png" ? "png" : contentType === "image/webp" ? "webp" : "jpg";
+      const imagePath = `${context.userId}/${crypto.randomUUID()}-catalog.${extension}`;
+      const { error: uploadError } = await context.supabase.storage.from("brand-product-images").upload(imagePath, imageBytes, { contentType, upsert: false, cacheControl: "3600" });
+      if (uploadError) continue;
+
+      const { data: saved, error } = await context.supabase.from("brand_products").insert({
+        brand_application_id: application.id,
+        user_id: context.userId,
+        product_name: product.name,
+        description: product.description,
+        category: product.category,
+        price: product.price,
+        product_url: productUrl.toString(),
+        image_path: imagePath,
+        sizes: product.sizes,
+        colors: product.colors,
+        tags: [],
+        audience: data.audience,
+        source: "shopify",
+        status: "draft",
+      }).select("id, product_name, status").single();
+      if (error || !saved) {
+        await context.supabase.storage.from("brand-product-images").remove([imagePath]);
+        continue;
+      }
+      inserted.push(saved);
+      existingUrls.add(productUrl.toString());
+    }
+    return { imported: inserted.length, products: inserted };
   });
 
 export const updateBrandProductStatus = createServerFn({ method: "POST" })
