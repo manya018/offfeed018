@@ -1,6 +1,8 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@/integrations/supabase/types";
 
 const audienceValues = ["her", "him"] as const;
 const productSchema = z.object({
@@ -50,7 +52,7 @@ const shopifyFeedSchema = z.object({
 
 type ShopifyProduct = z.infer<typeof shopifyFeedSchema>["products"][number];
 
-async function getApprovedApplication(context: { supabase: any; userId: string }) {
+async function getApprovedApplication(context: { supabase: SupabaseClient<Database>; userId: string }) {
   const { data, error } = await context.supabase
     .from("brand_applications")
     .select("id, brand_name, status, audience, commission_rate, website_url")
@@ -148,7 +150,14 @@ export const getBrandWorkspace = createServerFn({ method: "GET" })
       ? await context.supabase.from("brand_products").select("id, product_name, description, category, price, product_url, image_path, sizes, colors, tags, audience, source, status, created_at").eq("user_id", context.userId).order("created_at", { ascending: false })
       : { data: [], error: null };
     if (productError) throw new Error("Your product list couldn't be loaded.");
-    return { application, products: products ?? [] };
+    const productRows = products ?? [];
+    const paths = productRows.map((product) => product.image_path).filter((path): path is string => Boolean(path && !path.startsWith("https://")));
+    const { data: signedFiles, error: signedError } = paths.length
+      ? await context.supabase.storage.from("brand-product-images").createSignedUrls(paths, 3600)
+      : { data: [], error: null };
+    if (signedError) throw new Error("Product images couldn't be loaded.");
+    const imageUrls = new Map((signedFiles ?? []).map((file) => [file.path, file.signedUrl]));
+    return { application, products: productRows.map((product) => ({ ...product, imageUrl: product.image_path?.startsWith("https://") ? product.image_path : imageUrls.get(product.image_path ?? "") ?? null })) };
   });
 
 export const importShopifyCatalog = createServerFn({ method: "POST" })
