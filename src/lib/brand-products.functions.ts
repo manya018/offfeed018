@@ -191,10 +191,13 @@ export const importShopifyCatalog = createServerFn({ method: "POST" })
       try { parsed = shopifyFeedSchema.safeParse(await readLimitedJson(response)); }
       catch { throw new Error("The store's product feed couldn't be read. Use manual listing instead."); }
       if (!parsed.success) throw new Error("The store returned an unsupported product feed. Use manual listing instead.");
-      for (const item of parsed.data.products) collected.set(String(item.id), mapShopifyProduct(item, requested.origin));
+      for (const item of parsed.data.products) {
+        const normalizedProduct = mapShopifyProduct(item, requested.origin);
+        if (normalizedProduct) collected.set(String(item.id), normalizedProduct);
+      }
       if (parsed.data.products.length < 100) break;
     }
-    const products = [...collected.values()].filter((product): product is NonNullable<typeof product> => product !== null);
+    const products = [...collected.values()];
     return { products, truncated: products.length >= 1000 };
   });
 
@@ -256,7 +259,7 @@ export const saveImportedShopifyProducts = createServerFn({ method: "POST" })
       try { imageResponse = await fetch(imageUrl, { redirect: "manual", signal: AbortSignal.timeout(8000) }); }
       catch { continue; }
       const contentType = (imageResponse.headers.get("content-type") ?? "").split(";")[0]?.toLowerCase();
-      if (!imageResponse.ok || imageResponse.status >= 300 || !["image/jpeg", "image/png", "image/webp"].includes(contentType ?? "")) continue;
+      if (!imageResponse.ok || imageResponse.status >= 300 || !contentType || !["image/jpeg", "image/png", "image/webp"].includes(contentType)) continue;
       const declaredSize = Number(imageResponse.headers.get("content-length") ?? 0);
       if (declaredSize > 20 * 1024 * 1024) continue;
       const imageBytes = new Uint8Array(await imageResponse.arrayBuffer());
