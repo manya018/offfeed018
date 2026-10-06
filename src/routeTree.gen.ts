@@ -17,6 +17,7 @@ import { Route as CreateRouteImport } from './routes/create'
 import { Route as DiscoverRouteImport } from './routes/discover'
 import { Route as ExploreRouteImport } from './routes/explore'
 import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as BrandBrandHandleRouteImport } from './routes/brand.$brandHandle'
 import { Route as ForBrandsApplyRouteImport } from './routes/for-brands.apply'
 import { Route as LookLookIdRouteImport } from './routes/look.$lookId'
 import { Route as AuthenticatedBrandDashboardRouteImport } from './routes/_authenticated/brand/dashboard'
@@ -60,6 +61,11 @@ const ProfileRoute = ProfileRouteImport.update({
   path: '/profile',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BrandBrandHandleRoute = BrandBrandHandleRouteImport.update({
+  id: '/brand/$brandHandle',
+  path: '/brand/$brandHandle',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ForBrandsApplyRoute = ForBrandsApplyRouteImport.update({
   id: '/for-brands/apply',
   path: '/for-brands/apply',
@@ -85,6 +91,7 @@ export interface FileRoutesByFullPath {
   '/discover': typeof DiscoverRoute
   '/explore': typeof ExploreRoute
   '/profile': typeof ProfileRoute
+  '/brand/$brandHandle': typeof BrandBrandHandleRoute
   '/for-brands/apply': typeof ForBrandsApplyRoute
   '/look/$lookId': typeof LookLookIdRoute
   '/brand/dashboard': typeof AuthenticatedBrandDashboardRoute
@@ -97,6 +104,7 @@ export interface FileRoutesByTo {
   '/discover': typeof DiscoverRoute
   '/explore': typeof ExploreRoute
   '/profile': typeof ProfileRoute
+  '/brand/$brandHandle': typeof BrandBrandHandleRoute
   '/for-brands/apply': typeof ForBrandsApplyRoute
   '/look/$lookId': typeof LookLookIdRoute
   '/brand/dashboard': typeof AuthenticatedBrandDashboardRoute
@@ -111,6 +119,7 @@ export interface FileRoutesById {
   '/discover': typeof DiscoverRoute
   '/explore': typeof ExploreRoute
   '/profile': typeof ProfileRoute
+  '/brand/$brandHandle': typeof BrandBrandHandleRoute
   '/for-brands/apply': typeof ForBrandsApplyRoute
   '/look/$lookId': typeof LookLookIdRoute
   '/_authenticated/brand/dashboard': typeof AuthenticatedBrandDashboardRoute
@@ -125,6 +134,7 @@ export interface FileRouteTypes {
     | '/discover'
     | '/explore'
     | '/profile'
+    | '/brand/$brandHandle'
     | '/for-brands/apply'
     | '/look/$lookId'
     | '/brand/dashboard'
@@ -137,6 +147,7 @@ export interface FileRouteTypes {
     | '/discover'
     | '/explore'
     | '/profile'
+    | '/brand/$brandHandle'
     | '/for-brands/apply'
     | '/look/$lookId'
     | '/brand/dashboard'
@@ -150,6 +161,7 @@ export interface FileRouteTypes {
     | '/discover'
     | '/explore'
     | '/profile'
+    | '/brand/$brandHandle'
     | '/for-brands/apply'
     | '/look/$lookId'
     | '/_authenticated/brand/dashboard'
@@ -164,6 +176,7 @@ export interface RootRouteChildren {
   DiscoverRoute: typeof DiscoverRoute
   ExploreRoute: typeof ExploreRoute
   ProfileRoute: typeof ProfileRoute
+  BrandBrandHandleRoute: typeof BrandBrandHandleRoute
   ForBrandsApplyRoute: typeof ForBrandsApplyRoute
   LookLookIdRoute: typeof LookLookIdRoute
 }
@@ -226,6 +239,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProfileRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/brand/$brandHandle': {
+      id: '/brand/$brandHandle'
+      path: '/brand/$brandHandle'
+      fullPath: '/brand/$brandHandle'
+      preLoaderRoute: typeof BrandBrandHandleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/for-brands/apply': {
       id: '/for-brands/apply'
       path: '/for-brands/apply'
@@ -270,6 +290,7 @@ const rootRouteChildren: RootRouteChildren = {
   DiscoverRoute: DiscoverRoute,
   ExploreRoute: ExploreRoute,
   ProfileRoute: ProfileRoute,
+  BrandBrandHandleRoute: BrandBrandHandleRoute,
   ForBrandsApplyRoute: ForBrandsApplyRoute,
   LookLookIdRoute: LookLookIdRoute,
 }
