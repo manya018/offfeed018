@@ -189,7 +189,7 @@ function BrandDashboard() {
     <div className="mx-auto max-w-6xl">
       <div className="flex flex-wrap items-end justify-between gap-5 border-b border-border/70 pb-7">
         <div><p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">OFFFEED · BRAND STUDIO</p><h1 className="mt-3 font-display text-5xl">{application.brand_name}</h1><p className="mt-2 text-sm text-muted-foreground">A considered space for your products to find their people.</p><div className="mt-4 flex flex-wrap gap-2">{supportedAudience.map((item) => <Badge key={item} variant="secondary">{item === "her" ? "Her space" : "Him space"}</Badge>)}</div></div>
-        <div className="flex flex-wrap gap-2"><Button variant="outline" onClick={() => { setDraft({ ...blankProduct, audience: supportedAudience.length ? supportedAudience : ["her"] }); setMode("manual"); }}><Plus/>Add product</Button><Button onClick={() => { setMode("import"); setImported([]); setError(""); }}><ArrowDownToLine/>Import from Shopify</Button></div>
+        <div className="flex flex-wrap gap-2">{application.public_handle && <Button variant="ghost" asChild><Link to="/brand/$brandHandle" params={{ brandHandle: application.public_handle }}><ExternalLink/>Preview storefront</Link></Button>}<Button variant="outline" onClick={() => { setDraft({ ...blankProduct, audience: supportedAudience.length ? supportedAudience : ["her"] }); setMode("manual"); }}><Plus/>Add product</Button><Button onClick={() => { setMode("import"); setImported([]); setError(""); }}><ArrowDownToLine/>Import from Shopify</Button></div>
       </div>
 
       <div className="grid gap-5 border-b border-border/70 py-6 sm:grid-cols-3">
