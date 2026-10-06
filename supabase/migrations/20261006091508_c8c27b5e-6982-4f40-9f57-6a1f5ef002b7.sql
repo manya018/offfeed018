@@ -1,0 +1,1 @@
+CREATE POLICY "Public can view approved brand storefront images" ON storage.objects FOR SELECT TO anon USING (bucket_id = 'brand-applications' AND EXISTS (SELECT 1 FROM public.brand_applications a WHERE a.status = 'approved' AND (a.logo_path = name OR a.cover_path = name)));

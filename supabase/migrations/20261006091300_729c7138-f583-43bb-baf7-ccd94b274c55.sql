@@ -1,0 +1,2 @@
+DROP POLICY "Public can view approved brand profiles" ON public.brand_applications;
+CREATE POLICY "Public can view approved brand profiles" ON public.brand_applications FOR SELECT TO anon, authenticated USING (status = 'approved' AND public_handle IS NOT NULL);

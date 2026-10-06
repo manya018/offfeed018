@@ -29,6 +29,7 @@ export type Database = {
           id: string
           logo_path: string
           proof_path: string | null
+          public_handle: string | null
           social_handle: string | null
           status: string
           updated_at: string
@@ -49,6 +50,7 @@ export type Database = {
           id?: string
           logo_path: string
           proof_path?: string | null
+          public_handle?: string | null
           social_handle?: string | null
           status?: string
           updated_at?: string
@@ -69,6 +71,7 @@ export type Database = {
           id?: string
           logo_path?: string
           proof_path?: string | null
+          public_handle?: string | null
           social_handle?: string | null
           status?: string
           updated_at?: string
