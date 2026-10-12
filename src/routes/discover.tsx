@@ -55,6 +55,7 @@ function DiscoverPage() {
 
   if (category === "jewellery" || category === "accessories") {
     const jewellery = category === "jewellery";
+    const calmHerJewellery = jewellery && !isHim;
     const referenceImages = jewellery
       ? isHim
         ? [
@@ -86,22 +87,26 @@ function DiscoverPage() {
             { src: "https://images.unsplash.com/photo-1473496169904-658ba7c44d8a?auto=format&fit=crop&w=1000&q=85", title: "A little sun", note: "Sleek sunglasses and an easy, polished finish" },
           ]
     return <main className="mx-auto min-h-[70vh] max-w-[1440px] px-5 pb-24 pt-12 lg:px-10 lg:pt-16">
-      <section className="mx-auto max-w-3xl text-center">
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">Independent brands · OFFFEED</p>
-        <h1 className="mt-4 font-display text-5xl font-medium sm:text-7xl">{jewellery ? "Jewellery" : "Accessories"} <em className="font-normal text-primary">edit.</em></h1>
-        <p className="mx-auto mt-5 max-w-xl leading-7 text-muted-foreground">{jewellery ? "Discover independent jewellery labels, delicate everyday pieces and statement finds." : "Find bags, sunglasses, belts and finishing touches from independent brands."}</p>
+      <section className={calmHerJewellery ? "mx-auto max-w-3xl pb-2 pt-2 text-center" : "mx-auto max-w-3xl text-center"}>
+        {!calmHerJewellery && <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">Independent brands · OFFFEED</p>}
+        <h1 className={calmHerJewellery ? "mt-2 font-display text-5xl font-medium tracking-[-0.045em] text-stone-800 sm:text-7xl" : "mt-4 font-display text-5xl font-medium sm:text-7xl"}>{calmHerJewellery ? <><em className="font-normal text-[#c58d98]">Her</em> Jewellery</> : <>{jewellery ? "Jewellery" : "Accessories"} <em className="font-normal text-primary">edit.</em></>}</h1>
+        <p className={calmHerJewellery ? "mx-auto mt-4 max-w-lg text-[15px] leading-7 text-stone-500" : "mx-auto mt-5 max-w-xl leading-7 text-muted-foreground"}>{calmHerJewellery ? "Delicate details, everyday pieces and little treasures from independent brands." : jewellery ? "Discover independent jewellery labels, delicate everyday pieces and statement finds." : "Find bags, sunglasses, belts and finishing touches from independent brands."}</p>
       </section>
-      <section className="mt-12">
-        <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
+      <section className={calmHerJewellery ? "mt-10 sm:mt-14" : "mt-12"}>
+        {!calmHerJewellery && <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
           <div><p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">A tiny jewellery daydream · {isHim ? "Him" : "Her"}</p><h2 className="mt-2 font-display text-3xl sm:text-4xl">{isHim ? "The details make the mood." : <>Little treasures, <em className="font-normal text-primary">softly found.</em></>}</h2></div>
           <p className="max-w-sm text-sm leading-6 text-muted-foreground">{isHim ? "Considered details, collected inspiration." : "Pearls, warm gold, shell dishes and the kind of pieces you save just because they make you feel something."}</p>
-        </div>
-        <div className="columns-1 gap-5 sm:columns-2 lg:columns-3">
+        </div>}
+        {calmHerJewellery ? <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4 lg:gap-6">
+          {referenceImages.map((item, index) => <figure key={item.title} className="overflow-hidden rounded-[1rem] bg-[#f5f0eb]">
+            <img src={item.src} alt={item.title} loading="lazy" className={`block w-full object-cover ${index % 5 === 1 ? "aspect-[4/5]" : index % 5 === 3 ? "aspect-[3/4]" : "aspect-[4/5]"}`} />
+          </figure>)}
+        </div> : <div className="columns-1 gap-5 sm:columns-2 lg:columns-3">
           {referenceImages.map((item, index) => <article key={item.title} className="group mb-5 break-inside-avoid overflow-hidden rounded-[1.35rem] border border-border/50 bg-card/80 shadow-soft">
             <div className="relative overflow-hidden bg-secondary/30"><img src={item.src} alt={item.title} loading="lazy" className={`w-full object-cover transition-transform duration-700 group-hover:scale-[1.035] ${index % 4 === 1 ? "aspect-[4/5]" : index % 4 === 2 ? "aspect-[3/4]" : index % 4 === 3 ? "aspect-[5/6]" : "aspect-[4/5]"}`} /><span className="absolute bottom-3 left-3 rounded-full border border-white/40 bg-white/80 px-3 py-1.5 text-[10px] font-medium tracking-[0.08em] text-stone-700 shadow-sm backdrop-blur-md">♡ saved for the mood</span></div>
             <div className="px-4 pb-4 pt-3"><h3 className="font-display text-xl">{item.title}</h3><p className="mt-1 text-sm leading-6 text-muted-foreground">{item.note}</p></div>
           </article>)}
-        </div>
+        </div>}
       </section>
       <section className="mt-16">
         <div className="mb-6"><p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Shop independent labels</p><h2 className="mt-2 font-display text-3xl sm:text-4xl">Pieces to make it yours.</h2></div>
