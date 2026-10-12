@@ -63,6 +63,7 @@ function DiscoverPage() {
             { src: "https://najo.com.au/cdn/shop/files/Pearl-Blog-17.png?v=1695853341&width=1080", title: "Sculptural silver", note: "Cool-toned metal, clean lines, no excess" },
             { src: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=1000&q=85", title: "The daily watch", note: "Understated hardware against warm neutrals" },
             { src: "https://www.poshtottydesigns.com/cdn/shop/files/9ctLargePearlHoops.jpg?v=1723033585", title: "Quiet statement", note: "A few considered details, styled with restraint" },
+            { src: "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?auto=format&fit=crop&w=1000&q=85", title: "The understated edit", note: "A clean, everyday jewellery detail in soft light" },
           ]
         : [
             { src: "https://www.linjer.co/cdn/shop/files/keira-43-maeve-pearl-hoop-earrings-gv-lookbook-94copy-min_4480x.jpg?v=1747718107", title: "A little treasure from the sea", note: "Golden hoops tucked into a pearly shell" },
