@@ -1,12 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Search, Sparkles } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { PublicProductCard } from "@/components/public-product-card";
+import { getShopTheLookProducts, type ProductWithBrand } from "@/lib/public-brand.functions";
 import { Button } from "@/components/ui/button";
 import { LookCard } from "@/components/look-card";
 import { himLooks, himMoodImages, himMoods, looks, moodImages, moods } from "@/lib/offfeed-data";
 import { useStyleSpace } from "@/lib/style-space";
 
 export const Route = createFileRoute("/discover")({
+  validateSearch: (search: Record<string, unknown>) => ({ category: typeof search.category === "string" ? search.category : undefined }),
   head: () => ({ meta: [
     { title: "Discover your next obsession — OFFFEED" },
     { name: "description", content: "Search fashion styles, moods, occasions and unique outfits curated beyond the algorithm." },
@@ -19,6 +22,7 @@ export const Route = createFileRoute("/discover")({
 const filters = ["All", "Trending", "For You", "New", "Aesthetic", "Occasion", "Season", "Color", "Style", "Price"];
 
 function DiscoverPage() {
+  const { category } = Route.useSearch();
   const { space } = useStyleSpace();
   const isHim = space === "him";
   const collection = isHim ? himLooks : looks;
@@ -27,13 +31,39 @@ function DiscoverPage() {
   const [filter, setFilter] = useState("All");
   const [query, setQuery] = useState("");
   const [visible, setVisible] = useState(6);
+  const [categoryProducts, setCategoryProducts] = useState<ProductWithBrand[]>([]);
+  const [categoryLoading, setCategoryLoading] = useState(false);
+  const [categoryError, setCategoryError] = useState(false);
   useEffect(() => { setFilter("All"); setQuery(""); setVisible(6); }, [space]);
+  useEffect(() => {
+    if (category !== "jewellery" && category !== "accessories") return;
+    let active = true;
+    setCategoryLoading(true);
+    setCategoryError(false);
+    getShopTheLookProducts({ data: { audience: space, aesthetic: category, categoryOnly: true } })
+      .then((products) => { if (active) setCategoryProducts(products); })
+      .catch(() => { if (active) { setCategoryProducts([]); setCategoryError(true); } })
+      .finally(() => { if (active) setCategoryLoading(false); });
+    return () => { active = false; };
+  }, [category, space]);
   const filtered = useMemo(() => collection.filter((look) => {
     const searchMatch = `${look.title} ${look.aesthetic} ${look.occasion} ${look.season}`.toLowerCase().includes(query.toLowerCase());
     if (!searchMatch) return false;
     if (["All", "Trending", "For You", "New", "Color", "Style", "Price"].includes(filter)) return true;
     return `${look.aesthetic} ${look.occasion} ${look.season}`.toLowerCase().includes(filter.toLowerCase());
   }), [collection, filter, query]);
+
+  if (category === "jewellery" || category === "accessories") {
+    const jewellery = category === "jewellery";
+    return <main className="mx-auto min-h-[70vh] max-w-[1440px] px-5 pb-24 pt-12 lg:px-10 lg:pt-16">
+      <section className="mx-auto max-w-3xl text-center">
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">Independent brands · OFFFEED</p>
+        <h1 className="mt-4 font-display text-5xl font-medium sm:text-7xl">{jewellery ? "Jewellery" : "Accessories"} <em className="font-normal text-primary">edit.</em></h1>
+        <p className="mx-auto mt-5 max-w-xl leading-7 text-muted-foreground">{jewellery ? "Discover independent jewellery labels, delicate everyday pieces and statement finds." : "Find bags, sunglasses, belts and finishing touches from independent brands."}</p>
+      </section>
+      {categoryLoading ? <p className="py-20 text-center text-muted-foreground">Finding pieces for your edit…</p> : categoryError ? <p className="py-20 text-center text-muted-foreground">We couldn’t load this edit right now. Please try again.</p> : categoryProducts.length ? <section className="mt-12 grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 sm:gap-x-6 lg:grid-cols-4">{categoryProducts.map((product) => <PublicProductCard key={product.id} product={product} />)}</section> : <section className="mx-auto mt-12 max-w-2xl border-y border-dashed border-border/70 py-16 text-center"><h2 className="font-display text-3xl">Good things are on their way.</h2><p className="mt-3 leading-7 text-muted-foreground">There aren’t any approved, published {jewellery ? "jewellery" : "accessory"} products in this edit yet. As brands publish matching products, they’ll appear here.</p></section>}
+    </main>;
+  }
 
   return <main className="pb-24">
     <section className="mx-auto max-w-[1440px] px-5 pb-12 pt-16 text-center lg:px-10 lg:pt-24">
