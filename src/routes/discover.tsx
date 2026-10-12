@@ -85,15 +85,15 @@ function DiscoverPage() {
             { src: "https://images.unsplash.com/photo-1508296695146-257a814070b4?auto=format&fit=crop&w=1000&q=85", title: "Off-duty uniform", note: "Minimal essentials in black, stone and espresso" },
           ]
         : [
-            { src: "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&w=1000&q=85", title: "The everyday bag", note: "Soft structure, warm neutrals and understated gold hardware" },
-            { src: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=1000&q=85", title: "Espresso, always", note: "A rich brown shoulder bag for a quietly polished look" },
-            { src: "https://images.unsplash.com/photo-1590874103328-eac38a683ce7?auto=format&fit=crop&w=1000&q=85", title: "A little vintage", note: "Timeless silhouettes in cream, tan and chocolate" },
-            { src: "https://images.unsplash.com/photo-1473496169904-658ba7c44d8a?auto=format&fit=crop&w=1000&q=85", title: "Golden-hour shades", note: "Sculpted frames in warm tortoiseshell tones" },
-            { src: "https://images.unsplash.com/photo-1511499767150-a48a237f0083?auto=format&fit=crop&w=1000&q=85", title: "The classic pair", note: "Clean, effortless sunglasses with a soft-luxe feel" },
-            { src: "https://images.unsplash.com/photo-1572635196237-14b3f281503f?auto=format&fit=crop&w=1000&q=85", title: "Off-duty elegance", note: "Minimal frames that finish the simplest outfit" },
-            { src: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=1000&q=85", title: "The daily watch", note: "A simple timepiece with a polished, timeless face" },
-            { src: "https://images.unsplash.com/photo-1524592094714-0f0654e20314?auto=format&fit=crop&w=1000&q=85", title: "Gold on gold", note: "A delicate gold-tone watch for everyday wear" },
-            { src: "https://images.unsplash.com/photo-1508685096489-7aacd43bd3b1?auto=format&fit=crop&w=1000&q=85", title: "A timeless detail", note: "A refined watch that feels just as lovely dressed up" },
+            { src: "https://i.etsystatic.com/54390317/r/il/0b503d/6587497406/il_794xN.6587497406_s7tx.jpg", title: "Cherry, softly", note: "A deep burgundy handbag with polished gold hardware" },
+            { src: "https://cdn.shopify.com/s/files/1/0264/0793/files/Pandora-Bag-B1_1280x.progressive.jpg?v=1519732356", title: "The little burgundy bag", note: "A sculptural top handle against a soft blush backdrop" },
+            { src: "https://onocan.com/cdn/shop/files/dianaminiburgundy_00001_1_1024x1024.webp?v=1775549576", title: "A timeless favourite", note: "Rich wine leather and delicate gold accents" },
+            { src: "https://lenskandy.com/cdn/shop/files/Bold_Brown_Designer_Square_Sunglasses_For_Women_LKS9131-BRN-4.webp?v=1776932368&width=3840", title: "Tortoiseshell mornings", note: "Warm brown frames styled with soft pink and tiny florals" },
+            { src: "https://ellosunglasses.com/cdn/shop/articles/editorial-flatlay-sunglasses-thin-face-female-fashion_c1f2e297-eeb9-405e-926d-c733d3b5e685.jpg?v=1760982934", title: "The golden-hour edit", note: "Brown sunglasses, delicate gold jewellery and a little lipstick" },
+            { src: "https://lushboutique.ie/cdn/shop/files/IMG-3004.png?v=1771606401&width=533", title: "A little shine", note: "Slim espresso frames with feminine gold chain details" },
+            { src: "https://watchwithsun.com/?n=Tx7OP7hYF5o2x3l4Gm1vQ&seraph_accel_gi=wp-content%2Fuploads%2F2024%2F01%2Fwomens-watch120-3.jpg", title: "Golden hour, always", note: "A dainty gold watch on soft champagne fabric" },
+            { src: "https://blingbaebysuhanabasheer.com/cdn/shop/files/18D19D32-809B-4B23-A450-25DD0F448D0E.jpg?v=1764788418&width=1946", title: "A little heirloom", note: "A sculptural gold bracelet watch against silky beige" },
+            { src: "https://caitlynminimalist.com/cdn/shop/files/ANTIQUELOW-5316.jpg?v=1778434769&width=1024", title: "Collected treasures", note: "A vintage-inspired gold timepiece beside an iridescent shell" },
           ]
     return <main className="mx-auto min-h-[70vh] max-w-[1440px] px-5 pb-24 pt-12 lg:px-10 lg:pt-16">
       <section className={(calmHerJewellery || calmHerAccessories) ? "mx-auto max-w-3xl pb-2 pt-2 text-center" : "mx-auto max-w-3xl text-center"}>
