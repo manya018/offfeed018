@@ -25,8 +25,8 @@ export function SiteHeader() {
         </div>
         <nav className="hidden items-center gap-8 lg:flex">
           {links.map((link) => <Link key={link.label} to={link.to} className="text-sm text-muted-foreground transition-colors hover:text-foreground" activeProps={{ className: "text-foreground" }}>{link.label}</Link>)}
-          <Link to="/" hash="jewellery" className="text-sm text-muted-foreground transition-colors hover:text-foreground">Jewellery</Link>
-          <Link to="/" hash="accessories" className="text-sm text-muted-foreground transition-colors hover:text-foreground">Accessories</Link>
+          <Link to="/discover" search={{ category: "jewellery" }} className="text-sm text-muted-foreground transition-colors hover:text-foreground">Jewellery</Link>
+          <Link to="/discover" search={{ category: "accessories" }} className="text-sm text-muted-foreground transition-colors hover:text-foreground">Accessories</Link>
         </nav>
         <div className="flex items-center gap-1.5">
           <Button variant="ghost" size="icon" aria-label="Search" className="hidden sm:inline-flex" asChild><Link to="/discover"><Search /></Link></Button>
