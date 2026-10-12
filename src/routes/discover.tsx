@@ -73,6 +73,7 @@ function DiscoverPage() {
             { src: "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?auto=format&fit=crop&w=1000&q=85", title: "Collected on the coast", note: "Natural shells, tiny treasures, slow summer days" },
             { src: "https://images.pexels.com/photos/29371789/pexels-photo-29371789.jpeg?auto=compress&cs=tinysrgb&w=1000", title: "A bow in the story", note: "Delicate gold and pearl charms on silky fabric" },
             { src: "https://images.pexels.com/photos/36229139/pexels-photo-36229139.jpeg?auto=compress&cs=tinysrgb&w=1000", title: "Little things to keep", note: "Romantic vintage details, like a jewellery box" },
+            { src: "https://images.unsplash.com/photo-1617038220319-276d3cfab638?auto=format&fit=crop&w=1000&q=85&sat=-8", title: "Softly treasured", note: "Delicate jewellery arranged in a calm, feminine flat lay" },
             { src: "https://images.unsplash.com/photo-1611652022419-a9419f74343d?auto=format&fit=crop&w=1000&q=85&sat=-8", title: "Everyday heirloom", note: "Understated gold with a vintage feel" },
             { src: "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?auto=format&fit=crop&w=1000&q=85&sat=-8", title: "Quiet gold", note: "A single sculptural detail in soft light" },
             { src: "https://images.pexels.com/photos/6624862/pexels-photo-6624862.jpeg?auto=compress&cs=tinysrgb&w=1000", title: "Notes from a soft morning", note: "Fine chains, flowers and sunlit linen" },
@@ -83,17 +84,19 @@ function DiscoverPage() {
             { src: "https://images.unsplash.com/photo-1511499767150-a48a237f0083?auto=format&fit=crop&w=1000&q=85", title: "After-hours shades", note: "Sharp frames, muted tones, effortless edge" },
             { src: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=1000&q=85", title: "Everyday utility", note: "Functional shapes with a considered silhouette" },
             { src: "https://images.unsplash.com/photo-1508296695146-257a814070b4?auto=format&fit=crop&w=1000&q=85", title: "Off-duty uniform", note: "Minimal essentials in black, stone and espresso" },
+            { src: "https://images.unsplash.com/photo-1511499767150-a48a237f0083?auto=format&fit=crop&w=1000&q=85&sat=-8", title: "Clean lines", note: "A classic pair of shades in a muted editorial palette" },
           ]
         : [
             { src: "https://i.etsystatic.com/54390317/r/il/0b503d/6587497406/il_794xN.6587497406_s7tx.jpg", title: "Cherry, softly", note: "A deep burgundy handbag with polished gold hardware" },
             { src: "https://cdn.shopify.com/s/files/1/0264/0793/files/Pandora-Bag-B1_1280x.progressive.jpg?v=1519732356", title: "The little burgundy bag", note: "A sculptural top handle against a soft blush backdrop" },
-            { src: "https://onocan.com/cdn/shop/files/dianaminiburgundy_00001_1_1024x1024.webp?v=1775549576", title: "A timeless favourite", note: "Rich wine leather and delicate gold accents" },
+            { src: "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&w=1000&q=85", title: "A timeless favourite", note: "A polished handbag in warm, understated tones" },
             { src: "https://lenskandy.com/cdn/shop/files/Bold_Brown_Designer_Square_Sunglasses_For_Women_LKS9131-BRN-4.webp?v=1776932368&width=3840", title: "Tortoiseshell mornings", note: "Warm brown frames styled with soft pink and tiny florals" },
             { src: "https://ellosunglasses.com/cdn/shop/articles/editorial-flatlay-sunglasses-thin-face-female-fashion_c1f2e297-eeb9-405e-926d-c733d3b5e685.jpg?v=1760982934", title: "The golden-hour edit", note: "Brown sunglasses, delicate gold jewellery and a little lipstick" },
             { src: "https://lushboutique.ie/cdn/shop/files/IMG-3004.png?v=1771606401&width=533", title: "A little shine", note: "Slim espresso frames with feminine gold chain details" },
-            { src: "https://watchwithsun.com/?n=Tx7OP7hYF5o2x3l4Gm1vQ&seraph_accel_gi=wp-content%2Fuploads%2F2024%2F01%2Fwomens-watch120-3.jpg", title: "Golden hour, always", note: "A dainty gold watch on soft champagne fabric" },
+            { src: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=1000&q=85", title: "Golden hour, always", note: "A dainty watch styled in warm, minimal light" },
             { src: "https://blingbaebysuhanabasheer.com/cdn/shop/files/18D19D32-809B-4B23-A450-25DD0F448D0E.jpg?v=1764788418&width=1946", title: "A little heirloom", note: "A sculptural gold bracelet watch against silky beige" },
             { src: "https://caitlynminimalist.com/cdn/shop/files/ANTIQUELOW-5316.jpg?v=1778434769&width=1024", title: "Collected treasures", note: "A vintage-inspired gold timepiece beside an iridescent shell" },
+            { src: "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&w=1000&q=85", title: "The finishing touch", note: "A softly structured bag for a polished everyday edit" },
           ]
     return <main className="mx-auto min-h-[70vh] max-w-[1440px] px-5 pb-24 pt-12 lg:px-10 lg:pt-16">
       <section className={(calmHerJewellery || calmHerAccessories) ? "mx-auto max-w-3xl pb-2 pt-2 text-center" : "mx-auto max-w-3xl text-center"}>
