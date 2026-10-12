@@ -57,7 +57,7 @@ function Index() {
           <p className="mt-4 max-w-xl leading-7 text-muted-foreground">Meet the independent jewellery and accessory brands worth finding — the little details that make a look feel like you.</p>
         </div>
         <div className="grid gap-5 sm:grid-cols-2">
-          <Link id="jewellery" to="/discover" className="group relative min-h-[280px] overflow-hidden rounded-[1.5rem] bg-secondary p-7 shadow-soft transition-transform duration-300 hover:-translate-y-1 sm:min-h-[340px]">
+          <Link id="jewellery" to="/discover" search={{ category: "jewellery" }} className="group relative min-h-[280px] overflow-hidden rounded-[1.5rem] bg-secondary p-7 shadow-soft transition-transform duration-300 hover:-translate-y-1 sm:min-h-[340px]">
             <img src={coquette} alt="" loading="lazy" className="absolute inset-0 size-full object-cover transition-transform duration-700 group-hover:scale-105" />
             <div className="absolute inset-0 bg-gradient-to-t from-foreground/75 via-foreground/15 to-transparent" />
             <div className="absolute inset-x-0 bottom-0 p-6 text-primary-foreground sm:p-8">
@@ -67,7 +67,7 @@ function Index() {
               <span className="mt-5 inline-flex items-center gap-2 text-sm font-medium">Explore the edit <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" /></span>
             </div>
           </Link>
-          <Link id="accessories" to="/discover" className="group relative min-h-[280px] overflow-hidden rounded-[1.5rem] bg-secondary p-7 shadow-soft transition-transform duration-300 hover:-translate-y-1 sm:min-h-[340px]">
+          <Link id="accessories" to="/discover" search={{ category: "accessories" }} className="group relative min-h-[280px] overflow-hidden rounded-[1.5rem] bg-secondary p-7 shadow-soft transition-transform duration-300 hover:-translate-y-1 sm:min-h-[340px]">
             <img src={minimal} alt="" loading="lazy" className="absolute inset-0 size-full object-cover transition-transform duration-700 group-hover:scale-105" />
             <div className="absolute inset-0 bg-gradient-to-t from-foreground/75 via-foreground/15 to-transparent" />
             <div className="absolute inset-x-0 bottom-0 p-6 text-primary-foreground sm:p-8">
