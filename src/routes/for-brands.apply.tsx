@@ -14,6 +14,11 @@ const acceptedImageTypes = ["image/jpeg", "image/png", "image/webp"];
 const maxUploadBytes = 20 * 1024 * 1024;
 type UploadKind = "logo" | "cover" | "proof";
 type UploadItem = { file: File; preview?: string };
+const subcategories = {
+  her: ["Clothes", "Jewellery", "Bags", "Accessories", "Shoes", "Beauty"] as const,
+  him: ["Clothes", "Accessories", "Shoes", "Grooming"] as const,
+};
+type Audience = "her" | "him";
 type ApplicationValues = {
   contactName: string;
   email: string;
@@ -22,11 +27,12 @@ type ApplicationValues = {
   description: string;
   website: string;
   socialHandle: string;
-  audience: Array<"her" | "him">;
+  audience: Audience[];
+  audienceCategories: Record<Audience, string[]>;
 };
 
 const defaultValues: ApplicationValues = {
-  contactName: "", email: "", brandName: "", category: "", description: "", website: "https://", socialHandle: "", audience: ["her"],
+  contactName: "", email: "", brandName: "", category: "", description: "", website: "https://", socialHandle: "", audience: ["her"], audienceCategories: { her: [], him: [] },
 };
 
 const accountSchema = z.object({
@@ -41,13 +47,14 @@ const applicationFormSchema = z.object({
   brandName: z.string().trim().min(2, "Please enter your brand name.").max(120),
   category: z.string().min(1, "Choose a category."),
   audience: z.array(z.enum(["her", "him"])).min(1, "Choose at least one audience."),
+  audienceCategories: z.object({ her: z.array(z.string()).default([]), him: z.array(z.string()).default([]) }).superRefine((categories, ctx) => { for (const audience of ["her", "him"] as const) { if (categories[audience].some((item) => !(subcategories[audience] as readonly string[]).includes(item))) ctx.addIssue({ code: z.ZodIssueCode.custom, path: [audience], message: "Choose a valid category." }); } }),
   description: z.string().trim().min(20, "Add at least 20 characters about your brand.").max(1000, "Keep your introduction under 1,000 characters."),
   website: z.string().trim().url("Enter a full website address, starting with https://").max(2048),
   socialHandle: z.string().trim().max(120, "Keep your social handle under 120 characters."),
 });
 const draftSchema = z.object({
   contactName: z.string().max(120), email: z.string().max(255), brandName: z.string().max(120),
-  category: z.string().max(80), description: z.string().max(1000), website: z.string().max(2048), socialHandle: z.string().max(120), audience: z.array(z.enum(["her", "him"])).min(1).max(2),
+  category: z.string().max(80), description: z.string().max(1000), website: z.string().max(2048), socialHandle: z.string().max(120), audience: z.array(z.enum(["her", "him"])).min(1).max(2), audienceCategories: z.object({ her: z.array(z.string()).max(6), him: z.array(z.string()).max(4) }).optional().default({ her: [], him: [] }),
 });
 
 export const Route = createFileRoute("/for-brands/apply")({
@@ -137,6 +144,15 @@ function BrandApplicationPage() {
     setErrors((current) => ({ ...current, [key]: "" }));
   };
 
+  const toggleSubcategory = (audience: Audience, category: string) => {
+    setValues((current) => {
+      const selected = current.audienceCategories[audience];
+      const next = selected.includes(category) ? selected.filter((item) => item !== category) : [...selected, category];
+      return { ...current, audienceCategories: { ...current.audienceCategories, [audience]: next } };
+    });
+    setErrors((current) => ({ ...current, audienceCategories: "" }));
+  };
+
   const toggleAudience = (audience: "her" | "him") => {
     setValues((current) => {
       const next = current.audience.includes(audience)
@@ -178,8 +194,11 @@ function BrandApplicationPage() {
       if (!parsed.success) for (const issue of parsed.error.issues) nextErrors[issue.path[0]?.toString() ?? "form"] = issue.message;
     }
     if (step === 2) {
-        const parsed = applicationFormSchema.pick({ brandName: true, category: true, description: true, audience: true }).safeParse(values);
+        const parsed = applicationFormSchema.pick({ brandName: true, category: true, description: true, audience: true, audienceCategories: true }).safeParse(values);
       if (!parsed.success) for (const issue of parsed.error.issues) nextErrors[issue.path[0]?.toString() ?? "form"] = issue.message;
+      for (const audience of values.audience) {
+        if (!values.audienceCategories[audience]?.length) nextErrors["audienceCategories"] = `Choose at least one category for ${audience === "her" ? "Her" : "Him"}.`;
+      }
     }
     if (step === 3) {
         const parsed = applicationFormSchema.pick({ website: true, socialHandle: true }).safeParse(values);
@@ -270,6 +289,7 @@ function BrandApplicationPage() {
         brandName: parsed.data.brandName,
         category: parsed.data.category as (typeof brandCategories)[number],
         audience: parsed.data.audience,
+        audienceCategories: parsed.data.audienceCategories,
         description: parsed.data.description,
         website: parsed.data.website,
         socialHandle: parsed.data.socialHandle || null,
@@ -344,7 +364,7 @@ function BrandApplicationPage() {
               <div className="grid gap-5 sm:grid-cols-2">
                 <Field label="Brand name" htmlFor="brand-name" error={errors["brandName"]}><Input id="brand-name" value={values.brandName} onChange={(event) => update("brandName", event.target.value)} placeholder="The name people know you by" className={fieldClass} maxLength={120} aria-invalid={Boolean(errors["brandName"])} /></Field>
                 <Field label="Category" htmlFor="brand-category" error={errors["category"]}><select id="brand-category" value={values.category} onChange={(event) => update("category", event.target.value)} className={`${fieldClass} w-full rounded-lg border px-4 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring`} aria-invalid={Boolean(errors["category"])}><option value="">Choose a category</option>{brandCategories.map((category) => <option key={category} value={category}>{category}</option>)}</select></Field>
-                <div className="sm:col-span-2"><p className="text-sm font-medium">Who is your collection for?</p><p className="mt-1 text-xs text-muted-foreground">Choose one or both spaces. This can be updated with our team after approval.</p><div className="mt-3 flex flex-wrap gap-2">{([{ value: "her", label: "Her" }, { value: "him", label: "Him" }] as const).map((option) => <Button key={option.value} type="button" size="sm" variant={values.audience.includes(option.value) ? "default" : "outline"} aria-pressed={values.audience.includes(option.value)} onClick={() => toggleAudience(option.value)}>{values.audience.includes(option.value) && <Check className="size-4"/>}{option.label}</Button>)}</div>{errors["audience"] && <p role="alert" className="mt-1 text-xs text-destructive">{errors["audience"]}</p>}</div>
+                <div className="sm:col-span-2"><p className="text-sm font-medium">Who is your collection for?</p><p className="mt-1 text-xs text-muted-foreground">Choose Her, Him, or both, then select the product categories for each.</p><div className="mt-3 flex flex-wrap gap-2">{([{ value: "her", label: "Her" }, { value: "him", label: "Him" }] as const).map((option) => <Button key={option.value} type="button" size="sm" variant={values.audience.includes(option.value) ? "default" : "outline"} aria-pressed={values.audience.includes(option.value)} onClick={() => toggleAudience(option.value)}>{values.audience.includes(option.value) && <Check className="size-4"/>}{option.label}</Button>)}</div>{errors["audience"] && <p role="alert" className="mt-1 text-xs text-destructive">{errors["audience"]}</p>}{values.audience.map((audience) => <div key={audience} className="mt-5 rounded-lg border border-border/70 p-4"><p className="text-sm font-medium">{audience === "her" ? "Her collection" : "His collection"}</p><p className="mt-1 text-xs text-muted-foreground">Select all that apply.</p><div className="mt-3 flex flex-wrap gap-2">{subcategories[audience].map((category) => { const selected = values.audienceCategories[audience].includes(category); return <button key={category} type="button" aria-pressed={selected} onClick={() => toggleSubcategory(audience, category)} className={`rounded-full border px-3 py-2 text-sm transition-colors ${selected ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card hover:border-primary/50"}`}>{selected && <Check className="mr-1 inline size-3.5" />}{category}</button>; })}</div></div>)}{errors["audienceCategories"] && <p role="alert" className="mt-2 text-xs text-destructive">{errors["audienceCategories"]}</p>}</div>
                 <div className="sm:col-span-2"><Field label="A short introduction" htmlFor="brand-description" error={errors["description"]}><Textarea id="brand-description" value={values.description} onChange={(event) => update("description", event.target.value)} placeholder="What inspires your work? Who is it for?" className="mt-2 min-h-36 resize-y rounded-lg border-border/80 bg-card px-4 py-3" maxLength={1000} aria-invalid={Boolean(errors["description"])} /><p className="mt-1 text-right text-xs text-muted-foreground">{values.description.length} / 1,000</p></Field></div>
               </div>
               <StepButtons onBack={() => setStep(1)} onNext={() => { if (validateStep()) setStep(3); }} />
@@ -373,7 +393,7 @@ function BrandApplicationPage() {
                 <ReviewRow label="Your account" value={`${values.contactName} · ${values.email}`} onEdit={() => setStep(1)} />
                 <ReviewRow label="Brand" value={values.brandName || "Not added yet"} onEdit={() => setStep(2)} />
                 <ReviewRow label="Category" value={values.category || "Not selected"} onEdit={() => setStep(2)} />
-                <ReviewRow label="Style spaces" value={values.audience.map((item) => item === "her" ? "Her" : "Him").join(" · ")} onEdit={() => setStep(2)} />
+                <ReviewRow label="Collection for" value={values.audience.map((item) => `${item === "her" ? "Her" : "Him"}: ${values.audienceCategories[item].join(", ")}`).join(" · ")} onEdit={() => setStep(2)} />
                 <ReviewRow label="Website" value={values.website || "Not added yet"} onEdit={() => setStep(3)} />
                 <div className="flex items-center justify-between gap-4 py-4"><div className="min-w-0"><p className="text-xs text-muted-foreground">Brand identity</p><p className="mt-1 text-sm">{uploads.logo ? "Logo added" : "Logo missing"} · {uploads.cover ? "Cover added" : "Cover missing"}{uploads.proof ? " · Proof added" : ""}</p></div><Button variant="ghost" size="sm" onClick={() => setStep(3)}>Edit</Button></div>
               </div>
