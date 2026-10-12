@@ -63,16 +63,16 @@ function DiscoverPage() {
             { src: "https://images.unsplash.com/photo-1611652022419-a9419f74343d?auto=format&fit=crop&w=1000&q=85", title: "Quiet statement", note: "A few considered details, styled with restraint" },
           ]
         : [
-            { src: "https://images.pexels.com/photos/15567392/pexels-photo-15567392.jpeg?auto=compress&cs=tinysrgb&w=1000", title: "Treasures from the sea", note: "Gold pieces nestled in a sculptural shell" },
-            { src: "https://images.pexels.com/photos/23495778/pexels-photo-23495778.jpeg?auto=compress&cs=tinysrgb&w=1000", title: "Pearls in the morning light", note: "Soft cream textures and delicate pearl drops" },
-            { src: "https://images.pexels.com/photos/23495719/pexels-photo-23495719.jpeg?auto=compress&cs=tinysrgb&w=1000", title: "Little golden keepsakes", note: "Layered pendants with a collected, nostalgic feel" },
-            { src: "https://images.pexels.com/photos/23495776/pexels-photo-23495776.jpeg?auto=compress&cs=tinysrgb&w=1000", title: "A softer kind of shine", note: "Pearl and gold against tactile ivory fabric" },
-            { src: "https://images.pexels.com/photos/23495773/pexels-photo-23495773.jpeg?auto=compress&cs=tinysrgb&w=1000", title: "Everyday little luxuries", note: "Simple gold details and soft curtain light" },
-            { src: "https://images.pexels.com/photos/4939296/pexels-photo-4939296.jpeg?auto=compress&cs=tinysrgb&w=1000", title: "Vintage vanity", note: "Romantic heirloom details on a reflective tray" },
-            { src: "https://images.pexels.com/photos/10556215/pexels-photo-10556215.jpeg?auto=compress&cs=tinysrgb&w=1000", title: "Pages of inspiration", note: "Pearls and jewellery arranged like a personal journal" },
-            { src: "https://images.pexels.com/photos/8776984/pexels-photo-8776984.jpeg?auto=compress&cs=tinysrgb&w=1000", title: "Sun-kissed layers", note: "Fine jewellery styled close to the skin" },
-            { src: "https://images.pexels.com/photos/12185015/pexels-photo-12185015.jpeg?auto=compress&cs=tinysrgb&w=1000", title: "Golden reflections", note: "Warm metallic details with a quiet glow" },
-            { src: "https://images.pexels.com/photos/19394248/pexels-photo-19394248.jpeg?auto=compress&cs=tinysrgb&w=1000", title: "Pearl daydream", note: "Delicate statement pieces with a whimsical touch" },
+            { src: "https://images.pexels.com/photos/18585098/pexels-photo-18585098.jpeg?auto=compress&cs=tinysrgb&w=1000", title: "A little treasure from the sea", note: "Golden hoops tucked into a pearly shell" },
+            { src: "https://images.pexels.com/photos/34344084/pexels-photo-34344084.jpeg?auto=compress&cs=tinysrgb&w=1000", title: "Pearls, please", note: "Soft, luminous details for a daydream" },
+            { src: "https://images.pexels.com/photos/10915187/pexels-photo-10915187.jpeg?auto=compress&cs=tinysrgb&w=1000", title: "Found at the vanity", note: "An heirloom mood with a little mirror magic" },
+            { src: "https://images.pexels.com/photos/12585697/pexels-photo-12585697.jpeg?auto=compress&cs=tinysrgb&w=1000", title: "Golden hour, always", note: "Sculptural gold catching the light" },
+            { src: "https://images.pexels.com/photos/19394248/pexels-photo-19394248.jpeg?auto=compress&cs=tinysrgb&w=1000", title: "The pearl girl edit", note: "Sweet pearls with a playful, dressed-up feel" },
+            { src: "https://images.pexels.com/photos/9692389/pexels-photo-9692389.jpeg?auto=compress&cs=tinysrgb&w=1000", title: "Collected on the coast", note: "Natural shells, tiny treasures, slow summer days" },
+            { src: "https://images.pexels.com/photos/29371789/pexels-photo-29371789.jpeg?auto=compress&cs=tinysrgb&w=1000", title: "A bow in the story", note: "Delicate gold and pearl charms on silky fabric" },
+            { src: "https://images.pexels.com/photos/36229139/pexels-photo-36229139.jpeg?auto=compress&cs=tinysrgb&w=1000", title: "Little things to keep", note: "Romantic vintage details, like a jewellery box" },
+            { src: "https://images.pexels.com/photos/6624862/pexels-photo-6624862.jpeg?auto=compress&cs=tinysrgb&w=1000", title: "Notes from a soft morning", note: "Fine chains, flowers and sunlit linen" },
+            { src: "https://images.pexels.com/photos/7743086/pexels-photo-7743086.jpeg?auto=compress&cs=tinysrgb&w=1000", title: "A bloom and a pearl", note: "Dreamy floral details with a vintage heart" },
           ]
       : isHim
         ? [
@@ -92,14 +92,14 @@ function DiscoverPage() {
         <p className="mx-auto mt-5 max-w-xl leading-7 text-muted-foreground">{jewellery ? "Discover independent jewellery labels, delicate everyday pieces and statement finds." : "Find bags, sunglasses, belts and finishing touches from independent brands."}</p>
       </section>
       <section className="mt-12">
-        <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
-          <div><p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Visual moodboard · {isHim ? "Him" : "Her"}</p><h2 className="mt-2 font-display text-3xl sm:text-4xl">{isHim ? "A little inspiration for him." : "A little inspiration for her."}</h2></div>
-          <p className="max-w-sm text-sm leading-6 text-muted-foreground">Reference ideas to help you explore the vibe — not product listings.</p>
+        <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
+          <div><p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">A tiny jewellery daydream · {isHim ? "Him" : "Her"}</p><h2 className="mt-2 font-display text-3xl sm:text-4xl">{isHim ? "The details make the mood." : <>Little treasures, <em className="font-normal text-primary">softly found.</em></>}</h2></div>
+          <p className="max-w-sm text-sm leading-6 text-muted-foreground">{isHim ? "Considered details, collected inspiration." : "Pearls, warm gold, shell dishes and the kind of pieces you save just because they make you feel something."}</p>
         </div>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {referenceImages.map((item) => <article key={item.title} className="group overflow-hidden rounded-[1.25rem] border border-border/60 bg-card shadow-soft">
-            <div className="relative overflow-hidden"><img src={item.src} alt={item.title} loading="lazy" className="aspect-[4/5] w-full object-cover transition-transform duration-700 group-hover:scale-105" /><span className="absolute bottom-3 left-3 rounded-full border border-white/30 bg-background/85 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.14em] text-foreground backdrop-blur">Style reference</span></div>
-            <div className="p-4"><h3 className="font-display text-xl">{item.title}</h3><p className="mt-1 text-sm leading-6 text-muted-foreground">{item.note}</p></div>
+        <div className="columns-1 gap-5 sm:columns-2 lg:columns-3">
+          {referenceImages.map((item, index) => <article key={item.title} className="group mb-5 break-inside-avoid overflow-hidden rounded-[1.35rem] border border-border/50 bg-card/80 shadow-soft">
+            <div className="relative overflow-hidden bg-secondary/30"><img src={item.src} alt={item.title} loading="lazy" className={`w-full object-cover transition-transform duration-700 group-hover:scale-[1.035] ${index % 4 === 1 ? "aspect-[4/5]" : index % 4 === 2 ? "aspect-[3/4]" : index % 4 === 3 ? "aspect-[5/6]" : "aspect-[4/5]"}`} /><span className="absolute bottom-3 left-3 rounded-full border border-white/40 bg-white/80 px-3 py-1.5 text-[10px] font-medium tracking-[0.08em] text-stone-700 shadow-sm backdrop-blur-md">♡ saved for the mood</span></div>
+            <div className="px-4 pb-4 pt-3"><h3 className="font-display text-xl">{item.title}</h3><p className="mt-1 text-sm leading-6 text-muted-foreground">{item.note}</p></div>
           </article>)}
         </div>
       </section>
