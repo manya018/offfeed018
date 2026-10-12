@@ -88,15 +88,15 @@ function DiscoverPage() {
             { src: "https://images.unsplash.com/photo-1556306535-38febf6782e7?auto=format&fit=crop&w=1000&q=85", title: "Clean lines", note: "Classic frames in a muted, editorial palette" },
           ]
         : [
-            { src: "https://i.etsystatic.com/63821927/r/il/b5ae44/7610152187/il_1588xN.7610152187_ilps.jpg", title: "Cherry, softly", note: "A deep burgundy handbag against champagne satin" },
+            { src: "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&w=1200&q=85", title: "Cherry, softly", note: "A deep burgundy handbag against champagne satin" },
             { src: "https://cdn.shopify.com/s/files/1/0264/0793/files/Pandora-Bag-B1_1280x.progressive.jpg?v=1519732356", title: "The little burgundy bag", note: "A sculptural top handle against a soft blush backdrop" },
             { src: "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&w=1000&q=85", title: "A timeless favourite", note: "A polished handbag in warm, understated tones" },
             { src: "https://images.unsplash.com/photo-1590874103328-334f7c2a4e1a?auto=format&fit=crop&w=1000&q=85", title: "Collected in the city", note: "A feminine bag in a softly considered palette" },
-            { src: "https://lenskandy.com/cdn/shop/files/Bold_Brown_Designer_Square_Sunglasses_For_Women_LKS9131-BRN-4.webp?v=1776932368&width=1200", title: "Tortoiseshell mornings", note: "Warm brown frames styled with soft pink and tiny florals" },
+            { src: "https://ellosunglasses.com/cdn/shop/articles/editorial-flatlay-sunglasses-thin-face-female-fashion_c1f2e297-eeb9-405e-926d-c733d3b5e685.jpg?v=1760982934", title: "Tortoiseshell mornings", note: "Warm brown frames styled with soft pink and tiny florals" },
             { src: "https://ellosunglasses.com/cdn/shop/articles/editorial-flatlay-sunglasses-thin-face-female-fashion_c1f2e297-eeb9-405e-926d-c733d3b5e685.jpg?v=1760982934", title: "The golden-hour edit", note: "Brown sunglasses, delicate gold jewellery and a little lipstick" },
             { src: "https://lushboutique.ie/cdn/shop/files/IMG-3004.png?v=1771606401&width=800", title: "A little shine", note: "Slim espresso frames with feminine gold details" },
             { src: "https://images.unsplash.com/photo-1508296695146-257a814070b4?auto=format&fit=crop&w=1000&q=85", title: "Off-duty elegance", note: "Classic frames in a muted, editorial palette" },
-            { src: "https://www.bjorklund.no/media/wysiwyg/bjorklund-mockberg-by-mockberg-miljo-tett.jpg?auto=webp&format=pjpg&quality=85", title: "Golden hour, always", note: "A delicate gold analogue watch in warm natural light" },
+            { src: "https://images.unsplash.com/photo-1523170335258-f5ed11844a49?auto=format&fit=crop&w=1200&q=85", title: "Golden hour, always", note: "A delicate gold analogue watch in warm natural light" },
             { src: "https://blingbaebysuhanabasheer.com/cdn/shop/files/18D19D32-809B-4B23-A450-25DD0F448D0E.jpg?v=1764788418&width=1200", title: "A little heirloom", note: "A sculptural gold bracelet watch against silky beige" },
             { src: "https://caitlynminimalist.com/cdn/shop/files/ANTIQUELOW-5316.jpg?v=1778434769&width=1024", title: "Collected treasures", note: "A vintage-inspired gold timepiece beside an iridescent shell" },
             { src: "https://images.unsplash.com/photo-1523170335258-f5ed11844a49?auto=format&fit=crop&w=1000&q=85", title: "Soft gold details", note: "A classic analogue watch for a timeless everyday edit" },
