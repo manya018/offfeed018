@@ -63,9 +63,16 @@ function DiscoverPage() {
             { src: "https://images.unsplash.com/photo-1611652022419-a9419f74343d?auto=format&fit=crop&w=1000&q=85", title: "Quiet statement", note: "A few considered details, styled with restraint" },
           ]
         : [
-            { src: "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?auto=format&fit=crop&w=1000&q=85", title: "Soft gold layers", note: "Delicate chains, warm light and bare skin" },
-            { src: "https://images.unsplash.com/photo-1617038220319-276d3cfab638?auto=format&fit=crop&w=1000&q=85", title: "The art of the ear stack", note: "Unexpected pairings, sculptural hoops and considered details" },
-            { src: "https://images.unsplash.com/photo-1630019852942-f89202989a59?auto=format&fit=crop&w=1000&q=85", title: "Little heirlooms", note: "Sculptural rings and everyday pieces worth keeping" },
+            { src: "https://images.pexels.com/photos/15567392/pexels-photo-15567392.jpeg?auto=compress&cs=tinysrgb&w=1000", title: "Treasures from the sea", note: "Gold pieces nestled in a sculptural shell" },
+            { src: "https://images.pexels.com/photos/23495778/pexels-photo-23495778.jpeg?auto=compress&cs=tinysrgb&w=1000", title: "Pearls in the morning light", note: "Soft cream textures and delicate pearl drops" },
+            { src: "https://images.pexels.com/photos/23495719/pexels-photo-23495719.jpeg?auto=compress&cs=tinysrgb&w=1000", title: "Little golden keepsakes", note: "Layered pendants with a collected, nostalgic feel" },
+            { src: "https://images.pexels.com/photos/23495776/pexels-photo-23495776.jpeg?auto=compress&cs=tinysrgb&w=1000", title: "A softer kind of shine", note: "Pearl and gold against tactile ivory fabric" },
+            { src: "https://images.pexels.com/photos/23495773/pexels-photo-23495773.jpeg?auto=compress&cs=tinysrgb&w=1000", title: "Everyday little luxuries", note: "Simple gold details and soft curtain light" },
+            { src: "https://images.pexels.com/photos/4939296/pexels-photo-4939296.jpeg?auto=compress&cs=tinysrgb&w=1000", title: "Vintage vanity", note: "Romantic heirloom details on a reflective tray" },
+            { src: "https://images.pexels.com/photos/10556215/pexels-photo-10556215.jpeg?auto=compress&cs=tinysrgb&w=1000", title: "Pages of inspiration", note: "Pearls and jewellery arranged like a personal journal" },
+            { src: "https://images.pexels.com/photos/8776984/pexels-photo-8776984.jpeg?auto=compress&cs=tinysrgb&w=1000", title: "Sun-kissed layers", note: "Fine jewellery styled close to the skin" },
+            { src: "https://images.pexels.com/photos/12185015/pexels-photo-12185015.jpeg?auto=compress&cs=tinysrgb&w=1000", title: "Golden reflections", note: "Warm metallic details with a quiet glow" },
+            { src: "https://images.pexels.com/photos/19394248/pexels-photo-19394248.jpeg?auto=compress&cs=tinysrgb&w=1000", title: "Pearl daydream", note: "Delicate statement pieces with a whimsical touch" },
           ]
       : isHim
         ? [
