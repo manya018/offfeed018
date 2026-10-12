@@ -13,6 +13,8 @@ export type BrandApplicationEmail = {
   contactName: string;
   email: string;
   category: string;
+  audience: string[];
+  audienceCategories: { her: string[]; him: string[] };
   description: string;
   website: string;
   socialHandle: string | null;
@@ -31,6 +33,7 @@ export async function sendBrandApplicationEmail(application: BrandApplicationEma
   const rows: Array<[string, string]> = [
     ["Brand", application.brandName],
     ["Category", application.category],
+    ["Collection for", application.audience.map((audience) => `${audience === "her" ? "Her" : "Him"}: ${(application.audienceCategories[audience as "her" | "him"] ?? []).join(", ") || "Not selected"}`).join(" · ")],
     ["Contact", application.contactName],
     ["Email", application.email],
     ["Website", application.website],
