@@ -55,13 +55,51 @@ function DiscoverPage() {
 
   if (category === "jewellery" || category === "accessories") {
     const jewellery = category === "jewellery";
+    const referenceImages = jewellery
+      ? isHim
+        ? [
+            { src: "https://images.pexels.com/photos/33812674/pexels-photo-33812674.jpeg?cs=srgb&dl=pexels-mahdi-yousefi-1276588-33812674.jpg&fm=jpg", title: "Silver rings & wristwear", note: "Bold rings, stacked chains and a statement watch" },
+            { src: "https://images.unsplash.com/photo-1586878341340-1971696a9b71?auto=format&fit=crop&w=1000&q=80", title: "Everyday metal details", note: "Sculptural silver and understated pieces" },
+            { src: "https://images.pexels.com/photos/31078822/pexels-photo-31078822.jpeg?cs=srgb&dl=pexels-helloaesthe-31078822.jpg&fm=jpg", title: "Off-duty essentials", note: "Neutral textures with a little shine" },
+          ]
+        : [
+            { src: "https://images.pexels.com/photos/29502924/pexels-photo-29502924/free-photo-of-elegant-gold-jewelry-set-with-necklace-and-earrings.jpeg?auto=compress&dpr=1&h=750&w=1260", title: "Golden hour", note: "Layered chains, delicate rings and warm gold" },
+            { src: "https://images.unsplash.com/photo-1586878341340-1971696a9b71?auto=format&fit=crop&w=1000&q=80", title: "Everyday treasures", note: "Minimal pieces for your daily rotation" },
+            { src: "https://images.pexels.com/photos/2986445/pexels-photo-2986445.jpeg?auto=compress&dpr=1&h=750&w=1260", title: "The finishing touch", note: "Mix jewellery with your favourite accessories" },
+          ]
+      : isHim
+        ? [
+            { src: "https://images.pexels.com/photos/31078822/pexels-photo-31078822.jpeg?cs=srgb&dl=pexels-helloaesthe-31078822.jpg&fm=jpg", title: "Everyday carry", note: "Clean sneakers, shades and useful essentials" },
+            { src: "https://images.pexels.com/photos/33812674/pexels-photo-33812674.jpeg?cs=srgb&dl=pexels-mahdi-yousefi-1276588-33812674.jpg&fm=jpg", title: "Silver & leather", note: "Watches, rings and tactile details" },
+            { src: "https://images.pexels.com/photos/2986445/pexels-photo-2986445.jpeg?auto=compress&dpr=1&h=750&w=1260", title: "Style, pared back", note: "Build a signature with a few considered pieces" },
+          ]
+        : [
+            { src: "https://images.pexels.com/photos/2986445/pexels-photo-2986445.jpeg?auto=compress&dpr=1&h=750&w=1260", title: "The everyday edit", note: "Sunglasses, scarves and little details" },
+            { src: "https://images.pexels.com/photos/31078822/pexels-photo-31078822.jpeg?cs=srgb&dl=pexels-helloaesthe-31078822.jpg&fm=jpg", title: "Soft neutrals", note: "Easy essentials in warm, wearable tones" },
+            { src: "https://images.pexels.com/photos/29502924/pexels-photo-29502924/free-photo-of-elegant-gold-jewelry-set-with-necklace-and-earrings.jpeg?auto=compress&dpr=1&h=750&w=1260", title: "A hint of gold", note: "Pair bags and shades with delicate jewellery" },
+          ];
     return <main className="mx-auto min-h-[70vh] max-w-[1440px] px-5 pb-24 pt-12 lg:px-10 lg:pt-16">
       <section className="mx-auto max-w-3xl text-center">
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">Independent brands · OFFFEED</p>
         <h1 className="mt-4 font-display text-5xl font-medium sm:text-7xl">{jewellery ? "Jewellery" : "Accessories"} <em className="font-normal text-primary">edit.</em></h1>
         <p className="mx-auto mt-5 max-w-xl leading-7 text-muted-foreground">{jewellery ? "Discover independent jewellery labels, delicate everyday pieces and statement finds." : "Find bags, sunglasses, belts and finishing touches from independent brands."}</p>
       </section>
-      {categoryLoading ? <p className="py-20 text-center text-muted-foreground">Finding pieces for your edit…</p> : categoryError ? <p className="py-20 text-center text-muted-foreground">We couldn’t load this edit right now. Please try again.</p> : categoryProducts.length ? <section className="mt-12 grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 sm:gap-x-6 lg:grid-cols-4">{categoryProducts.map((product) => <PublicProductCard key={product.id} product={product} />)}</section> : <section className="mx-auto mt-12 max-w-2xl border-y border-dashed border-border/70 py-16 text-center"><h2 className="font-display text-3xl">Good things are on their way.</h2><p className="mt-3 leading-7 text-muted-foreground">There aren’t any approved, published {jewellery ? "jewellery" : "accessory"} products in this edit yet. As brands publish matching products, they’ll appear here.</p></section>}
+      <section className="mt-12">
+        <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
+          <div><p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Visual moodboard · {isHim ? "Him" : "Her"}</p><h2 className="mt-2 font-display text-3xl sm:text-4xl">{isHim ? "A little inspiration for him." : "A little inspiration for her."}</h2></div>
+          <p className="max-w-sm text-sm leading-6 text-muted-foreground">Reference ideas to help you explore the vibe — not product listings.</p>
+        </div>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {referenceImages.map((item) => <article key={item.title} className="group overflow-hidden rounded-[1.25rem] border border-border/60 bg-card shadow-soft">
+            <div className="relative overflow-hidden"><img src={item.src} alt={item.title} loading="lazy" className="aspect-[4/5] w-full object-cover transition-transform duration-700 group-hover:scale-105" /><span className="absolute bottom-3 left-3 rounded-full border border-white/30 bg-background/85 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.14em] text-foreground backdrop-blur">Style reference</span></div>
+            <div className="p-4"><h3 className="font-display text-xl">{item.title}</h3><p className="mt-1 text-sm leading-6 text-muted-foreground">{item.note}</p></div>
+          </article>)}
+        </div>
+      </section>
+      <section className="mt-16">
+        <div className="mb-6"><p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Shop independent labels</p><h2 className="mt-2 font-display text-3xl sm:text-4xl">Pieces to make it yours.</h2></div>
+        {categoryLoading ? <p className="py-20 text-center text-muted-foreground">Finding pieces for your edit…</p> : categoryError ? <p className="py-20 text-center text-muted-foreground">We couldn’t load this edit right now. Please try again.</p> : categoryProducts.length ? <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 sm:gap-x-6 lg:grid-cols-4">{categoryProducts.map((product) => <PublicProductCard key={product.id} product={product} />)}</div> : <div className="mx-auto max-w-2xl border-y border-dashed border-border/70 py-12 text-center"><h2 className="font-display text-3xl">Good things are on their way.</h2><p className="mt-3 leading-7 text-muted-foreground">There aren’t any approved, published {jewellery ? "jewellery" : "accessory"} products in this edit yet. As brands publish matching products, they’ll appear here.</p></div>}
+      </section>
     </main>;
   }
 
