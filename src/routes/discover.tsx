@@ -68,7 +68,7 @@ function DiscoverPage() {
             { src: "https://images.pexels.com/photos/34344084/pexels-photo-34344084.jpeg?auto=compress&cs=tinysrgb&w=1000", title: "Pearls, please", note: "Soft, luminous details for a daydream" },
             { src: "https://images.pexels.com/photos/10915187/pexels-photo-10915187.jpeg?auto=compress&cs=tinysrgb&w=1000", title: "Found at the vanity", note: "An heirloom mood with a little mirror magic" },
             { src: "https://images.pexels.com/photos/12585697/pexels-photo-12585697.jpeg?auto=compress&cs=tinysrgb&w=1000", title: "Golden hour, always", note: "Sculptural gold catching the light" },
-            { src: "https://images.pexels.com/photos/19394248/pexels-photo-19394248.jpeg?auto=compress&cs=tinysrgb&w=1000", title: "The pearl girl edit", note: "Sweet pearls with a playful, dressed-up feel" },
+            { src: "https://images.unsplash.com/photo-1611652022419-a9419f74343d?auto=format&fit=crop&w=1000&q=85", title: "The pearl girl edit", note: "Sweet pearls with a playful, dressed-up feel" },
             { src: "https://images.pexels.com/photos/9692389/pexels-photo-9692389.jpeg?auto=compress&cs=tinysrgb&w=1000", title: "Collected on the coast", note: "Natural shells, tiny treasures, slow summer days" },
             { src: "https://images.pexels.com/photos/29371789/pexels-photo-29371789.jpeg?auto=compress&cs=tinysrgb&w=1000", title: "A bow in the story", note: "Delicate gold and pearl charms on silky fabric" },
             { src: "https://images.pexels.com/photos/36229139/pexels-photo-36229139.jpeg?auto=compress&cs=tinysrgb&w=1000", title: "Little things to keep", note: "Romantic vintage details, like a jewellery box" },
