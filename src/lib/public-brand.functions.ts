@@ -7,6 +7,7 @@ const profileInput = z.object({ brandHandle: z.string().trim().min(1).max(180) }
 const shopInput = z.object({
   audience: z.enum(["her", "him"]),
   aesthetic: z.string().trim().min(1).max(80),
+  categoryOnly: z.boolean().optional(),
 });
 
 type Audience = "her" | "him";
@@ -62,7 +63,7 @@ function getImageUrl(path: string | null, signedUrls: Map<string, string>) {
 
 function relevanceScore(product: ProductWithBrand, aesthetic: string) {
   const tokens = aesthetic.toLowerCase().split(/[^a-z0-9]+/).filter((token) => token.length > 2);
-  const searchable = [product.productName, product.category, product.description, ...product.tags]
+  const searchable = [product.productName, product.category, product.description, product.brand.category, ...product.tags]
     .join(" ")
     .toLowerCase();
   return tokens.reduce((score, token) => score + (searchable.includes(token) ? 1 : 0), 0);
@@ -188,10 +189,12 @@ export const getShopTheLookProducts = createServerFn({ method: "GET" })
         brand: { name: brand.brand_name, handle: brand.public_handle, category: brand.category },
       }];
     });
-    return products
+    const ranked = products
       .map((product) => ({ product, score: relevanceScore(product, data.aesthetic) }))
-      .sort((left, right) => right.score - left.score)
-      .slice(0, 8)
+      .filter(({ score }) => !data.categoryOnly || score > 0)
+      .sort((left, right) => right.score - left.score);
+    return ranked
+      .slice(0, data.categoryOnly ? 60 : 8)
       .map(({ product }) => product);
   });
 
