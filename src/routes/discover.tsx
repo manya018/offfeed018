@@ -59,16 +59,16 @@ function DiscoverPage() {
     const referenceImages = jewellery
       ? isHim
         ? [
-            { src: "https://images.unsplash.com/photo-1617038220319-276d3cfab638?auto=format&fit=crop&w=1000&q=85", title: "Sculptural silver", note: "Cool-toned metal, clean lines, no excess" },
+            { src: "https://najo.com.au/cdn/shop/files/Pearl-Blog-17.png?v=1695853341&width=1080", title: "Sculptural silver", note: "Cool-toned metal, clean lines, no excess" },
             { src: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=1000&q=85", title: "The daily watch", note: "Understated hardware against warm neutrals" },
-            { src: "https://images.unsplash.com/photo-1611652022419-a9419f74343d?auto=format&fit=crop&w=1000&q=85", title: "Quiet statement", note: "A few considered details, styled with restraint" },
+            { src: "https://www.poshtottydesigns.com/cdn/shop/files/9ctLargePearlHoops.jpg?v=1723033585", title: "Quiet statement", note: "A few considered details, styled with restraint" },
           ]
         : [
-            { src: "https://images.pexels.com/photos/18585098/pexels-photo-18585098.jpeg?auto=compress&cs=tinysrgb&w=1000", title: "A little treasure from the sea", note: "Golden hoops tucked into a pearly shell" },
+            { src: "https://www.linjer.co/cdn/shop/files/keira-43-maeve-pearl-hoop-earrings-gv-lookbook-94copy-min_4480x.jpg?v=1747718107", title: "A little treasure from the sea", note: "Golden hoops tucked into a pearly shell" },
             { src: "https://images.unsplash.com/photo-1617038220319-276d3cfab638?auto=format&fit=crop&w=1000&q=85", title: "Pearls, please", note: "Soft, luminous details for a daydream" },
             { src: "https://images.unsplash.com/photo-1611652022419-a9419f74343d?auto=format&fit=crop&w=1000&q=85", title: "Found at the vanity", note: "An heirloom mood with a little mirror magic" },
             { src: "https://images.pexels.com/photos/12585697/pexels-photo-12585697.jpeg?auto=compress&cs=tinysrgb&w=1000", title: "Golden hour, always", note: "Sculptural gold catching the light" },
-            { src: "https://images.unsplash.com/photo-1611085583191-a3b181a88401?auto=format&fit=crop&w=1000&q=85", title: "Golden details", note: "Sweet pearls with a playful, dressed-up feel" },
+            { src: "https://gemfemme.shop/cdn/shop/files/CallaEarrings_1_4362f635-e62f-468e-8d55-79f8feb21c2e.jpg?v=1772123694&width=1946", title: "Golden details", note: "Sweet pearls with a playful, dressed-up feel" },
             { src: "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?auto=format&fit=crop&w=1000&q=85", title: "Collected on the coast", note: "Natural shells, tiny treasures, slow summer days" },
             { src: "https://images.pexels.com/photos/29371789/pexels-photo-29371789.jpeg?auto=compress&cs=tinysrgb&w=1000", title: "A bow in the story", note: "Delicate gold and pearl charms on silky fabric" },
             { src: "https://images.pexels.com/photos/36229139/pexels-photo-36229139.jpeg?auto=compress&cs=tinysrgb&w=1000", title: "Little things to keep", note: "Romantic vintage details, like a jewellery box" },
