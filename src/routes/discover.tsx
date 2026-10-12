@@ -72,6 +72,8 @@ function DiscoverPage() {
             { src: "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?auto=format&fit=crop&w=1000&q=85", title: "Collected on the coast", note: "Natural shells, tiny treasures, slow summer days" },
             { src: "https://images.pexels.com/photos/29371789/pexels-photo-29371789.jpeg?auto=compress&cs=tinysrgb&w=1000", title: "A bow in the story", note: "Delicate gold and pearl charms on silky fabric" },
             { src: "https://images.pexels.com/photos/36229139/pexels-photo-36229139.jpeg?auto=compress&cs=tinysrgb&w=1000", title: "Little things to keep", note: "Romantic vintage details, like a jewellery box" },
+            { src: "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?auto=format&fit=crop&w=1000&q=85", title: "Golden keepsakes", note: "Sculptural gold against soft neutral textures" },
+            { src: "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?auto=format&fit=crop&w=1000&q=85", title: "Everyday gold", note: "Fine jewellery, quietly collected" },
             { src: "https://images.pexels.com/photos/6624862/pexels-photo-6624862.jpeg?auto=compress&cs=tinysrgb&w=1000", title: "Notes from a soft morning", note: "Fine chains, flowers and sunlit linen" },
             { src: "https://images.unsplash.com/photo-1630019852942-f89202989a59?auto=format&fit=crop&w=1000&q=85", title: "A bloom and a pearl", note: "Dreamy floral details with a vintage heart" },
           ]
