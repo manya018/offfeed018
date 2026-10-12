@@ -61,9 +61,9 @@ function DiscoverPage() {
       ? isHim
         ? [
             { src: "https://najo.com.au/cdn/shop/files/Pearl-Blog-17.png?v=1695853341&width=1080", title: "Sculptural silver", note: "Cool-toned metal, clean lines, no excess" },
-            { src: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=1000&q=85", title: "The daily watch", note: "Understated hardware against warm neutrals" },
+            { src: "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?auto=format&fit=crop&w=1000&q=85", title: "Sculptural silver", note: "A restrained jewellery detail in soft, natural light" },
             { src: "https://www.poshtottydesigns.com/cdn/shop/files/9ctLargePearlHoops.jpg?v=1723033585", title: "Quiet statement", note: "A few considered details, styled with restraint" },
-            { src: "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?auto=format&fit=crop&w=1000&q=85", title: "The understated edit", note: "A clean, everyday jewellery detail in soft light" },
+            { src: "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?auto=format&fit=crop&w=1000&q=85", title: "The understated edit", note: "Delicate gold pieces styled with a quiet editorial feel" },
           ]
         : [
             { src: "https://www.linjer.co/cdn/shop/files/keira-43-maeve-pearl-hoop-earrings-gv-lookbook-94copy-min_4480x.jpg?v=1747718107", title: "A little treasure from the sea", note: "Golden hoops tucked into a pearly shell" },
@@ -85,19 +85,19 @@ function DiscoverPage() {
             { src: "https://images.unsplash.com/photo-1511499767150-a48a237f0083?auto=format&fit=crop&w=1000&q=85", title: "After-hours shades", note: "Sharp frames, muted tones, effortless edge" },
             { src: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=1000&q=85", title: "Everyday utility", note: "Functional shapes with a considered silhouette" },
             { src: "https://images.unsplash.com/photo-1508296695146-257a814070b4?auto=format&fit=crop&w=1000&q=85", title: "Off-duty uniform", note: "Minimal essentials in black, stone and espresso" },
-            { src: "https://images.unsplash.com/photo-1511499767150-a48a237f0083?auto=format&fit=crop&w=1000&q=85&sat=-8", title: "Clean lines", note: "A classic pair of shades in a muted editorial palette" },
+            { src: "https://images.unsplash.com/photo-1556306535-38febf6782e7?auto=format&fit=crop&w=1000&q=85", title: "Clean lines", note: "Classic frames in a muted, editorial palette" },
           ]
         : [
-            { src: "https://i.etsystatic.com/54390317/r/il/0b503d/6587497406/il_794xN.6587497406_s7tx.jpg", title: "Cherry, softly", note: "A deep burgundy handbag with polished gold hardware" },
+            { src: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=1000&q=85", title: "Cherry, softly", note: "A deep-toned handbag styled in warm, minimal light" },
             { src: "https://cdn.shopify.com/s/files/1/0264/0793/files/Pandora-Bag-B1_1280x.progressive.jpg?v=1519732356", title: "The little burgundy bag", note: "A sculptural top handle against a soft blush backdrop" },
             { src: "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&w=1000&q=85", title: "A timeless favourite", note: "A polished handbag in warm, understated tones" },
             { src: "https://lenskandy.com/cdn/shop/files/Bold_Brown_Designer_Square_Sunglasses_For_Women_LKS9131-BRN-4.webp?v=1776932368&width=3840", title: "Tortoiseshell mornings", note: "Warm brown frames styled with soft pink and tiny florals" },
             { src: "https://ellosunglasses.com/cdn/shop/articles/editorial-flatlay-sunglasses-thin-face-female-fashion_c1f2e297-eeb9-405e-926d-c733d3b5e685.jpg?v=1760982934", title: "The golden-hour edit", note: "Brown sunglasses, delicate gold jewellery and a little lipstick" },
             { src: "https://lushboutique.ie/cdn/shop/files/IMG-3004.png?v=1771606401&width=533", title: "A little shine", note: "Slim espresso frames with feminine gold chain details" },
-            { src: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=1000&q=85", title: "Golden hour, always", note: "A dainty watch styled in warm, minimal light" },
+            { src: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=1000&q=85", title: "Golden hour, always", note: "A soft, feminine styling flat lay in warm neutral tones" },
             { src: "https://blingbaebysuhanabasheer.com/cdn/shop/files/18D19D32-809B-4B23-A450-25DD0F448D0E.jpg?v=1764788418&width=1946", title: "A little heirloom", note: "A sculptural gold bracelet watch against silky beige" },
             { src: "https://caitlynminimalist.com/cdn/shop/files/ANTIQUELOW-5316.jpg?v=1778434769&width=1024", title: "Collected treasures", note: "A vintage-inspired gold timepiece beside an iridescent shell" },
-            { src: "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&w=1000&q=85", title: "The finishing touch", note: "A softly structured bag for a polished everyday edit" },
+            { src: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=1000&q=85", title: "The finishing touch", note: "A softly structured bag for a polished everyday edit" },
           ]
     return <main className="mx-auto min-h-[70vh] max-w-[1440px] px-5 pb-24 pt-12 lg:px-10 lg:pt-16">
       <section className={(calmHerJewellery || calmHerAccessories) ? "mx-auto max-w-3xl pb-2 pt-2 text-center" : "mx-auto max-w-3xl text-center"}>
