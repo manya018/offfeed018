@@ -88,16 +88,9 @@ function DiscoverPage() {
             { src: "https://images.unsplash.com/photo-1556306535-38febf6782e7?auto=format&fit=crop&w=1000&q=85", title: "Clean lines", note: "Classic frames in a muted, editorial palette" },
           ]
         : [
-            { src: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=1000&q=85", title: "Cherry, softly", note: "A deep-toned handbag styled in warm, minimal light" },
-            { src: "https://cdn.shopify.com/s/files/1/0264/0793/files/Pandora-Bag-B1_1280x.progressive.jpg?v=1519732356", title: "The little burgundy bag", note: "A sculptural top handle against a soft blush backdrop" },
-            { src: "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&w=1000&q=85", title: "A timeless favourite", note: "A polished handbag in warm, understated tones" },
-            { src: "https://lenskandy.com/cdn/shop/files/Bold_Brown_Designer_Square_Sunglasses_For_Women_LKS9131-BRN-4.webp?v=1776932368&width=3840", title: "Tortoiseshell mornings", note: "Warm brown frames styled with soft pink and tiny florals" },
-            { src: "https://ellosunglasses.com/cdn/shop/articles/editorial-flatlay-sunglasses-thin-face-female-fashion_c1f2e297-eeb9-405e-926d-c733d3b5e685.jpg?v=1760982934", title: "The golden-hour edit", note: "Brown sunglasses, delicate gold jewellery and a little lipstick" },
-            { src: "https://lushboutique.ie/cdn/shop/files/IMG-3004.png?v=1771606401&width=533", title: "A little shine", note: "Slim espresso frames with feminine gold chain details" },
-            { src: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=1000&q=85", title: "Golden hour, always", note: "A soft, feminine styling flat lay in warm neutral tones" },
-            { src: "https://blingbaebysuhanabasheer.com/cdn/shop/files/18D19D32-809B-4B23-A450-25DD0F448D0E.jpg?v=1764788418&width=1946", title: "A little heirloom", note: "A sculptural gold bracelet watch against silky beige" },
-            { src: "https://caitlynminimalist.com/cdn/shop/files/ANTIQUELOW-5316.jpg?v=1778434769&width=1024", title: "Collected treasures", note: "A vintage-inspired gold timepiece beside an iridescent shell" },
-            { src: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=1000&q=85", title: "The finishing touch", note: "A softly structured bag for a polished everyday edit" },
+            { src: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=1200&q=85", title: "Cherry, softly", note: "A deep burgundy handbag with a polished, timeless silhouette" },
+            { src: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=1200&q=85", title: "Golden hour, always", note: "A classic analogue watch styled in warm neutral light" },
+            { src: "https://images.unsplash.com/photo-1511499767150-a48a237f0083?auto=format&fit=crop&w=1200&q=85", title: "Tortoiseshell mornings", note: "Sunglasses in a soft, sunlit editorial mood" },
           ]
     return <main className="mx-auto min-h-[70vh] max-w-[1440px] px-5 pb-24 pt-12 lg:px-10 lg:pt-16">
       <section className={(calmHerJewellery || calmHerAccessories) ? "mx-auto max-w-3xl pb-2 pt-2 text-center" : "mx-auto max-w-3xl text-center"}>
@@ -121,10 +114,12 @@ function DiscoverPage() {
           </article>)}
         </div>}
       </section>
+{!calmHerAccessories && (
       <section className="mt-16">
         <div className="mb-6"><p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Shop independent labels</p><h2 className="mt-2 font-display text-3xl sm:text-4xl">Pieces to make it yours.</h2></div>
         {categoryLoading ? <p className="py-20 text-center text-muted-foreground">Finding pieces for your edit…</p> : categoryError ? <p className="py-20 text-center text-muted-foreground">We couldn’t load this edit right now. Please try again.</p> : categoryProducts.length ? <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 sm:gap-x-6 lg:grid-cols-4">{categoryProducts.map((product) => <PublicProductCard key={product.id} product={product} />)}</div> : <div className="mx-auto max-w-2xl border-y border-dashed border-border/70 py-12 text-center"><h2 className="font-display text-3xl">Good things are on their way.</h2><p className="mt-3 leading-7 text-muted-foreground">There aren’t any approved, published {jewellery ? "jewellery" : "accessory"} products in this edit yet. As brands publish matching products, they’ll appear here.</p></div>}
       </section>
+      )}
     </main>;
   }
 
