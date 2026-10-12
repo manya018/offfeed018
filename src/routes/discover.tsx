@@ -56,6 +56,7 @@ function DiscoverPage() {
   if (category === "jewellery" || category === "accessories") {
     const jewellery = category === "jewellery";
     const calmHerJewellery = jewellery && !isHim;
+    const calmHerAccessories = !jewellery && !isHim;
     const referenceImages = jewellery
       ? isHim
         ? [
@@ -95,17 +96,17 @@ function DiscoverPage() {
             { src: "https://images.unsplash.com/photo-1508685096489-7aacd43bd3b1?auto=format&fit=crop&w=1000&q=85", title: "A timeless detail", note: "A refined watch that feels just as lovely dressed up" },
           ]
     return <main className="mx-auto min-h-[70vh] max-w-[1440px] px-5 pb-24 pt-12 lg:px-10 lg:pt-16">
-      <section className={calmHerJewellery ? "mx-auto max-w-3xl pb-2 pt-2 text-center" : "mx-auto max-w-3xl text-center"}>
-        {!calmHerJewellery && <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">Independent brands · OFFFEED</p>}
-        <h1 className={calmHerJewellery ? "mt-2 font-display text-5xl font-medium tracking-[-0.045em] text-stone-800 sm:text-7xl" : "mt-4 font-display text-5xl font-medium sm:text-7xl"}>{calmHerJewellery ? <><em className="font-normal text-[#c58d98]">Her</em> Jewellery</> : <>{jewellery ? "Jewellery" : "Accessories"} <em className="font-normal text-primary">edit.</em></>}</h1>
-        <p className={calmHerJewellery ? "mx-auto mt-4 max-w-lg text-[15px] leading-7 text-stone-500" : "mx-auto mt-5 max-w-xl leading-7 text-muted-foreground"}>{calmHerJewellery ? "Delicate details, everyday pieces and little treasures from independent brands." : jewellery ? "Discover independent jewellery labels, delicate everyday pieces and statement finds." : "Find bags, sunglasses, belts and finishing touches from independent brands."}</p>
+      <section className={(calmHerJewellery || calmHerAccessories) ? "mx-auto max-w-3xl pb-2 pt-2 text-center" : "mx-auto max-w-3xl text-center"}>
+        {!calmHerJewellery && !calmHerAccessories && <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">Independent brands · OFFFEED</p>}
+        <h1 className={(calmHerJewellery || calmHerAccessories) ? "mt-2 font-display text-5xl font-medium tracking-[-0.045em] text-stone-800 sm:text-7xl" : "mt-4 font-display text-5xl font-medium sm:text-7xl"}>{calmHerJewellery ? <><em className="font-normal text-[#c58d98]">Her</em> Jewellery</> : calmHerAccessories ? <><em className="font-normal text-[#c58d98]">Her</em> Accessories</> : <>{jewellery ? "Jewellery" : "Accessories"} <em className="font-normal text-primary">edit.</em></>}</h1>
+        <p className={(calmHerJewellery || calmHerAccessories) ? "mx-auto mt-4 max-w-lg text-[15px] leading-7 text-stone-500" : "mx-auto mt-5 max-w-xl leading-7 text-muted-foreground"}>{calmHerJewellery ? "Delicate details, everyday pieces and little treasures from independent brands." : calmHerAccessories ? "Bags, sunglasses and watches — little details, softly collected." : jewellery ? "Discover independent jewellery labels, delicate everyday pieces and statement finds." : "Find bags, sunglasses, belts and finishing touches from independent brands."}</p>
       </section>
-      <section className={calmHerJewellery ? "mt-10 sm:mt-14" : "mt-12"}>
-        {!calmHerJewellery && <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
+      <section className={(calmHerJewellery || calmHerAccessories) ? "mt-10 sm:mt-14" : "mt-12"}>
+        {!calmHerJewellery && !calmHerAccessories && <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
           <div><p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">{jewellery ? "A tiny jewellery daydream" : "The accessories edit"} · {isHim ? "Him" : "Her"}</p><h2 className="mt-2 font-display text-3xl sm:text-4xl">{isHim ? "The details make the mood." : jewellery ? <>Little treasures, <em className="font-normal text-primary">softly found.</em></> : <>The finishing touches, <em className="font-normal text-primary">considered.</em></>}</h2></div>
           <p className="max-w-sm text-sm leading-6 text-muted-foreground">{isHim ? "Considered details, collected inspiration." : jewellery ? "Pearls, warm gold, shell dishes and the kind of pieces you save just because they make you feel something." : "Structured bags, timeless sunglasses and gold-tone watches in warm, understated shades."}</p>
         </div>}
-        {calmHerJewellery ? <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4 lg:gap-6">
+        {(calmHerJewellery || calmHerAccessories) ? <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4 lg:gap-6">
           {referenceImages.map((item, index) => <figure key={item.title} className="overflow-hidden rounded-[1rem] bg-[#f5f0eb]">
             <img src={item.src} alt={item.title} loading="lazy" className={`block w-full object-cover ${index % 5 === 1 ? "aspect-[4/5]" : index % 5 === 3 ? "aspect-[3/4]" : "aspect-[4/5]"}`} />
           </figure>)}
