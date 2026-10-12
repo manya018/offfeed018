@@ -63,9 +63,9 @@ function DiscoverPage() {
             { src: "https://images.unsplash.com/photo-1611652022419-a9419f74343d?auto=format&fit=crop&w=1000&q=85", title: "Quiet statement", note: "A few considered details, styled with restraint" },
           ]
         : [
-            { src: "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?auto=format&fit=crop&w=1000&q=85", title: "Soft gold layers", note: "Delicate chains, warm light and bare skin" },
-            { src: "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?auto=format&fit=crop&w=1000&q=85", title: "Pearl & polish", note: "Romantic details with a modern finish" },
-            { src: "https://images.unsplash.com/photo-1605100804763-247f67b3557e?auto=format&fit=crop&w=1000&q=85", title: "Little heirlooms", note: "Fine rings and everyday pieces worth keeping" },
+            { src: "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?auto=format&fit=crop&w=1000&q=85", title: "Soft gold layers", note: "Delicate chains, warm light and bare skin" },
+            { src: "https://images.unsplash.com/photo-1617038220319-276d3cfab638?auto=format&fit=crop&w=1000&q=85", title: "The art of the ear stack", note: "Unexpected pairings, sculptural hoops and considered details" },
+            { src: "https://images.unsplash.com/photo-1630019852942-f89202989a59?auto=format&fit=crop&w=1000&q=85", title: "Little heirlooms", note: "Sculptural rings and everyday pieces worth keeping" },
           ]
       : isHim
         ? [
