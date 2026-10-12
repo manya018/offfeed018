@@ -76,7 +76,7 @@ function DiscoverPage() {
         : [
             { src: "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&w=1000&q=85", title: "The statement bag", note: "Sculptural shapes in soft, wearable colour" },
             { src: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=1000&q=85", title: "Blush-hour details", note: "Pretty textures, subtle colour and clean styling" },
-            { src: "https://images.unsplash.com/photo-1511499767150-a48a237f0083?auto=format&fit=crop&w=1000&q=85", title: "A little sun", note: "Sleek sunglasses and an easy, polished finish" },
+            { src: "https://images.unsplash.com/photo-1473496169904-658ba7c44d8a?auto=format&fit=crop&w=1000&q=85", title: "A little sun", note: "Sleek sunglasses and an easy, polished finish" },
           ]
     return <main className="mx-auto min-h-[70vh] max-w-[1440px] px-5 pb-24 pt-12 lg:px-10 lg:pt-16">
       <section className="mx-auto max-w-3xl text-center">
