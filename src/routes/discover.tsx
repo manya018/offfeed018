@@ -88,9 +88,9 @@ function DiscoverPage() {
             { src: "https://images.unsplash.com/photo-1556306535-38febf6782e7?auto=format&fit=crop&w=1000&q=85", title: "Clean lines", note: "Classic frames in a muted, editorial palette" },
           ]
         : [
-            { src: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=1200&q=85", title: "Cherry, softly", note: "A deep burgundy handbag with a polished, timeless silhouette" },
-            { src: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=1200&q=85", title: "Golden hour, always", note: "A classic analogue watch styled in warm neutral light" },
-            { src: "https://images.unsplash.com/photo-1511499767150-a48a237f0083?auto=format&fit=crop&w=1200&q=85", title: "Tortoiseshell mornings", note: "Sunglasses in a soft, sunlit editorial mood" },
+            { src: "https://i.etsystatic.com/63821927/r/il/b5ae44/7610152187/il_1588xN.7610152187_ilps.jpg", title: "Cherry, softly", note: "A deep burgundy handbag against champagne satin" },
+            { src: "https://www.bjorklund.no/media/wysiwyg/bjorklund-mockberg-by-mockberg-miljo-tett.jpg?auto=webp&format=pjpg&quality=85", title: "Golden hour, always", note: "A classic gold analogue watch, delicate and timeless" },
+            { src: "https://ellosunglasses.com/cdn/shop/articles/editorial-flatlay-sunglasses-thin-face-female-fashion_c1f2e297-eeb9-405e-926d-c733d3b5e685.jpg?v=1760982934", title: "Tortoiseshell mornings", note: "Warm brown sunglasses styled in a soft editorial flat lay" },
           ]
     return <main className="mx-auto min-h-[70vh] max-w-[1440px] px-5 pb-24 pt-12 lg:px-10 lg:pt-16">
       <section className={(calmHerJewellery || calmHerAccessories) ? "mx-auto max-w-3xl pb-2 pt-2 text-center" : "mx-auto max-w-3xl text-center"}>
