@@ -58,26 +58,26 @@ function DiscoverPage() {
     const referenceImages = jewellery
       ? isHim
         ? [
-            { src: "https://images.pexels.com/photos/33812674/pexels-photo-33812674.jpeg?cs=srgb&dl=pexels-mahdi-yousefi-1276588-33812674.jpg&fm=jpg", title: "Silver rings & wristwear", note: "Bold rings, stacked chains and a statement watch" },
-            { src: "https://images.unsplash.com/photo-1586878341340-1971696a9b71?auto=format&fit=crop&w=1000&q=80", title: "Everyday metal details", note: "Sculptural silver and understated pieces" },
-            { src: "https://images.pexels.com/photos/31078822/pexels-photo-31078822.jpeg?cs=srgb&dl=pexels-helloaesthe-31078822.jpg&fm=jpg", title: "Off-duty essentials", note: "Neutral textures with a little shine" },
+            { src: "https://images.unsplash.com/photo-1617038220319-276d3cfab638?auto=format&fit=crop&w=1000&q=85", title: "Sculptural silver", note: "Cool-toned metal, clean lines, no excess" },
+            { src: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=1000&q=85", title: "The daily watch", note: "Understated hardware against warm neutrals" },
+            { src: "https://images.unsplash.com/photo-1611652022419-a9419f74343d?auto=format&fit=crop&w=1000&q=85", title: "Quiet statement", note: "A few considered details, styled with restraint" },
           ]
         : [
-            { src: "https://images.pexels.com/photos/29502924/pexels-photo-29502924/free-photo-of-elegant-gold-jewelry-set-with-necklace-and-earrings.jpeg?auto=compress&dpr=1&h=750&w=1260", title: "Golden hour", note: "Layered chains, delicate rings and warm gold" },
-            { src: "https://images.unsplash.com/photo-1586878341340-1971696a9b71?auto=format&fit=crop&w=1000&q=80", title: "Everyday treasures", note: "Minimal pieces for your daily rotation" },
-            { src: "https://images.pexels.com/photos/2986445/pexels-photo-2986445.jpeg?auto=compress&dpr=1&h=750&w=1260", title: "The finishing touch", note: "Mix jewellery with your favourite accessories" },
+            { src: "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?auto=format&fit=crop&w=1000&q=85", title: "Soft gold layers", note: "Delicate chains, warm light and bare skin" },
+            { src: "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?auto=format&fit=crop&w=1000&q=85", title: "Pearl & polish", note: "Romantic details with a modern finish" },
+            { src: "https://images.unsplash.com/photo-1605100804763-247f67b3557e?auto=format&fit=crop&w=1000&q=85", title: "Little heirlooms", note: "Fine rings and everyday pieces worth keeping" },
           ]
       : isHim
         ? [
-            { src: "https://images.pexels.com/photos/31078822/pexels-photo-31078822.jpeg?cs=srgb&dl=pexels-helloaesthe-31078822.jpg&fm=jpg", title: "Everyday carry", note: "Clean sneakers, shades and useful essentials" },
-            { src: "https://images.pexels.com/photos/33812674/pexels-photo-33812674.jpeg?cs=srgb&dl=pexels-mahdi-yousefi-1276588-33812674.jpg&fm=jpg", title: "Silver & leather", note: "Watches, rings and tactile details" },
-            { src: "https://images.pexels.com/photos/2986445/pexels-photo-2986445.jpeg?auto=compress&dpr=1&h=750&w=1260", title: "Style, pared back", note: "Build a signature with a few considered pieces" },
+            { src: "https://images.unsplash.com/photo-1511499767150-a48a237f0083?auto=format&fit=crop&w=1000&q=85", title: "After-hours shades", note: "Sharp frames, muted tones, effortless edge" },
+            { src: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=1000&q=85", title: "Everyday utility", note: "Functional shapes with a considered silhouette" },
+            { src: "https://images.unsplash.com/photo-1508296695146-257a814070b4?auto=format&fit=crop&w=1000&q=85", title: "Off-duty uniform", note: "Minimal essentials in black, stone and espresso" },
           ]
         : [
-            { src: "https://images.pexels.com/photos/2986445/pexels-photo-2986445.jpeg?auto=compress&dpr=1&h=750&w=1260", title: "The everyday edit", note: "Sunglasses, scarves and little details" },
-            { src: "https://images.pexels.com/photos/31078822/pexels-photo-31078822.jpeg?cs=srgb&dl=pexels-helloaesthe-31078822.jpg&fm=jpg", title: "Soft neutrals", note: "Easy essentials in warm, wearable tones" },
-            { src: "https://images.pexels.com/photos/29502924/pexels-photo-29502924/free-photo-of-elegant-gold-jewelry-set-with-necklace-and-earrings.jpeg?auto=compress&dpr=1&h=750&w=1260", title: "A hint of gold", note: "Pair bags and shades with delicate jewellery" },
-          ];
+            { src: "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&w=1000&q=85", title: "The statement bag", note: "Sculptural shapes in soft, wearable colour" },
+            { src: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=1000&q=85", title: "Blush-hour details", note: "Pretty textures, subtle colour and clean styling" },
+            { src: "https://images.unsplash.com/photo-1511499767150-a48a237f0083?auto=format&fit=crop&w=1000&q=85", title: "A little sun", note: "Sleek sunglasses and an easy, polished finish" },
+          ]
     return <main className="mx-auto min-h-[70vh] max-w-[1440px] px-5 pb-24 pt-12 lg:px-10 lg:pt-16">
       <section className="mx-auto max-w-3xl text-center">
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">Independent brands · OFFFEED</p>
