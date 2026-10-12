@@ -65,15 +65,15 @@ function DiscoverPage() {
           ]
         : [
             { src: "https://images.pexels.com/photos/18585098/pexels-photo-18585098.jpeg?auto=compress&cs=tinysrgb&w=1000", title: "A little treasure from the sea", note: "Golden hoops tucked into a pearly shell" },
-            { src: "https://images.pexels.com/photos/34344084/pexels-photo-34344084.jpeg?auto=compress&cs=tinysrgb&w=1000", title: "Pearls, please", note: "Soft, luminous details for a daydream" },
-            { src: "https://images.pexels.com/photos/10915187/pexels-photo-10915187.jpeg?auto=compress&cs=tinysrgb&w=1000", title: "Found at the vanity", note: "An heirloom mood with a little mirror magic" },
+            { src: "https://images.unsplash.com/photo-1617038220319-276d3cfab638?auto=format&fit=crop&w=1000&q=85", title: "Pearls, please", note: "Soft, luminous details for a daydream" },
+            { src: "https://images.unsplash.com/photo-1611652022419-a9419f74343d?auto=format&fit=crop&w=1000&q=85", title: "Found at the vanity", note: "An heirloom mood with a little mirror magic" },
             { src: "https://images.pexels.com/photos/12585697/pexels-photo-12585697.jpeg?auto=compress&cs=tinysrgb&w=1000", title: "Golden hour, always", note: "Sculptural gold catching the light" },
-            { src: "https://images.unsplash.com/photo-1611652022419-a9419f74343d?auto=format&fit=crop&w=1000&q=85", title: "The pearl girl edit", note: "Sweet pearls with a playful, dressed-up feel" },
-            { src: "https://images.pexels.com/photos/9692389/pexels-photo-9692389.jpeg?auto=compress&cs=tinysrgb&w=1000", title: "Collected on the coast", note: "Natural shells, tiny treasures, slow summer days" },
+            { src: "https://images.unsplash.com/photo-1611085583191-a3b181a88401?auto=format&fit=crop&w=1000&q=85", title: "Golden details", note: "Sweet pearls with a playful, dressed-up feel" },
+            { src: "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?auto=format&fit=crop&w=1000&q=85", title: "Collected on the coast", note: "Natural shells, tiny treasures, slow summer days" },
             { src: "https://images.pexels.com/photos/29371789/pexels-photo-29371789.jpeg?auto=compress&cs=tinysrgb&w=1000", title: "A bow in the story", note: "Delicate gold and pearl charms on silky fabric" },
             { src: "https://images.pexels.com/photos/36229139/pexels-photo-36229139.jpeg?auto=compress&cs=tinysrgb&w=1000", title: "Little things to keep", note: "Romantic vintage details, like a jewellery box" },
             { src: "https://images.pexels.com/photos/6624862/pexels-photo-6624862.jpeg?auto=compress&cs=tinysrgb&w=1000", title: "Notes from a soft morning", note: "Fine chains, flowers and sunlit linen" },
-            { src: "https://images.pexels.com/photos/7743086/pexels-photo-7743086.jpeg?auto=compress&cs=tinysrgb&w=1000", title: "A bloom and a pearl", note: "Dreamy floral details with a vintage heart" },
+            { src: "https://images.unsplash.com/photo-1630019852942-f89202989a59?auto=format&fit=crop&w=1000&q=85", title: "A bloom and a pearl", note: "Dreamy floral details with a vintage heart" },
           ]
       : isHim
         ? [
