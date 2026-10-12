@@ -84,9 +84,15 @@ function DiscoverPage() {
             { src: "https://images.unsplash.com/photo-1508296695146-257a814070b4?auto=format&fit=crop&w=1000&q=85", title: "Off-duty uniform", note: "Minimal essentials in black, stone and espresso" },
           ]
         : [
-            { src: "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&w=1000&q=85", title: "The statement bag", note: "Sculptural shapes in soft, wearable colour" },
-            { src: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=1000&q=85", title: "Blush-hour details", note: "Pretty textures, subtle colour and clean styling" },
-            { src: "https://images.unsplash.com/photo-1473496169904-658ba7c44d8a?auto=format&fit=crop&w=1000&q=85", title: "A little sun", note: "Sleek sunglasses and an easy, polished finish" },
+            { src: "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&w=1000&q=85", title: "The everyday bag", note: "Soft structure, warm neutrals and understated gold hardware" },
+            { src: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=1000&q=85", title: "Espresso, always", note: "A rich brown shoulder bag for a quietly polished look" },
+            { src: "https://images.unsplash.com/photo-1590874103328-eac38a683ce7?auto=format&fit=crop&w=1000&q=85", title: "A little vintage", note: "Timeless silhouettes in cream, tan and chocolate" },
+            { src: "https://images.unsplash.com/photo-1473496169904-658ba7c44d8a?auto=format&fit=crop&w=1000&q=85", title: "Golden-hour shades", note: "Sculpted frames in warm tortoiseshell tones" },
+            { src: "https://images.unsplash.com/photo-1511499767150-a48a237f0083?auto=format&fit=crop&w=1000&q=85", title: "The classic pair", note: "Clean, effortless sunglasses with a soft-luxe feel" },
+            { src: "https://images.unsplash.com/photo-1572635196237-14b3f281503f?auto=format&fit=crop&w=1000&q=85", title: "Off-duty elegance", note: "Minimal frames that finish the simplest outfit" },
+            { src: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=1000&q=85", title: "The daily watch", note: "A simple timepiece with a polished, timeless face" },
+            { src: "https://images.unsplash.com/photo-1524592094714-0f0654e20314?auto=format&fit=crop&w=1000&q=85", title: "Gold on gold", note: "A delicate gold-tone watch for everyday wear" },
+            { src: "https://images.unsplash.com/photo-1508685096489-7aacd43bd3b1?auto=format&fit=crop&w=1000&q=85", title: "A timeless detail", note: "A refined watch that feels just as lovely dressed up" },
           ]
     return <main className="mx-auto min-h-[70vh] max-w-[1440px] px-5 pb-24 pt-12 lg:px-10 lg:pt-16">
       <section className={calmHerJewellery ? "mx-auto max-w-3xl pb-2 pt-2 text-center" : "mx-auto max-w-3xl text-center"}>
@@ -96,8 +102,8 @@ function DiscoverPage() {
       </section>
       <section className={calmHerJewellery ? "mt-10 sm:mt-14" : "mt-12"}>
         {!calmHerJewellery && <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
-          <div><p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">A tiny jewellery daydream · {isHim ? "Him" : "Her"}</p><h2 className="mt-2 font-display text-3xl sm:text-4xl">{isHim ? "The details make the mood." : <>Little treasures, <em className="font-normal text-primary">softly found.</em></>}</h2></div>
-          <p className="max-w-sm text-sm leading-6 text-muted-foreground">{isHim ? "Considered details, collected inspiration." : "Pearls, warm gold, shell dishes and the kind of pieces you save just because they make you feel something."}</p>
+          <div><p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">{jewellery ? "A tiny jewellery daydream" : "The accessories edit"} · {isHim ? "Him" : "Her"}</p><h2 className="mt-2 font-display text-3xl sm:text-4xl">{isHim ? "The details make the mood." : jewellery ? <>Little treasures, <em className="font-normal text-primary">softly found.</em></> : <>The finishing touches, <em className="font-normal text-primary">considered.</em></>}</h2></div>
+          <p className="max-w-sm text-sm leading-6 text-muted-foreground">{isHim ? "Considered details, collected inspiration." : jewellery ? "Pearls, warm gold, shell dishes and the kind of pieces you save just because they make you feel something." : "Structured bags, timeless sunglasses and gold-tone watches in warm, understated shades."}</p>
         </div>}
         {calmHerJewellery ? <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4 lg:gap-6">
           {referenceImages.map((item, index) => <figure key={item.title} className="overflow-hidden rounded-[1rem] bg-[#f5f0eb]">
