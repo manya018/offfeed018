@@ -58,7 +58,7 @@ function Index() {
         </div>
         <div className="grid gap-5 sm:grid-cols-2">
           <Link id="jewellery" to="/discover" search={{ category: "jewellery" }} className="group relative min-h-[280px] overflow-hidden rounded-[1.5rem] bg-secondary p-7 shadow-soft transition-transform duration-300 hover:-translate-y-1 sm:min-h-[340px]">
-            <img src={coquette} alt="" loading="lazy" className="absolute inset-0 size-full object-cover transition-transform duration-700 group-hover:scale-105" />
+            <img src="https://images.unsplash.com/photo-1617038220319-276d3cfab638?auto=format&fit=crop&w=1400&q=90" alt="Elegant gold jewellery arranged in a soft editorial flat lay" loading="lazy" className="absolute inset-0 size-full object-cover transition-transform duration-700 group-hover:scale-105" />
             <div className="absolute inset-0 bg-gradient-to-t from-foreground/75 via-foreground/15 to-transparent" />
             <div className="absolute inset-x-0 bottom-0 p-6 text-primary-foreground sm:p-8">
               <p className="text-xs font-semibold uppercase tracking-[0.18em]">Small details, big feeling</p>
