@@ -180,3 +180,89 @@ html[data-style-space="him"] {
 }
 
 @utility shadow-soft { box-shadow: var(--shadow-soft); }
+
+
+/* OFFFEED first-visit brand reveal */
+.offfeed-intro {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  overflow: hidden;
+  background: #fdf6ef;
+  animation: offfeed-intro-out 650ms ease 1.55s forwards;
+}
+.offfeed-intro__lockup {
+  position: relative;
+  width: min(100%, 900px);
+  text-align: center;
+  animation: offfeed-lockup-in 900ms cubic-bezier(.2,.75,.25,1) both;
+}
+.offfeed-intro__wordmark {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  white-space: nowrap;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: clamp(3.25rem, 13vw, 9.25rem);
+  font-weight: 500;
+  letter-spacing: -.075em;
+  line-height: .9;
+}
+.offfeed-intro__o {
+  position: relative;
+  display: inline-block;
+  margin-right: .025em;
+  color: #e6b7b8;
+  background: linear-gradient(115deg, #e6b7b8 12%, #6b4f3f 90%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.offfeed-intro__spark {
+  position: absolute;
+  top: 42%;
+  left: 50%;
+  color: #6b4f3f;
+  font-family: Georgia, serif;
+  font-size: .3em;
+  transform: translate(-50%, -50%);
+  -webkit-text-fill-color: #6b4f3f;
+}
+.offfeed-intro__brown { color: #6b4f3f; }
+.offfeed-intro__pink { color: #d9959a; }
+.offfeed-intro__green { color: #8a9b7d; }
+.offfeed-intro__tagline {
+  margin: clamp(14px, 2.5vw, 24px) 0 0;
+  color: #6b4f3f;
+  font-family: "DM Sans", sans-serif;
+  font-size: clamp(.62rem, 2.1vw, 1rem);
+  font-weight: 400;
+  letter-spacing: clamp(.18em, 1vw, .42em);
+}
+.offfeed-intro__rule {
+  display: block;
+  width: 0;
+  height: 1px;
+  margin: 26px auto 0;
+  background: linear-gradient(90deg, #e6b7b8, #8a9b7d);
+  animation: offfeed-rule-in 850ms ease 250ms forwards;
+}
+@keyframes offfeed-lockup-in {
+  from { opacity: 0; transform: translateY(12px) scale(.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes offfeed-rule-in {
+  to { width: min(38vw, 250px); }
+}
+@keyframes offfeed-intro-out {
+  to { opacity: 0; visibility: hidden; pointer-events: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .offfeed-intro, .offfeed-intro__lockup, .offfeed-intro__rule {
+    animation-duration: 1ms;
+    animation-delay: 0ms;
+  }
+}
