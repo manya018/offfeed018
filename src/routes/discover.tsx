@@ -87,10 +87,16 @@ function DiscoverPage() {
           ]
       : isHim
         ? [
-            { src: "https://images.unsplash.com/photo-1511499767150-a48a237f0083?auto=format&fit=crop&w=1000&q=85", title: "After-hours shades", note: "Sharp frames, muted tones, effortless edge" },
-            { src: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=1000&q=85", title: "Everyday utility", note: "Functional shapes with a considered silhouette" },
-            { src: "https://images.unsplash.com/photo-1508296695146-257a814070b4?auto=format&fit=crop&w=1000&q=85", title: "Off-duty uniform", note: "Minimal essentials in black, stone and espresso" },
-            { src: "https://images.unsplash.com/photo-1556306535-38febf6782e7?auto=format&fit=crop&w=1000&q=85", title: "Clean lines", note: "Classic frames in a muted, editorial palette" },
+            { src: "/images/accessories/ChatGPT%20Image%20Oct%2014%2C%202026%2C%2010_21_51%20PM.jpg", title: "Espresso statement belt", note: "A rich brown belt with a polished silver buckle" },
+            { src: "/images/accessories/ChatGPT%20Image%20Oct%2014%2C%202026%2C%2010_22_00%20PM.jpg", title: "After-hours black shades", note: "Sculptural black frames with a clean, confident edge" },
+            { src: "/images/accessories/ChatGPT%20Image%20Oct%2014%2C%202026%2C%2010_22_06%20PM.jpg", title: "Minimal black leather belt", note: "A timeless everyday essential with silver hardware" },
+            { src: "/images/accessories/ChatGPT%20Image%20Oct%2014%2C%202026%2C%2010_22_12%20PM.jpg", title: "Off-duty square sunglasses", note: "Bold frames styled for an effortless street look" },
+            { src: "/images/accessories/ChatGPT%20Image%20Oct%2014%2C%202026%2C%2010_22_18%20PM.jpg", title: "Vintage-inspired sunglasses", note: "A relaxed denim look finished with slim dark lenses" },
+            { src: "/images/accessories/ChatGPT%20Image%20Oct%2014%2C%202026%2C%2010_22_23%20PM.jpg", title: "Everyday black frames", note: "A sharp, understated accessory for daily outfits" },
+            { src: "/images/accessories/ChatGPT%20Image%20Oct%2014%2C%202026%2C%2010_22_29%20PM.jpg", title: "Classic bold sunglasses", note: "Dark rectangular frames with a strong silhouette" },
+            { src: "/images/accessories/ChatGPT%20Image%20Oct%2014%2C%202026%2C%2010_22_36%20PM.jpg", title: "Black crossbody bag", note: "Compact and practical with a minimal city-ready shape" },
+            { src: "/images/accessories/ChatGPT%20Image%20Oct%2014%2C%202026%2C%2010_22_42%20PM.jpg", title: "Utility sling bag", note: "A hands-free essential with understated streetwear appeal" },
+            { src: "/images/accessories/ChatGPT%20Image%20Oct%2014%2C%202026%2C%2010_22_47%20PM.jpg", title: "Monochrome backpack", note: "A clean black-and-white backpack for everyday carry" },
           ]
         : [
             { src: "https://i.etsystatic.com/63821927/r/il/b5ae44/7610152187/il_1588xN.7610152187_ilps.jpg", title: "Cherry, softly", note: "A deep burgundy handbag against champagne satin" },
