@@ -60,10 +60,15 @@ function DiscoverPage() {
     const referenceImages = jewellery
       ? isHim
         ? [
-            { src: "https://najo.com.au/cdn/shop/files/Pearl-Blog-17.png?v=1695853341&width=1080", title: "Sculptural silver", note: "Cool-toned metal, clean lines, no excess" },
-            { src: "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?auto=format&fit=crop&w=1000&q=85", title: "Sculptural silver", note: "A restrained jewellery detail in soft, natural light" },
-            { src: "https://www.poshtottydesigns.com/cdn/shop/files/9ctLargePearlHoops.jpg?v=1723033585", title: "Quiet statement", note: "A few considered details, styled with restraint" },
-            { src: "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?auto=format&fit=crop&w=1000&q=85", title: "The understated edit", note: "Delicate gold pieces styled with a quiet editorial feel" },
+            { src: "/images/jewellery/ChatGPT%20Image%20Oct%2014%2C%202026%2C%2010_02_37%20PM.jpg", title: "Starburst pendant", note: "A sculptural silver pendant on a fine chain" },
+            { src: "/images/jewellery/ChatGPT%20Image%20Oct%2014%2C%202026%2C%2010_02_45%20PM.jpg", title: "Black dog-tag pendant", note: "Clean, dark-toned metal with a minimal edge" },
+            { src: "/images/jewellery/ChatGPT%20Image%20Oct%2014%2C%202026%2C%2010_02_53%20PM.jpg", title: "Double silver chain bracelet", note: "Layered links with a polished finish" },
+            { src: "/images/jewellery/ChatGPT%20Image%20Oct%2014%2C%202026%2C%2010_03_00%20PM.jpg", title: "Initial bar bracelet", note: "A personal detail in a clean silver silhouette" },
+            { src: "/images/jewellery/ChatGPT%20Image%20Oct%2014%2C%202026%2C%2010_03_06%20PM.jpg", title: "Black geometric pendant", note: "A bold black-and-silver everyday chain" },
+            { src: "/images/jewellery/ChatGPT%20Image%20Oct%2014%2C%202026%2C%2010_03_12%20PM.jpg", title: "Slim gold bracelet", note: "A subtle gold accent for everyday styling" },
+            { src: "/images/jewellery/ChatGPT%20Image%20Oct%2014%2C%202026%2C%2010_03_19%20PM.jpg", title: "Silver snake chain", note: "A smooth, understated silver essential" },
+            { src: "/images/jewellery/ChatGPT%20Image%20Oct%2014%2C%202026%2C%2010_03_26%20PM.jpg", title: "Gold snake chain", note: "Warm gold with a clean, classic profile" },
+            { src: "/images/jewellery/ChatGPT%20Image%20Oct%2014%2C%202026%2C%2010_03_33%20PM.jpg", title: "Geometric gold hoop", note: "A sharp, modern finishing detail" }
           ]
         : [
             { src: "https://www.linjer.co/cdn/shop/files/keira-43-maeve-pearl-hoop-earrings-gv-lookbook-94copy-min_4480x.jpg?v=1747718107", title: "A little treasure from the sea", note: "Golden hoops tucked into a pearly shell" },
