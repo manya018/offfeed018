@@ -8,12 +8,45 @@ import {
   Scripts,
   type ErrorComponentProps,
 } from "@tanstack/react-router";
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { SiteHeader } from "@/components/site-header";
 import { StyleSpaceProvider } from "@/lib/style-space";
+
+function BrandIntro() {
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    try {
+      if (sessionStorage.getItem("offfeed-intro-seen") === "1") return;
+      setVisible(true);
+      const timeout = window.setTimeout(() => {
+        setVisible(false);
+        sessionStorage.setItem("offfeed-intro-seen", "1");
+      }, 2100);
+      return () => window.clearTimeout(timeout);
+    } catch {
+      // If storage is unavailable, keep the site usable without blocking navigation.
+      return;
+    }
+  }, []);
+
+  if (!visible) return null;
+
+  return (
+    <div className="offfeed-intro" role="status" aria-label="Welcome to OFFFEED">
+      <div className="offfeed-intro__lockup">
+        <div className="offfeed-intro__wordmark" aria-label="OFFFEED">
+          <span className="offfeed-intro__o">O<span className="offfeed-intro__spark">✦</span></span><span className="offfeed-intro__brown">FF</span><span className="offfeed-intro__pink">EE</span><span className="offfeed-intro__green">D</span>
+        </div>
+        <p className="offfeed-intro__tagline">find it before your feed does.</p>
+        <span className="offfeed-intro__rule" aria-hidden="true" />
+      </div>
+    </div>
+  );
+}
 
 function NotFoundComponent() {
   return (
@@ -121,6 +154,7 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <StyleSpaceProvider>
+        <BrandIntro />
         <SiteHeader />
         <Outlet />
       </StyleSpaceProvider>
