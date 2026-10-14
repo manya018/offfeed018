@@ -25,7 +25,7 @@ function BrandIntro() {
       const timeout = window.setTimeout(() => {
         setVisible(false);
         sessionStorage.setItem("offfeed-intro-seen", "1");
-      }, 2100);
+      }, 2200);
       return () => window.clearTimeout(timeout);
     } catch {
       // If storage is unavailable, keep the site usable without blocking navigation.
