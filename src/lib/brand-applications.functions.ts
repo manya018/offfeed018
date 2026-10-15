@@ -10,7 +10,7 @@ const applicationSchema = z.object({
   audience: z.array(z.enum(["her", "him"])).min(1),
   audienceCategories: z.object({ her: z.array(z.enum(["Clothes", "Jewellery", "Bags", "Accessories", "Shoes", "Beauty"])).max(6), him: z.array(z.enum(["Clothes", "Accessories", "Shoes", "Grooming"])).max(4) }),
   description: z.string().trim().min(20).max(1000),
-  website: z.string().trim().url().max(2048),
+  website: z.string().trim().max(2048).refine((value) => value === "" || z.string().url().safeParse(value).success, "Enter a valid website address starting with https://"),
   socialHandle: z.string().trim().max(120).optional().nullable(),
   logoPath: z.string().min(1).max(500),
   coverPath: z.string().min(1).max(500),
