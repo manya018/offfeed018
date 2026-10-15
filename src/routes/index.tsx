@@ -58,12 +58,12 @@ function Index() {
         </div>
         <div className="grid gap-5 sm:grid-cols-2">
           <Link id="jewellery" to="/discover" search={{ category: "jewellery" }} className="group relative min-h-[280px] overflow-hidden rounded-[1.5rem] bg-secondary p-7 shadow-soft transition-transform duration-300 hover:-translate-y-1 sm:min-h-[340px]">
-            <img src="https://images.unsplash.com/photo-1617038220319-276d3cfab638?auto=format&fit=crop&w=1400&q=90" alt="Elegant gold jewellery arranged in a soft editorial flat lay" className="absolute inset-0 size-full object-cover transition-transform duration-700 group-hover:scale-105" />
+            <img src={isHim ? "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?auto=format&fit=crop&w=1400&q=90" : "https://images.unsplash.com/photo-1617038220319-276d3cfab638?auto=format&fit=crop&w=1400&q=90"} alt={isHim ? "Men’s silver chain, rings and bracelets in an editorial flat lay" : "Elegant gold jewellery arranged in a soft editorial flat lay"} className="absolute inset-0 size-full object-cover transition-transform duration-700 group-hover:scale-105" />
             <div className="absolute inset-0 bg-gradient-to-t from-foreground/75 via-foreground/15 to-transparent" />
             <div className="absolute inset-x-0 bottom-0 p-6 text-primary-foreground sm:p-8">
               <p className="text-xs font-semibold uppercase tracking-[0.18em]">Small details, big feeling</p>
               <h3 className="mt-2 font-display text-3xl sm:text-4xl">Jewellery</h3>
-              <p className="mt-2 max-w-sm text-sm text-primary-foreground/85">Everyday pieces, statement earrings and independent jewellery finds.</p>
+              <p className="mt-2 max-w-sm text-sm text-primary-foreground/85">{isHim ? "Chains, rings, bracelets and understated pieces from independent brands." : "Everyday pieces, statement earrings and independent jewellery finds."}</p>
               <span className="mt-5 inline-flex items-center gap-2 text-sm font-medium">Explore the edit <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" /></span>
             </div>
           </Link>
