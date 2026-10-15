@@ -17,6 +17,7 @@ export type Database = {
       brand_applications: {
         Row: {
           audience: string[]
+          audience_categories: Json
           brand_description: string
           brand_name: string
           category: string
@@ -38,6 +39,7 @@ export type Database = {
         }
         Insert: {
           audience?: string[]
+          audience_categories?: Json
           brand_description: string
           brand_name: string
           category: string
@@ -59,6 +61,7 @@ export type Database = {
         }
         Update: {
           audience?: string[]
+          audience_categories?: Json
           brand_description?: string
           brand_name?: string
           category?: string
