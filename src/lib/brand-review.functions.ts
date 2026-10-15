@@ -53,17 +53,19 @@ export const decideBrandApplication = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: current, error: readError } = await supabaseAdmin.from("brand_applications").select("id, brand_name, email, status, commission_rate").eq("id", payload.applicationId).single();
     if (readError || !current) throw new Error("This application could not be found.");
-    if (current.status !== "under_review") return { status: current.status, brandName: current.brand_name };
+    if (current.status !== "under_review") return { status: current.status, brandName: current.brand_name, emailSent: null as boolean | null };
 
     const nextStatus = data.action === "approve" ? "approved" : "declined";
     const { error } = await supabaseAdmin.from("brand_applications").update({ status: nextStatus }).eq("id", payload.applicationId).eq("status", "under_review");
     if (error) throw new Error("The application status could not be updated.");
 
+    let emailSent = true;
     try {
       const { sendBrandDecisionEmail } = await import("./brand-notification.server");
       await sendBrandDecisionEmail({ brandName: current.brand_name, email: current.email, approved: data.action === "approve", reason: data.reason, commissionRate: current.commission_rate });
     } catch (notifyError) {
-      console.error("[brand-review] Decision email failed", notifyError);
+      emailSent = false;
+      console.error("[brand-review] Decision saved, but the email failed to send", notifyError);
     }
-    return { status: nextStatus, brandName: current.brand_name };
+    return { status: nextStatus, brandName: current.brand_name, emailSent };
   });
