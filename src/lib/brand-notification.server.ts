@@ -111,12 +111,12 @@ export async function sendBrandDecisionEmail({ brandName, email, approved, reaso
     return;
   }
 
-  const subject = approved ? `OFFFEED approved ${brandName}` : `An update on your OFFFEED application`;
+  const subject = approved ? `Welcome to OFFFEED, ${brandName}!` : `An update on your OFFFEED application`;
   const headline = approved ? `Welcome to OFFFEED, ${brandName}.` : `An update on your OFFFEED application`;
   const body = approved
-    ? `Your brand has been approved. You can now sign in to OFFFEED and start preparing your products for the marketplace. OFFFEED's platform commission is ${commissionRate * 100}% on completed sales, with ${100 - commissionRate * 100}% paid to your brand.`
-    : `Thank you for introducing ${brandName} to OFFFEED. We’re not able to approve the application at this time.${reason ? ` Review note: ${reason}` : ""}`;
-  const html = `<div style="font-family:Helvetica,Arial,sans-serif;font-size:15px;line-height:1.6;color:#2b1c18"><h2 style="font-weight:600">${escapeHtml(headline)}</h2><p>${escapeHtml(body)}</p>${approved ? `<p style="color:#8a6f68">There are no upfront subscription or listing fees.</p>` : ""}<p>With care,<br>OFFFEED</p></div>`;
+    ? `We’re delighted to let you know that ${brandName} has been approved to join OFFFEED. Thank you for choosing to be part of a marketplace that celebrates independent brands. You can now sign in and begin preparing your products for the marketplace. Our platform commission is ${commissionRate * 100}% on completed sales, and ${100 - commissionRate * 100}% goes to your brand.`
+    : `Thank you for taking the time to introduce ${brandName} to OFFFEED and for sharing your work with us. After careful consideration, we’re sorry that we’re unable to move forward with the application at this time. This decision doesn’t take away from the effort you’ve put into your brand, and we truly appreciate your interest in OFFFEED.${reason ? `\n\nA note from our review team: ${reason}` : ""} We wish you and your brand all the very best, and hope there may be an opportunity to connect in the future.`;
+  const html = `<div style="font-family:Helvetica,Arial,sans-serif;font-size:15px;line-height:1.7;color:#2b1c18"><h2 style="font-weight:600">${escapeHtml(headline)}</h2><p>${escapeHtml(body).replace(/\n/g, "<br>")}</p>${approved ? `<p style="color:#8a6f68">There are no upfront subscription or listing fees.</p>` : ""}<p>With care,<br>OFFFEED team</p></div>`;
   const text = `${headline}\n\n${body}\n\nWith care,\nOFFFEED`;
   const message = [
     `To: ${email}`,
