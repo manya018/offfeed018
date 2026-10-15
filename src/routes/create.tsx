@@ -73,11 +73,10 @@ function CreateLookPage() {
       setError("Upload both your photo and the outfit photo to continue.");
       return;
     }
-    const endpoint = import.meta.env.VITE_VTON_API_URL as string | undefined;
-    if (!endpoint) {
-      setError(
-        "Your uploads are ready. To generate the real AI try-on, connect a virtual try-on API endpoint using VITE_VTON_API_URL. No image has been sent anywhere.",
-      );
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined;
+    const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined;
+    if (!supabaseUrl || !supabaseKey) {
+      setError("OFFFEED's secure try-on service is not configured yet. Please try again later.");
       return;
     }
 
@@ -87,13 +86,24 @@ function CreateLookPage() {
       const form = new FormData();
       form.append("person_image", personFile);
       form.append("outfit_image", outfitFile);
-      const response = await fetch(endpoint, { method: "POST", body: form });
+      const response = await fetch(`${supabaseUrl}/functions/v1/virtual-try-on`, {
+        method: "POST",
+        headers: {
+          apikey: supabaseKey,
+          Authorization: `Bearer ${supabaseKey}`,
+        },
+        body: form,
+      });
       if (!response.ok) {
-        throw new Error(
-          response.status === 429
-            ? "The try-on service is busy. Please try again shortly."
-            : "The try-on service could not process these images. Please try again.",
-        );
+        let message = "The try-on service could not process these images. Please try again.";
+        try {
+          const errorData = (await response.json()) as { message?: string };
+          if (errorData.message) message = errorData.message;
+        } catch {
+          // Keep the friendly fallback message when the server returns non-JSON.
+        }
+        if (response.status === 429) message = "The try-on service is busy. Please try again shortly.";
+        throw new Error(message);
       }
       const data = (await response.json()) as TryOnResponse;
       if (!data.imageUrl) {
