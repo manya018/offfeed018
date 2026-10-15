@@ -32,7 +32,7 @@ type ApplicationValues = {
 };
 
 const defaultValues: ApplicationValues = {
-  contactName: "", email: "", brandName: "", category: "", description: "", website: "https://", socialHandle: "", audience: ["her"], audienceCategories: { her: [], him: [] },
+  contactName: "", email: "", brandName: "", category: "", description: "", website: "", socialHandle: "", audience: ["her"], audienceCategories: { her: [], him: [] },
 };
 
 const accountSchema = z.object({
@@ -49,7 +49,7 @@ const applicationFormSchema = z.object({
   audience: z.array(z.enum(["her", "him"])).min(1, "Choose at least one audience."),
   audienceCategories: z.object({ her: z.array(z.string()).default([]), him: z.array(z.string()).default([]) }).superRefine((categories, ctx) => { for (const audience of ["her", "him"] as const) { if (categories[audience].some((item) => !(subcategories[audience] as readonly string[]).includes(item))) ctx.addIssue({ code: z.ZodIssueCode.custom, path: [audience], message: "Choose a valid category." }); } }),
   description: z.string().trim().min(20, "Add at least 20 characters about your brand.").max(1000, "Keep your introduction under 1,000 characters."),
-  website: z.string().trim().url("Enter a full website address, starting with https://").max(2048),
+  website: z.string().trim().max(2048).refine((value) => value === "" || z.string().url().safeParse(value).success, "Enter a valid website address starting with https://"),
   socialHandle: z.string().trim().max(120, "Keep your social handle under 120 characters."),
 });
 const draftSchema = z.object({
@@ -373,7 +373,7 @@ function BrandApplicationPage() {
             {step === 3 && <div>
               <div className="mb-7"><h2 className="font-display text-3xl">Show us your world.</h2><p className="mt-2 text-sm text-muted-foreground">These images help our team get a feel for your identity.</p></div>
               <div className="grid gap-5 sm:grid-cols-2">
-                <Field label="Website" htmlFor="brand-website" error={errors["website"]}><Input id="brand-website" type="url" inputMode="url" value={values.website} onChange={(event) => update("website", event.target.value)} placeholder="https://yourbrand.com" className={fieldClass} maxLength={2048} aria-invalid={Boolean(errors["website"])} /></Field>
+                <Field label="Website (optional)" htmlFor="brand-website" error={errors["website"]}><Input id="brand-website" type="url" inputMode="url" value={values.website} onChange={(event) => update("website", event.target.value)} placeholder="https://yourbrand.com (if available)" className={fieldClass} maxLength={2048} aria-invalid={Boolean(errors["website"])} /></Field>
                 <Field label="Instagram or social handle" htmlFor="brand-social" error={errors["socialHandle"]}><Input id="brand-social" value={values.socialHandle} onChange={(event) => update("socialHandle", event.target.value)} placeholder="@yourbrand" className={fieldClass} maxLength={120} aria-invalid={Boolean(errors["socialHandle"])} /></Field>
               </div>
               <div className="mt-6 grid gap-4 sm:grid-cols-2">
