@@ -50,7 +50,7 @@ function Index() {
 
       <section className="bg-secondary px-5 py-20 text-center"><p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">A softer way to discover</p><h2 className="mx-auto mt-4 max-w-3xl font-display text-4xl sm:text-5xl">Follow your taste, not the crowd.</h2><Button className="mt-8" variant="outline" asChild><Link to="/discover">Find your next look</Link></Button></section>
 
-      {!isHim && <section id="jewellery-accessories" className="mx-auto max-w-[1440px] px-5 py-16 lg:px-10 lg:py-20 scroll-mt-24">
+      <section id="jewellery-accessories" className="mx-auto max-w-[1440px] px-5 py-16 lg:px-10 lg:py-20 scroll-mt-24">
         <div className="mb-8 max-w-2xl">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">The finishing touches</p>
           <h2 className="mt-3 font-display text-4xl sm:text-5xl">More than just the outfit.</h2>
@@ -58,7 +58,7 @@ function Index() {
         </div>
         <div className="grid gap-5 sm:grid-cols-2">
           <Link id="jewellery" to="/discover" search={{ category: "jewellery" }} className="group relative min-h-[280px] overflow-hidden rounded-[1.5rem] bg-secondary p-7 shadow-soft transition-transform duration-300 hover:-translate-y-1 sm:min-h-[340px]">
-            <img src="https://images.unsplash.com/photo-1617038220319-276d3cfab638?auto=format&fit=crop&w=1400&q=90" alt="Elegant gold jewellery arranged in a soft editorial flat lay" loading="lazy" className="absolute inset-0 size-full object-cover transition-transform duration-700 group-hover:scale-105" />
+            <img src="https://images.unsplash.com/photo-1617038220319-276d3cfab638?auto=format&fit=crop&w=1400&q=90" alt="Elegant gold jewellery arranged in a soft editorial flat lay" className="absolute inset-0 size-full object-cover transition-transform duration-700 group-hover:scale-105" />
             <div className="absolute inset-0 bg-gradient-to-t from-foreground/75 via-foreground/15 to-transparent" />
             <div className="absolute inset-x-0 bottom-0 p-6 text-primary-foreground sm:p-8">
               <p className="text-xs font-semibold uppercase tracking-[0.18em]">Small details, big feeling</p>
@@ -68,7 +68,7 @@ function Index() {
             </div>
           </Link>
           <Link id="accessories" to="/discover" search={{ category: "accessories" }} className="group relative min-h-[280px] overflow-hidden rounded-[1.5rem] bg-secondary p-7 shadow-soft transition-transform duration-300 hover:-translate-y-1 sm:min-h-[340px]">
-            <img src="https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=1400&q=90" alt="Elegant structured handbag in a minimal editorial setting" loading="lazy" className="absolute inset-0 size-full object-cover transition-transform duration-700 group-hover:scale-105" />
+            <img src="https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=1400&q=90" alt="Elegant structured handbag in a minimal editorial setting" className="absolute inset-0 size-full object-cover transition-transform duration-700 group-hover:scale-105" />
             <div className="absolute inset-0 bg-gradient-to-t from-foreground/75 via-foreground/15 to-transparent" />
             <div className="absolute inset-x-0 bottom-0 p-6 text-primary-foreground sm:p-8">
               <p className="text-xs font-semibold uppercase tracking-[0.18em]">Your look, your signature</p>
@@ -78,7 +78,7 @@ function Index() {
             </div>
           </Link>
         </div>
-      </section>}
+      </section>
     </main>
   );
 }
