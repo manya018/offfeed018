@@ -37,6 +37,7 @@ function BrandReviewPage() {
     try {
       const result = await makeDecision({ data: { token, action, reason: reason || undefined } });
       setApplication((current) => current ? { ...current, status: result.status } : current);
+      if (result.emailSent === false) setNotice("Decision saved, but the email could not be sent. Please check the deployed Gmail connection credentials.");
     } catch (error) {
       setNotice(error instanceof Error ? error.message : "The decision could not be saved.");
     } finally { setDecision(null); }
