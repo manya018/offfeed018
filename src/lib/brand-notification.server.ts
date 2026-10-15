@@ -107,8 +107,7 @@ export async function sendBrandDecisionEmail({ brandName, email, approved, reaso
   const lovableKey = process.env["LOVABLE_API_KEY"];
   const connectionKey = process.env["GOOGLE_MAIL_API_KEY"];
   if (!lovableKey || !connectionKey) {
-    console.error("[brand-decision-email] Gmail connection is not configured.");
-    return;
+    throw new Error("Gmail connection is not configured: LOVABLE_API_KEY or GOOGLE_MAIL_API_KEY is missing.");
   }
 
   const subject = approved ? `Welcome to OFFFEED, ${brandName}!` : `An update on your OFFFEED application`;
@@ -143,5 +142,5 @@ export async function sendBrandDecisionEmail({ brandName, email, approved, reaso
     headers: { Authorization: `Bearer ${lovableKey}`, "X-Connection-Api-Key": connectionKey, "Content-Type": "application/json" },
     body: JSON.stringify({ raw }),
   });
-  if (!response.ok) console.error(`[brand-decision-email] Gmail send failed [${response.status}]: ${await response.text()}`);
+  if (!response.ok) throw new Error(`Gmail send failed [${response.status}]: ${await response.text()}`);
 }
