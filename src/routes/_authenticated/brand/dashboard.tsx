@@ -59,6 +59,7 @@ type BrandOrder = {
 };
 
 function BrandOrderCard({ order, onSaved }: { order: BrandOrder; onSaved: () => void }) {
+  const deliveryAddress = order.delivery_address as unknown as { line1?: string; line2?: string; city?: string; state?: string; landmark?: string };
   const [status, setStatus] = useState(order.status);
   const [provider, setProvider] = useState(order.tracking_provider);
   const [trackingNumber, setTrackingNumber] = useState(order.tracking_number);
