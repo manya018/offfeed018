@@ -164,7 +164,7 @@ export const getBrandWorkspace = createServerFn({ method: "GET" })
     const safeShippingProfile = shippingError ? null : shippingProfile;
     const { data: orderRows, error: ordersError } = application.status === "approved"
       ? await context.supabase.from("brand_orders")
-          .select("id, order_number, customer_name, customer_email, customer_phone, destination_pin_code, product_name, selected_size, selected_color, quantity, unit_price, currency, status, tracking_provider, tracking_number, tracking_url, estimated_delivery_start, estimated_delivery_end, dispatched_at, delivered_at, created_at")
+          .select("id, order_number, customer_name, customer_email, customer_phone, delivery_address, destination_pin_code, product_name, selected_size, selected_color, quantity, unit_price, currency, status, tracking_provider, tracking_number, tracking_url, estimated_delivery_start, estimated_delivery_end, dispatched_at, delivered_at, created_at")
           .eq("brand_application_id", application.id)
           .order("created_at", { ascending: false })
           .limit(100)
