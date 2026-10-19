@@ -160,10 +160,11 @@ export const getBrandWorkspace = createServerFn({ method: "GET" })
     const { data: shippingProfile, error: shippingError } = application.status === "approved"
       ? await context.supabase.from("brand_shipping_profiles").select("origin_pin_code, processing_days_min, processing_days_max, shipping_note").eq("brand_application_id", application.id).maybeSingle()
       : { data: null, error: null };
-    if (shippingError) throw new Error("Your shipping settings couldn't be loaded.");
+    // A pending migration must not prevent the rest of the brand dashboard from loading.
+    const safeShippingProfile = shippingError ? null : shippingProfile;
     return {
       application,
-      shippingProfile,
+      shippingProfile: safeShippingProfile,
       products: productRows.map((product) => ({ ...product, imageUrl: product.image_path?.startsWith("https://") ? product.image_path : imageUrls.get(product.image_path ?? "") ?? null })),
     };
   });
