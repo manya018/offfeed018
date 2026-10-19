@@ -91,7 +91,8 @@ export const getPublicBrandProfile = createServerFn({ method: "GET" })
       .select("origin_pin_code, processing_days_min, processing_days_max, shipping_note")
       .eq("brand_application_id", brand.id)
       .maybeSingle();
-    if (shippingError) throw new Error("This brand's shipping information could not be loaded.");
+    // Keep storefronts available if the shipping migration has not run yet.
+    const safeShippingProfile = shippingError ? null : shippingProfile;
 
     const { data: rows, error: productsError } = await supabase
       .from("brand_products")
@@ -125,10 +126,10 @@ export const getPublicBrandProfile = createServerFn({ method: "GET" })
         audience: brand.audience.filter((item): item is Audience => item === "her" || item === "him"),
         logoUrl: brandSigned.get(brand.logo_path) ?? null,
         coverUrl: brandSigned.get(brand.cover_path) ?? null,
-        dispatchPinCode: shippingProfile?.origin_pin_code ?? null,
-        processingDaysMin: shippingProfile?.processing_days_min ?? null,
-        processingDaysMax: shippingProfile?.processing_days_max ?? null,
-        shippingNote: shippingProfile?.shipping_note ?? null,
+        dispatchPinCode: safeShippingProfile?.origin_pin_code ?? null,
+        processingDaysMin: safeShippingProfile?.processing_days_min ?? null,
+        processingDaysMax: safeShippingProfile?.processing_days_max ?? null,
+        shippingNote: safeShippingProfile?.shipping_note ?? null,
       },
       products: (rows ?? []).map((row) => ({
         id: row.id,
