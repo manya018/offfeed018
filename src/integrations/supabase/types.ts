@@ -118,13 +118,6 @@ export type Database = {
             isOneToOne: true
             referencedRelation: "brand_applications"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "brand_shipping_profiles_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
           }
         ]
       }
