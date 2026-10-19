@@ -124,6 +124,7 @@ export interface FileRoutesById {
   '/about': typeof AboutRoute
   '/brand-review': typeof BrandReviewRoute
   '/create': typeof CreateRoute
+  '/checkout': typeof CheckoutRoute
   '/discover': typeof DiscoverRoute
   '/explore': typeof ExploreRoute
   '/profile': typeof ProfileRoute
