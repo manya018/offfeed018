@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
-import { createBrandProduct, getBrandWorkspace, importShopifyCatalog, saveBrandShippingProfile, saveImportedShopifyProducts, updateBrandProductStatus } from "@/lib/brand-products.functions";
+import { createBrandProduct, getBrandWorkspace, importShopifyCatalog, saveBrandShippingProfile, saveImportedShopifyProducts, updateBrandOrderTracking, updateBrandProductStatus } from "@/lib/brand-products.functions";
 
 export const Route = createFileRoute("/_authenticated/brand/dashboard")({
   head: () => ({ meta: [
@@ -51,6 +51,48 @@ const blankProduct: DraftProduct = { name: "", description: "", category: "Fashi
 const fieldClass = "mt-2 h-11 rounded-lg border-border/80 bg-card px-3";
 const parseList = (value: string) => value.split(",").map((item) => item.trim().replace(/^#/, "")).filter(Boolean);
 
+type BrandOrder = {
+  id: string; order_number: string; customer_name: string; customer_email: string; customer_phone: string;
+  destination_pin_code: string; product_name: string; quantity: number; unit_price: number; currency: string;
+  status: string; tracking_provider: string; tracking_number: string; tracking_url: string;
+  estimated_delivery_start: string | null; estimated_delivery_end: string | null; created_at: string;
+};
+
+function BrandOrderCard({ order, onSaved }: { order: BrandOrder; onSaved: () => void }) {
+  const [status, setStatus] = useState(order.status);
+  const [provider, setProvider] = useState(order.tracking_provider);
+  const [trackingNumber, setTrackingNumber] = useState(order.tracking_number);
+  const [trackingUrl, setTrackingUrl] = useState(order.tracking_url);
+  const [deliveryStart, setDeliveryStart] = useState(order.estimated_delivery_start ?? "");
+  const [deliveryEnd, setDeliveryEnd] = useState(order.estimated_delivery_end ?? "");
+  const [saving, setSaving] = useState(false);
+  const save = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault(); setSaving(true);
+    try {
+      await updateBrandOrderTracking({ data: {
+        orderId: order.id,
+        status: status as "confirmed" | "processing" | "shipped" | "out_for_delivery" | "delivered" | "cancelled",
+        trackingProvider: provider, trackingNumber, trackingUrl,
+        estimatedDeliveryStart: deliveryStart, estimatedDeliveryEnd: deliveryEnd,
+      }});
+      toast.success(`Tracking updated for ${order.order_number}.`); onSaved();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Order tracking couldn't be updated.");
+    } finally { setSaving(false); }
+  };
+  return <form onSubmit={(event) => void save(event)} className="rounded-xl border border-border/80 p-4 sm:p-5">
+    <div className="flex flex-wrap items-start justify-between gap-3"><div><p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">{order.order_number}</p><h3 className="mt-1 font-medium">{order.product_name} <span className="text-muted-foreground">× {order.quantity}</span></h3><p className="mt-1 text-sm text-muted-foreground">{order.customer_name} · {order.customer_email}</p><p className="mt-1 text-xs text-muted-foreground">Deliver to PIN {order.destination_pin_code} · ₹{(order.unit_price * order.quantity).toLocaleString("en-IN")}</p></div><Badge variant="secondary">{order.status.replaceAll("_", " ")}</Badge></div>
+    <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div><Label htmlFor={`status-${order.id}`}>Order status</Label><select id={`status-${order.id}`} value={status} onChange={(event) => setStatus(event.target.value)} className="mt-2 h-11 w-full rounded-lg border border-border/80 bg-card px-3 text-sm">{["confirmed", "processing", "shipped", "out_for_delivery", "delivered", "cancelled"].map((item) => <option key={item} value={item}>{item.replaceAll("_", " ")}</option>)}</select></div>
+      <div><Label htmlFor={`provider-${order.id}`}>Courier partner</Label><Input id={`provider-${order.id}`} value={provider} onChange={(event) => setProvider(event.target.value)} maxLength={100} placeholder="e.g. Shiprocket / Delhivery" className={fieldClass}/></div>
+      <div><Label htmlFor={`tracking-number-${order.id}`}>Tracking / AWB number</Label><Input id={`tracking-number-${order.id}`} value={trackingNumber} onChange={(event) => setTrackingNumber(event.target.value)} maxLength={160} placeholder="Enter tracking number" className={fieldClass}/></div>
+      <div className="sm:col-span-2"><Label htmlFor={`tracking-url-${order.id}`}>Tracking link</Label><Input id={`tracking-url-${order.id}`} type="url" value={trackingUrl} onChange={(event) => setTrackingUrl(event.target.value)} placeholder="https://…" className={fieldClass}/></div>
+      <div className="grid grid-cols-2 gap-3"><div><Label htmlFor={`eta-start-${order.id}`}>ETA from</Label><Input id={`eta-start-${order.id}`} type="date" value={deliveryStart} onChange={(event) => setDeliveryStart(event.target.value)} className={fieldClass}/></div><div><Label htmlFor={`eta-end-${order.id}`}>ETA until</Label><Input id={`eta-end-${order.id}`} type="date" value={deliveryEnd} onChange={(event) => setDeliveryEnd(event.target.value)} min={deliveryStart || undefined} className={fieldClass}/></div></div>
+    </div>
+    <div className="mt-4 flex justify-end"><Button type="submit" disabled={saving}>{saving ? <LoaderCircle className="animate-spin"/> : <Truck/>}{saving ? "Saving…" : "Save tracking update"}</Button></div>
+  </form>;
+}
+
 function BrandDashboard() {
   const queryClient = useQueryClient();
   const workspace = useQuery({ queryKey: ["brand-workspace"], queryFn: () => getBrandWorkspace() });
@@ -81,6 +123,7 @@ function BrandDashboard() {
   }, [shippingProfile]);
   const supportedAudience = useMemo(() => (application?.audience ?? ["her"]).filter((item): item is "her" | "him" => item === "her" || item === "him"), [application?.audience]);
   const products = workspace.data?.products ?? [];
+  const orders = workspace.data?.orders ?? [];
   const publishedCount = products.filter((product) => product.status === "published").length;
   const commission = Number(application?.commission_rate ?? 0.18);
 
@@ -253,6 +296,11 @@ function BrandDashboard() {
             <Button type="submit" disabled={shippingSaving}>{shippingSaving ? <LoaderCircle className="animate-spin"/> : <Truck/>}{shippingSaving ? "Saving…" : "Save shipping details"}</Button>
           </div>
         </form>
+      </section>
+
+      <section className="border-b border-border/70 py-7" aria-labelledby="brand-orders-heading">
+        <div className="flex flex-wrap items-end justify-between gap-3"><div><p className="text-xs font-semibold uppercase tracking-[0.15em] text-primary">FULFILMENT</p><h2 id="brand-orders-heading" className="mt-2 font-display text-3xl">Orders & tracking</h2><p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">When OFFFEED checkout is connected, orders will appear here. Add courier details and update the customer-facing status for orders in the system.</p></div><Badge variant="secondary">{orders.length} {orders.length === 1 ? "order" : "orders"}</Badge></div>
+        {orders.length ? <div className="mt-5 grid gap-4">{orders.map((order) => <BrandOrderCard key={order.id} order={order} onSaved={() => void queryClient.invalidateQueries({ queryKey: ["brand-workspace"] })} />)}</div> : <div className="mt-5 rounded-lg border border-dashed border-border/80 px-5 py-8"><PackagePlus className="size-5 text-muted-foreground"/><h3 className="mt-3 font-medium">No OFFFEED orders yet</h3><p className="mt-1 max-w-2xl text-sm leading-6 text-muted-foreground">Your brand ships directly from its own location; no warehouse is needed. Orders will appear here after OFFFEED checkout/order creation is connected. Existing website orders won't automatically show up here.</p></div>}
       </section>
 
       <div className="grid gap-10 py-9 lg:grid-cols-[minmax(0,1fr)_260px]">
