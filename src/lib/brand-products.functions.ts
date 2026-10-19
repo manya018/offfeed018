@@ -157,7 +157,42 @@ export const getBrandWorkspace = createServerFn({ method: "GET" })
       : { data: [], error: null };
     if (signedError) throw new Error("Product images couldn't be loaded.");
     const imageUrls = new Map((signedFiles ?? []).map((file) => [file.path, file.signedUrl]));
-    return { application, products: productRows.map((product) => ({ ...product, imageUrl: product.image_path?.startsWith("https://") ? product.image_path : imageUrls.get(product.image_path ?? "") ?? null })) };
+    const { data: shippingProfile, error: shippingError } = application.status === "approved"
+      ? await context.supabase.from("brand_shipping_profiles").select("origin_pin_code, processing_days_min, processing_days_max, shipping_note").eq("brand_application_id", application.id).maybeSingle()
+      : { data: null, error: null };
+    if (shippingError) throw new Error("Your shipping settings couldn't be loaded.");
+    return {
+      application,
+      shippingProfile,
+      products: productRows.map((product) => ({ ...product, imageUrl: product.image_path?.startsWith("https://") ? product.image_path : imageUrls.get(product.image_path ?? "") ?? null })),
+    };
+  });
+
+export const saveBrandShippingProfile = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({
+    originPinCode: z.string().trim().regex(/^[1-9][0-9]{5}$/, "Enter a valid 6-digit Indian PIN code."),
+    processingDaysMin: z.number().int().min(0).max(30),
+    processingDaysMax: z.number().int().min(0).max(45),
+    shippingNote: z.string().trim().max(500),
+  }).refine((value) => value.processingDaysMax >= value.processingDaysMin, {
+    message: "Maximum processing days must be at least the minimum.",
+    path: ["processingDaysMax"],
+  }).parse(input))
+  .handler(async ({ context, data }) => {
+    const application = await getApprovedApplication(context);
+    const { data: profile, error } = await context.supabase.from("brand_shipping_profiles").upsert({
+      brand_application_id: application.id,
+      user_id: context.userId,
+      origin_pin_code: data.originPinCode,
+      processing_days_min: data.processingDaysMin,
+      processing_days_max: data.processingDaysMax,
+      shipping_note: data.shippingNote,
+    }, { onConflict: "brand_application_id" })
+      .select("origin_pin_code, processing_days_min, processing_days_max, shipping_note")
+      .single();
+    if (error || !profile) throw new Error("Your shipping settings couldn't be saved. Please try again.");
+    return profile;
   });
 
 export const importShopifyCatalog = createServerFn({ method: "POST" })
