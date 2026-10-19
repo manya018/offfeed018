@@ -115,8 +115,8 @@ function CheckoutPage() {
               </div>
             ))}
           </div>
-          <div className="mt-5 flex justify-between font-medium"><span>Total due on delivery</span><span>₹{grandTotal.toLocaleString("en-IN")}</span></div>
-          <p className="mt-4 text-xs leading-5 text-muted-foreground">Save your order numbers for reference. Delivery estimates and courier tracking will appear once each brand confirms dispatch.</p>
+          <div className="mt-5 flex justify-between font-medium"><span>Product subtotal</span><span>₹{grandTotal.toLocaleString("en-IN")}</span></div>
+          <p className="mt-4 text-xs leading-5 text-muted-foreground">Save your order numbers for reference. The final amount due may include shipping confirmed by each brand before dispatch. Delivery estimates and courier tracking will appear once each brand confirms dispatch.</p>
           <Button className="mt-7" asChild><Link to="/discover">Continue discovering</Link></Button>
         </div>
       </main>
@@ -187,11 +187,11 @@ function CheckoutPage() {
               <div className="border-y border-border/70 py-4">
                 <div className="flex items-center justify-between text-sm"><span>Items subtotal</span><span>₹{total.toLocaleString("en-IN")}</span></div>
                 <div className="mt-2 flex items-center justify-between text-sm"><span>Shipping</span><span>Confirmed by each brand</span></div>
-                <p className="mt-2 text-xs leading-5 text-muted-foreground">Shipping charges, if any, will be confirmed by the brand before dispatch. No courier fee is being invented at checkout.</p>
+                <p className="mt-2 text-xs leading-5 text-muted-foreground">Shipping charges are not yet calculated at checkout. Each brand must confirm any shipping charge before dispatch, so the final amount due may change.</p>
               </div>
-              <div className="flex items-center justify-between text-base font-semibold"><span>Pay on delivery</span><span>₹{total.toLocaleString("en-IN")}</span></div>
+              <div className="flex items-center justify-between text-base font-semibold"><span>Product subtotal</span><span>₹{total.toLocaleString("en-IN")}</span></div>
               <Button type="submit" className="w-full" disabled={!items.length || loading}>{loading ? "Placing order…" : "Place COD order"}</Button>
-              <p className="text-center text-[11px] leading-5 text-muted-foreground">Cash on Delivery · No online payment is collected on this prototype checkout.</p>
+              <p className="text-center text-[11px] leading-5 text-muted-foreground">Cash on Delivery · Product subtotal shown; shipping, if charged, is confirmed by the brand before dispatch.</p>
             </form>
           </div>
         </aside>
