@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowDownToLine, ArrowLeft, ArrowRight, Check, ExternalLink, ImagePlus, LoaderCircle, PackagePlus, PencilLine, Plus, RefreshCw, Search, Shirt, Trash2, Upload, X } from "lucide-react";
-import { useMemo, useRef, useState, type ChangeEvent } from "react";
+import { ArrowDownToLine, ArrowLeft, ArrowRight, Check, ExternalLink, ImagePlus, LoaderCircle, PackagePlus, PencilLine, Plus, RefreshCw, Search, Shirt, Trash2, Truck, Upload, X } from "lucide-react";
+import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
-import { createBrandProduct, getBrandWorkspace, importShopifyCatalog, saveImportedShopifyProducts, updateBrandProductStatus } from "@/lib/brand-products.functions";
+import { createBrandProduct, getBrandWorkspace, importShopifyCatalog, saveBrandShippingProfile, saveImportedShopifyProducts, updateBrandProductStatus } from "@/lib/brand-products.functions";
 
 export const Route = createFileRoute("/_authenticated/brand/dashboard")({
   head: () => ({ meta: [
@@ -64,9 +64,21 @@ function BrandDashboard() {
   const [selectedImports, setSelectedImports] = useState<string[]>([]);
   const [importAudience, setImportAudience] = useState<Array<"her" | "him">>(["her"]);
   const [error, setError] = useState("");
+  const [originPinCode, setOriginPinCode] = useState("");
+  const [processingDaysMin, setProcessingDaysMin] = useState("1");
+  const [processingDaysMax, setProcessingDaysMax] = useState("2");
+  const [shippingNote, setShippingNote] = useState("");
+  const [shippingSaving, setShippingSaving] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
 
   const application = workspace.data?.application;
+  const shippingProfile = workspace.data?.shippingProfile;
+  useEffect(() => {
+    setOriginPinCode(shippingProfile?.origin_pin_code ?? "");
+    setProcessingDaysMin(String(shippingProfile?.processing_days_min ?? 1));
+    setProcessingDaysMax(String(shippingProfile?.processing_days_max ?? 2));
+    setShippingNote(shippingProfile?.shipping_note ?? "");
+  }, [shippingProfile]);
   const supportedAudience = useMemo(() => (application?.audience ?? ["her"]).filter((item): item is "her" | "him" => item === "her" || item === "him"), [application?.audience]);
   const products = workspace.data?.products ?? [];
   const publishedCount = products.filter((product) => product.status === "published").length;
@@ -81,6 +93,24 @@ function BrandDashboard() {
     setImported([]);
     setSelectedImports([]);
     setError("");
+  };
+
+  const saveShippingSettings = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const minDays = Number(processingDaysMin);
+    const maxDays = Number(processingDaysMax);
+    if (!/^[1-9][0-9]{5}$/.test(originPinCode)) { toast.error("Enter a valid 6-digit Indian dispatch PIN code."); return; }
+    if (!Number.isInteger(minDays) || !Number.isInteger(maxDays) || minDays < 0 || maxDays < minDays || maxDays > 45) {
+      toast.error("Check the processing-time range. Maximum days must be at least minimum days."); return;
+    }
+    setShippingSaving(true);
+    try {
+      await saveBrandShippingProfile({ data: { originPinCode, processingDaysMin: minDays, processingDaysMax: maxDays, shippingNote } });
+      await queryClient.invalidateQueries({ queryKey: ["brand-workspace"] });
+      toast.success("Shipping profile saved.");
+    } catch (saveError) {
+      toast.error(saveError instanceof Error ? saveError.message : "Shipping settings couldn't be saved.");
+    } finally { setShippingSaving(false); }
   };
 
   const updateDraft = (key: keyof DraftProduct, value: string) => setDraft((current) => ({ ...current, [key]: value }));
@@ -197,6 +227,33 @@ function BrandDashboard() {
         <Stat label="Published" value={String(publishedCount)} icon={Check}/>
         <Stat label="Your share" value={`${Math.round((1 - commission) * 100)}%`} icon={PackagePlus}/>
       </div>
+
+      <section className="border-b border-border/70 py-7" aria-labelledby="shipping-settings-heading">
+        <div className="max-w-3xl">
+          <p className="text-xs font-semibold uppercase tracking-[0.15em] text-primary">DIRECT-TO-CUSTOMER SHIPPING</p>
+          <h2 id="shipping-settings-heading" className="mt-2 font-display text-3xl">Your dispatch details</h2>
+          <p className="mt-2 text-sm leading-6 text-muted-foreground">Keep products at your own studio or shop. When an order is placed, you prepare it and a courier collects it from this PIN code. OFFFEED will use these details as the foundation for delivery estimates; courier-powered ETAs will be added when shipping integration is connected.</p>
+        </div>
+        <form onSubmit={(event) => void saveShippingSettings(event)} className="mt-5 grid gap-4 sm:grid-cols-2">
+          <div>
+            <Label htmlFor="shipping-origin-pin">Dispatch PIN code</Label>
+            <Input id="shipping-origin-pin" inputMode="numeric" maxLength={6} pattern="[1-9][0-9]{5}" required value={originPinCode} onChange={(event) => setOriginPinCode(event.target.value.replace(/\\D/g, "").slice(0, 6))} placeholder="e.g. 302001" className={fieldClass}/>
+            <p className="mt-1 text-xs text-muted-foreground">PIN code where your parcel will be picked up.</p>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div><Label htmlFor="processing-min">Min. prep days</Label><Input id="processing-min" type="number" min={0} max={30} required value={processingDaysMin} onChange={(event) => setProcessingDaysMin(event.target.value)} className={fieldClass}/></div>
+            <div><Label htmlFor="processing-max">Max. prep days</Label><Input id="processing-max" type="number" min={0} max={45} required value={processingDaysMax} onChange={(event) => setProcessingDaysMax(event.target.value)} className={fieldClass}/></div>
+          </div>
+          <div className="sm:col-span-2">
+            <Label htmlFor="shipping-note">Dispatch note (optional)</Label>
+            <Textarea id="shipping-note" maxLength={500} value={shippingNote} onChange={(event) => setShippingNote(event.target.value)} placeholder="e.g. Made-to-order items need 3 extra days. Orders ship Monday–Saturday." className="mt-2 min-h-24 rounded-lg border-border/80 bg-card"/>
+          </div>
+          <div className="sm:col-span-2 flex flex-wrap items-center justify-between gap-3">
+            <p className="max-w-xl text-xs leading-5 text-muted-foreground"><Truck className="mr-1 inline size-3.5"/> These are brand-provided preparation details, not a live courier ETA. No warehouse is required.</p>
+            <Button type="submit" disabled={shippingSaving}>{shippingSaving ? <LoaderCircle className="animate-spin"/> : <Truck/>}{shippingSaving ? "Saving…" : "Save shipping details"}</Button>
+          </div>
+        </form>
+      </section>
 
       <div className="grid gap-10 py-9 lg:grid-cols-[minmax(0,1fr)_260px]">
         <section className="min-w-0">
