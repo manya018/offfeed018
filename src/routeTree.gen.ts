@@ -14,6 +14,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as BrandReviewRouteImport } from './routes/brand-review'
 import { Route as CreateRouteImport } from './routes/create'
+import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as DiscoverRouteImport } from './routes/discover'
 import { Route as ExploreRouteImport } from './routes/explore'
 import { Route as ProfileRouteImport } from './routes/profile'
@@ -44,6 +45,11 @@ const BrandReviewRoute = BrandReviewRouteImport.update({
 const CreateRoute = CreateRouteImport.update({
   id: '/create',
   path: '/create',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CheckoutRoute = CheckoutRouteImport.update({
+  id: '/checkout',
+  path: '/checkout',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DiscoverRoute = DiscoverRouteImport.update({
@@ -88,6 +94,7 @@ export interface FileRoutesByFullPath {
   '/about': typeof AboutRoute
   '/brand-review': typeof BrandReviewRoute
   '/create': typeof CreateRoute
+  '/checkout': typeof CheckoutRoute
   '/discover': typeof DiscoverRoute
   '/explore': typeof ExploreRoute
   '/profile': typeof ProfileRoute
@@ -131,6 +138,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/brand-review'
     | '/create'
+    | '/checkout'
     | '/discover'
     | '/explore'
     | '/profile'
@@ -173,6 +181,7 @@ export interface RootRouteChildren {
   AboutRoute: typeof AboutRoute
   BrandReviewRoute: typeof BrandReviewRoute
   CreateRoute: typeof CreateRoute
+  CheckoutRoute: typeof CheckoutRoute
   DiscoverRoute: typeof DiscoverRoute
   ExploreRoute: typeof ExploreRoute
   ProfileRoute: typeof ProfileRoute
@@ -216,6 +225,13 @@ declare module '@tanstack/react-router' {
       path: '/create'
       fullPath: '/create'
       preLoaderRoute: typeof CreateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/checkout': {
+      id: '/checkout'
+      path: '/checkout'
+      fullPath: '/checkout'
+      preLoaderRoute: typeof CheckoutRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/discover': {
@@ -287,6 +303,7 @@ const rootRouteChildren: RootRouteChildren = {
   AboutRoute: AboutRoute,
   BrandReviewRoute: BrandReviewRoute,
   CreateRoute: CreateRoute,
+  CheckoutRoute: CheckoutRoute,
   DiscoverRoute: DiscoverRoute,
   ExploreRoute: ExploreRoute,
   ProfileRoute: ProfileRoute,
