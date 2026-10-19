@@ -83,6 +83,51 @@ export type Database = {
         }
         Relationships: []
       }
+      brand_shipping_profiles: {
+        Row: {
+          brand_application_id: string
+          origin_pin_code: string
+          processing_days_max: number
+          processing_days_min: number
+          shipping_note: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          brand_application_id: string
+          origin_pin_code: string
+          processing_days_max?: number
+          processing_days_min?: number
+          shipping_note?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          brand_application_id?: string
+          origin_pin_code?: string
+          processing_days_max?: number
+          processing_days_min?: number
+          shipping_note?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brand_shipping_profiles_brand_application_id_fkey"
+            columns: ["brand_application_id"]
+            isOneToOne: true
+            referencedRelation: "brand_applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_shipping_profiles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       brand_products: {
         Row: {
           audience: string[]
