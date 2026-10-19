@@ -71,7 +71,7 @@ function BrandOrderCard({ order, onSaved }: { order: BrandOrder; onSaved: () => 
     try {
       await updateBrandOrderTracking({ data: {
         orderId: order.id,
-        status: status as "confirmed" | "processing" | "shipped" | "out_for_delivery" | "delivered" | "cancelled",
+        status: status as "pending" | "confirmed" | "processing" | "shipped" | "out_for_delivery" | "delivered" | "cancelled",
         trackingProvider: provider, trackingNumber, trackingUrl,
         estimatedDeliveryStart: deliveryStart, estimatedDeliveryEnd: deliveryEnd,
       }});
@@ -83,7 +83,7 @@ function BrandOrderCard({ order, onSaved }: { order: BrandOrder; onSaved: () => 
   return <form onSubmit={(event) => void save(event)} className="rounded-xl border border-border/80 p-4 sm:p-5">
     <div className="flex flex-wrap items-start justify-between gap-3"><div><p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">{order.order_number}</p><h3 className="mt-1 font-medium">{order.product_name} <span className="text-muted-foreground">× {order.quantity}</span></h3><p className="mt-1 text-sm text-muted-foreground">{order.customer_name} · {order.customer_email}</p><p className="mt-1 text-xs text-muted-foreground">Deliver to PIN {order.destination_pin_code} · ₹{(order.unit_price * order.quantity).toLocaleString("en-IN")}</p>{(order.selected_size || order.selected_color) && <p className="mt-1 text-xs text-muted-foreground">Variant: {[order.selected_size, order.selected_color].filter(Boolean).join(" · ")}</p>}</div><Badge variant="secondary">{order.status.replaceAll("_", " ")}</Badge></div>
     <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      <div><Label htmlFor={`status-${order.id}`}>Order status</Label><select id={`status-${order.id}`} value={status} onChange={(event) => setStatus(event.target.value)} className="mt-2 h-11 w-full rounded-lg border border-border/80 bg-card px-3 text-sm">{["confirmed", "processing", "shipped", "out_for_delivery", "delivered", "cancelled"].map((item) => <option key={item} value={item}>{item.replaceAll("_", " ")}</option>)}</select></div>
+      <div><Label htmlFor={`status-${order.id}`}>Order status</Label><select id={`status-${order.id}`} value={status} onChange={(event) => setStatus(event.target.value)} className="mt-2 h-11 w-full rounded-lg border border-border/80 bg-card px-3 text-sm">{["pending", "confirmed", "processing", "shipped", "out_for_delivery", "delivered", "cancelled"].map((item) => <option key={item} value={item}>{item.replaceAll("_", " ")}</option>)}</select></div>
       <div><Label htmlFor={`provider-${order.id}`}>Courier partner</Label><Input id={`provider-${order.id}`} value={provider} onChange={(event) => setProvider(event.target.value)} maxLength={100} placeholder="e.g. Shiprocket / Delhivery" className={fieldClass}/></div>
       <div><Label htmlFor={`tracking-number-${order.id}`}>Tracking / AWB number</Label><Input id={`tracking-number-${order.id}`} value={trackingNumber} onChange={(event) => setTrackingNumber(event.target.value)} maxLength={160} placeholder="Enter tracking number" className={fieldClass}/></div>
       <div className="sm:col-span-2"><Label htmlFor={`tracking-url-${order.id}`}>Tracking link</Label><Input id={`tracking-url-${order.id}`} type="url" value={trackingUrl} onChange={(event) => setTrackingUrl(event.target.value)} placeholder="https://…" className={fieldClass}/></div>
