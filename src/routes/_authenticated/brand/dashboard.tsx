@@ -237,7 +237,7 @@ function BrandDashboard() {
         <form onSubmit={(event) => void saveShippingSettings(event)} className="mt-5 grid gap-4 sm:grid-cols-2">
           <div>
             <Label htmlFor="shipping-origin-pin">Dispatch PIN code</Label>
-            <Input id="shipping-origin-pin" inputMode="numeric" maxLength={6} pattern="[1-9][0-9]{5}" required value={originPinCode} onChange={(event) => setOriginPinCode(event.target.value.replace(/\\D/g, "").slice(0, 6))} placeholder="e.g. 302001" className={fieldClass}/>
+            <Input id="shipping-origin-pin" inputMode="numeric" maxLength={6} pattern="[1-9][0-9]{5}" required value={originPinCode} onChange={(event) => setOriginPinCode(event.target.value.replace(/\D/g, "").slice(0, 6))} placeholder="e.g. 302001" className={fieldClass}/>
             <p className="mt-1 text-xs text-muted-foreground">PIN code where your parcel will be picked up.</p>
           </div>
           <div className="grid grid-cols-2 gap-3">
