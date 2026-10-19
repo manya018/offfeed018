@@ -174,20 +174,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "brand_orders_brand_user_id_fkey"
-            columns: ["brand_user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "brand_orders_customer_user_id_fkey"
-            columns: ["customer_user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "brand_orders_product_id_fkey"
             columns: ["product_id"]
             isOneToOne: false
