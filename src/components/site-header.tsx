@@ -1,8 +1,9 @@
 import { Link } from "@tanstack/react-router";
 import { Menu, Search, UserRound, ShoppingBag } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useStyleSpace } from "@/lib/style-space";
+import { offfeedCartEventName, readOfffeedCart } from "@/lib/cart";
 
 const links = [
   { label: "Home", to: "/" as const },
@@ -15,7 +16,18 @@ const links = [
 
 export function SiteHeader() {
   const [open, setOpen] = useState(false);
+  const [bagCount, setBagCount] = useState(0);
   const { space, setSpace } = useStyleSpace();
+  useEffect(() => {
+    const syncBag = () => setBagCount(readOfffeedCart().reduce((sum, item) => sum + item.quantity, 0));
+    syncBag();
+    window.addEventListener(offfeedCartEventName(), syncBag);
+    window.addEventListener("storage", syncBag);
+    return () => {
+      window.removeEventListener(offfeedCartEventName(), syncBag);
+      window.removeEventListener("storage", syncBag);
+    };
+  }, []);
   return (
     <header className="sticky top-0 z-50 border-b border-border/70 bg-background/90 backdrop-blur-xl">
       <div className="mx-auto flex h-20 max-w-[1440px] items-center justify-between px-5 lg:px-10">
@@ -30,7 +42,7 @@ export function SiteHeader() {
         </nav>
         <div className="flex items-center gap-1.5">
           <Button variant="ghost" size="icon" aria-label="Search" className="hidden sm:inline-flex" asChild><Link to="/discover"><Search /></Link></Button>
-          <Button variant="ghost" size="icon" aria-label="Shopping bag and checkout" asChild><Link to="/checkout"><ShoppingBag /></Link></Button>
+          <Button variant="ghost" size="icon" aria-label={`Shopping bag, ${bagCount} items`} className="relative" asChild><Link to="/checkout"><ShoppingBag />{bagCount > 0 && <span className="absolute -right-1 -top-1 grid min-h-4 min-w-4 place-items-center rounded-full bg-primary px-1 text-[10px] leading-4 text-primary-foreground">{bagCount > 99 ? "99+" : bagCount}</span>}</Link></Button>
           <Button variant="ghost" size="icon" aria-label="Profile" asChild><Link to="/profile"><UserRound /></Link></Button>
           <Button className="hidden sm:inline-flex" asChild><Link to="/discover">Get Off the Feed</Link></Button>
           <Button variant="ghost" size="icon" aria-label="Open navigation" className="lg:hidden" onClick={() => setOpen((value) => !value)}><Menu /></Button>
