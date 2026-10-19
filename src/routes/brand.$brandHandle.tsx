@@ -71,6 +71,13 @@ function BrandProfilePage() {
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">{brand.category}</p>
             <h1 className="mt-2 font-display text-5xl font-medium sm:text-6xl">{brand.name}</h1>
             <p className="mt-4 max-w-2xl whitespace-pre-line text-sm leading-7 text-muted-foreground">{brand.description}</p>
+            {brand.dispatchPinCode && <div className="mt-5 max-w-xl border-y border-border/70 py-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.15em] text-primary">Shipping from the brand</p>
+              <p className="mt-2 text-sm">Dispatch PIN code: <span className="font-medium">{brand.dispatchPinCode}</span></p>
+              <p className="mt-1 text-sm text-muted-foreground">Usually prepared for dispatch in {brand.processingDaysMin}–{brand.processingDaysMax} business day{brand.processingDaysMax === 1 ? "" : "s"}.</p>
+              {brand.shippingNote && <p className="mt-2 whitespace-pre-line text-sm text-muted-foreground">{brand.shippingNote}</p>}
+              <p className="mt-2 text-xs text-muted-foreground">Transit time depends on the courier and destination. This is dispatch information, not a confirmed delivery date.</p>
+            </div>}
             <div className="mt-4 flex flex-wrap gap-2">
               {brand.audience.map((item) => <Badge key={item} variant="outline">{item === "her" ? "Her edit" : "Him edit"}</Badge>)}
             </div>
