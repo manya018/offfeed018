@@ -210,7 +210,7 @@ export const updateBrandOrderTracking = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input) => z.object({
     orderId: z.string().uuid(),
-    status: z.enum(["confirmed", "processing", "shipped", "out_for_delivery", "delivered", "cancelled"]),
+    status: z.enum(["pending", "confirmed", "processing", "shipped", "out_for_delivery", "delivered", "cancelled"]),
     trackingProvider: z.string().trim().max(100),
     trackingNumber: z.string().trim().max(160),
     trackingUrl: z.union([z.literal(""), z.string().url().max(2048)]),
