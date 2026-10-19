@@ -1,20 +1,12 @@
-import { ExternalLink, ImageOff } from "lucide-react";
+import { ImageOff, ShoppingBag, Check } from "lucide-react";
 import { Link } from "@tanstack/react-router";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import type { ProductWithBrand } from "@/lib/public-brand.functions";
-
-function safeExternalUrl(value: string | null) {
-  if (!value) return null;
-  try {
-    const url = new URL(value);
-    return url.protocol === "https:" ? url.toString() : null;
-  } catch {
-    return null;
-  }
-}
+import { addToOfffeedCart } from "@/lib/cart";
 
 export function PublicProductCard({ product }: { product: ProductWithBrand }) {
-  const productUrl = safeExternalUrl(product.productUrl);
+  const [added, setAdded] = useState(false);
   return (
     <article className="min-w-0 border-b border-border/70 pb-4">
       <Link to="/brand/$brandHandle" params={{ brandHandle: product.brand.handle }} className="group block">
@@ -37,11 +29,18 @@ export function PublicProductCard({ product }: { product: ProductWithBrand }) {
             {[product.sizes.length ? `Sizes ${product.sizes.join(", ")}` : "", product.colors.join(", ")].filter(Boolean).join(" · ")}
           </p>
         )}
-        {productUrl && (
-          <Button variant="outline" size="sm" className="mt-3 w-full" asChild>
-            <a href={productUrl} target="_blank" rel="noreferrer"><ExternalLink />View product</a>
-          </Button>
-        )}
+        <Button
+          variant="outline"
+          size="sm"
+          className="mt-3 w-full"
+          onClick={() => {
+            addToOfffeedCart(product);
+            setAdded(true);
+          }}
+        >
+          {added ? <Check /> : <ShoppingBag />}
+          {added ? "Added to bag" : "Add to bag"}
+        </Button>
       </div>
     </article>
   );
