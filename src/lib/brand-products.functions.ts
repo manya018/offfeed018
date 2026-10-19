@@ -162,9 +162,19 @@ export const getBrandWorkspace = createServerFn({ method: "GET" })
       : { data: null, error: null };
     // A pending migration must not prevent the rest of the brand dashboard from loading.
     const safeShippingProfile = shippingError ? null : shippingProfile;
+    const { data: orderRows, error: ordersError } = application.status === "approved"
+      ? await context.supabase.from("brand_orders")
+          .select("id, order_number, customer_name, customer_email, customer_phone, destination_pin_code, product_name, quantity, unit_price, currency, status, tracking_provider, tracking_number, tracking_url, estimated_delivery_start, estimated_delivery_end, dispatched_at, delivered_at, created_at")
+          .eq("brand_application_id", application.id)
+          .order("created_at", { ascending: false })
+          .limit(100)
+      : { data: [], error: null };
+    // Keep the workspace usable if the order-tracking migration is still pending.
+    const safeOrderRows = ordersError ? [] : orderRows ?? [];
     return {
       application,
       shippingProfile: safeShippingProfile,
+      orders: safeOrderRows,
       products: productRows.map((product) => ({ ...product, imageUrl: product.image_path?.startsWith("https://") ? product.image_path : imageUrls.get(product.image_path ?? "") ?? null })),
     };
   });
@@ -194,6 +204,43 @@ export const saveBrandShippingProfile = createServerFn({ method: "POST" })
       .single();
     if (error || !profile) throw new Error("Your shipping settings couldn't be saved. Please try again.");
     return profile;
+  });
+
+export const updateBrandOrderTracking = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({
+    orderId: z.string().uuid(),
+    status: z.enum(["confirmed", "processing", "shipped", "out_for_delivery", "delivered", "cancelled"]),
+    trackingProvider: z.string().trim().max(100),
+    trackingNumber: z.string().trim().max(160),
+    trackingUrl: z.union([z.literal(""), z.string().url().max(2048)]),
+    estimatedDeliveryStart: z.union([z.literal(""), z.string().date()]),
+    estimatedDeliveryEnd: z.union([z.literal(""), z.string().date()]),
+  }).refine((value) => !value.estimatedDeliveryStart || !value.estimatedDeliveryEnd || value.estimatedDeliveryEnd >= value.estimatedDeliveryStart, {
+    message: "The delivery end date must be on or after the start date.",
+    path: ["estimatedDeliveryEnd"],
+  }).parse(input))
+  .handler(async ({ context, data }) => {
+    const application = await getApprovedApplication(context);
+    const now = new Date().toISOString();
+    const updates = {
+      status: data.status,
+      tracking_provider: data.trackingProvider,
+      tracking_number: data.trackingNumber,
+      tracking_url: data.trackingUrl,
+      estimated_delivery_start: data.estimatedDeliveryStart || null,
+      estimated_delivery_end: data.estimatedDeliveryEnd || null,
+      dispatched_at: data.status === "shipped" ? now : undefined,
+      delivered_at: data.status === "delivered" ? now : undefined,
+    };
+    const { data: order, error } = await context.supabase.from("brand_orders")
+      .update(updates)
+      .eq("id", data.orderId)
+      .eq("brand_application_id", application.id)
+      .select("id, order_number, status, tracking_provider, tracking_number, tracking_url, estimated_delivery_start, estimated_delivery_end, dispatched_at, delivered_at")
+      .maybeSingle();
+    if (error || !order) throw new Error("Order tracking couldn't be updated. Please check that the database migration has been applied.");
+    return order;
   });
 
 export const importShopifyCatalog = createServerFn({ method: "POST" })
