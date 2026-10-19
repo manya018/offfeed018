@@ -102,6 +102,8 @@ export type Database = {
           order_number: string
           product_id: string | null
           product_name: string
+          selected_color: string
+          selected_size: string
           quantity: number
           status: string
           tracking_number: string
@@ -129,6 +131,8 @@ export type Database = {
           order_number: string
           product_id?: string | null
           product_name: string
+          selected_color?: string
+          selected_size?: string
           quantity?: number
           status?: string
           tracking_number?: string
@@ -156,6 +160,8 @@ export type Database = {
           order_number?: string
           product_id?: string | null
           product_name?: string
+          selected_color?: string
+          selected_size?: string
           quantity?: number
           status?: string
           tracking_number?: string
