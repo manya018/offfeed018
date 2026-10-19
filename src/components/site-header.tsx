@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { Menu, Search, UserRound } from "lucide-react";
+import { Menu, Search, UserRound, ShoppingBag } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useStyleSpace } from "@/lib/style-space";
@@ -30,12 +30,14 @@ export function SiteHeader() {
         </nav>
         <div className="flex items-center gap-1.5">
           <Button variant="ghost" size="icon" aria-label="Search" className="hidden sm:inline-flex" asChild><Link to="/discover"><Search /></Link></Button>
+          <Button variant="ghost" size="icon" aria-label="Shopping bag and checkout" asChild><Link to="/checkout"><ShoppingBag /></Link></Button>
           <Button variant="ghost" size="icon" aria-label="Profile" asChild><Link to="/profile"><UserRound /></Link></Button>
           <Button className="hidden sm:inline-flex" asChild><Link to="/discover">Get Off the Feed</Link></Button>
           <Button variant="ghost" size="icon" aria-label="Open navigation" className="lg:hidden" onClick={() => setOpen((value) => !value)}><Menu /></Button>
         </div>
       </div>
       {open && <nav className="grid border-t border-border bg-background px-5 py-4 lg:hidden">{links.map((link) => <Link key={link.label} to={link.to} className="py-3 text-sm" onClick={() => setOpen(false)}>{link.label}</Link>)}
+        <Link to="/checkout" className="py-3 text-sm" onClick={() => setOpen(false)}>Shopping bag / Checkout</Link>
         <Link to="/" hash="jewellery" className="py-3 text-sm" onClick={() => setOpen(false)}>Jewellery</Link>
         <Link to="/" hash="accessories" className="py-3 text-sm" onClick={() => setOpen(false)}>Accessories</Link></nav>}
     </header>
