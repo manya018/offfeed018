@@ -1,5 +1,5 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { ArrowLeft, ArrowUpRight, Instagram, Store } from "lucide-react";
+import { ArrowLeft, Instagram } from "lucide-react";
 import { useStyleSpace } from "@/lib/style-space";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -42,13 +42,6 @@ function BrandProfilePage() {
   const socialUrl = brand.socialHandle
     ? `https://www.instagram.com/${brand.socialHandle.replace(/^@/, "").replace(/^https?:\/\/(www\.)?instagram\.com\//i, "").replace(/\/$/, "")}`
     : null;
-  let websiteUrl: string | null = null;
-  try {
-    const parsed = new URL(brand.website);
-    if (parsed.protocol === "https:") websiteUrl = parsed.toString();
-  } catch {
-    websiteUrl = null;
-  }
 
   return (
     <main className="mx-auto max-w-7xl px-5 pb-16 pt-7 sm:px-8 lg:px-12">
@@ -83,7 +76,6 @@ function BrandProfilePage() {
             </div>
           </div>
           <div className="flex flex-wrap gap-2">
-            {websiteUrl && <Button asChild><a href={websiteUrl} target="_blank" rel="noreferrer"><Store />Shop website<ArrowUpRight /></a></Button>}
             {socialUrl && <Button variant="outline" asChild><a href={socialUrl} target="_blank" rel="noreferrer"><Instagram />Instagram</a></Button>}
           </div>
         </div>
