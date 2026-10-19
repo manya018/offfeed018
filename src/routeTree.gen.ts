@@ -108,6 +108,7 @@ export interface FileRoutesByTo {
   '/about': typeof AboutRoute
   '/brand-review': typeof BrandReviewRoute
   '/create': typeof CreateRoute
+  '/checkout': typeof CheckoutRoute
   '/discover': typeof DiscoverRoute
   '/explore': typeof ExploreRoute
   '/profile': typeof ProfileRoute
@@ -152,6 +153,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/brand-review'
     | '/create'
+    | '/checkout'
     | '/discover'
     | '/explore'
     | '/profile'
@@ -166,6 +168,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/brand-review'
     | '/create'
+    | '/checkout'
     | '/discover'
     | '/explore'
     | '/profile'
@@ -225,6 +228,13 @@ declare module '@tanstack/react-router' {
       path: '/create'
       fullPath: '/create'
       preLoaderRoute: typeof CreateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/checkout': {
+      id: '/checkout'
+      path: '/checkout'
+      fullPath: '/checkout'
+      preLoaderRoute: typeof CheckoutRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/checkout': {
