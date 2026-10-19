@@ -83,6 +83,119 @@ export type Database = {
         }
         Relationships: []
       }
+      brand_orders: {
+        Row: {
+          brand_application_id: string
+          brand_user_id: string
+          created_at: string
+          currency: string
+          customer_email: string
+          customer_name: string
+          customer_phone: string
+          customer_user_id: string | null
+          delivered_at: string | null
+          delivery_address: Json
+          destination_pin_code: string
+          estimated_delivery_end: string | null
+          estimated_delivery_start: string | null
+          id: string
+          order_number: string
+          product_id: string | null
+          product_name: string
+          quantity: number
+          status: string
+          tracking_number: string
+          tracking_provider: string
+          tracking_url: string
+          unit_price: number
+          updated_at: string
+          dispatched_at: string | null
+        }
+        Insert: {
+          brand_application_id: string
+          brand_user_id: string
+          created_at?: string
+          currency?: string
+          customer_email: string
+          customer_name: string
+          customer_phone?: string
+          customer_user_id?: string | null
+          delivered_at?: string | null
+          delivery_address?: Json
+          destination_pin_code: string
+          estimated_delivery_end?: string | null
+          estimated_delivery_start?: string | null
+          id?: string
+          order_number: string
+          product_id?: string | null
+          product_name: string
+          quantity?: number
+          status?: string
+          tracking_number?: string
+          tracking_provider?: string
+          tracking_url?: string
+          unit_price: number
+          updated_at?: string
+          dispatched_at?: string | null
+        }
+        Update: {
+          brand_application_id?: string
+          brand_user_id?: string
+          created_at?: string
+          currency?: string
+          customer_email?: string
+          customer_name?: string
+          customer_phone?: string
+          customer_user_id?: string | null
+          delivered_at?: string | null
+          delivery_address?: Json
+          destination_pin_code?: string
+          estimated_delivery_end?: string | null
+          estimated_delivery_start?: string | null
+          id?: string
+          order_number?: string
+          product_id?: string | null
+          product_name?: string
+          quantity?: number
+          status?: string
+          tracking_number?: string
+          tracking_provider?: string
+          tracking_url?: string
+          unit_price?: number
+          updated_at?: string
+          dispatched_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brand_orders_brand_application_id_fkey"
+            columns: ["brand_application_id"]
+            isOneToOne: false
+            referencedRelation: "brand_applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_orders_brand_user_id_fkey"
+            columns: ["brand_user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_orders_customer_user_id_fkey"
+            columns: ["customer_user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_orders_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "brand_products"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       brand_shipping_profiles: {
         Row: {
           brand_application_id: string
