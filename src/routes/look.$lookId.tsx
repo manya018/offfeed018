@@ -1,6 +1,6 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Heart, Share2, ShoppingBag } from "lucide-react";
+import { ArrowLeft, Heart, ShoppingBag } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { addToOfffeedCart } from "@/lib/cart";
@@ -55,7 +55,7 @@ function LookDetail() {
         <h1 className="mt-4 font-display text-6xl font-medium leading-none">{look.title}</h1>
         <p className="mt-6 max-w-md text-lg leading-8 text-muted-foreground">{look.description}</p>
         <dl className="mt-10 grid grid-cols-3 border-y border-border py-6 text-sm"><div><dt className="text-muted-foreground">Aesthetic</dt><dd className="mt-1 font-medium">{look.aesthetic}</dd></div><div><dt className="text-muted-foreground">Occasion</dt><dd className="mt-1 font-medium">{look.occasion}</dd></div><div><dt className="text-muted-foreground">Season</dt><dd className="mt-1 font-medium">{look.season}</dd></div></dl>
-        <div className="mt-8 flex flex-wrap gap-3"><Button size="lg" onClick={addLookToBag}><ShoppingBag /> {addedToBag ? "Added to bag" : "Add to bag"}</Button><Button size="lg" variant="outline" onClick={() => { toggleLikedLook(look); setLiked((value) => !value); }}><Heart className={liked ? "fill-current" : ""}/> {liked ? "Liked" : "Like"}</Button><Button size="lg" variant="outline" onClick={() => { if (navigator.share) void navigator.share({ title: look.title, text: look.description, url: window.location.href }); else void navigator.clipboard.writeText(window.location.href); }}><Share2/> Share</Button></div>
+        <div className="mt-8 flex flex-wrap gap-3"><Button size="lg" onClick={addLookToBag}><ShoppingBag /> {addedToBag ? "Added to cart" : "Add to cart"}</Button><Button size="lg" variant="outline" onClick={() => { toggleLikedLook(look); setLiked((value) => !value); }}><Heart className={liked ? "fill-current" : ""}/> {liked ? "Liked" : "Like"}</Button></div>
         <div className="mt-12"><p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Style notes</p><p className="mt-3 leading-7 text-muted-foreground">{space === "him" ? "Keep the palette grounded, build with texture, and let one strong layer set the tone." : "Balance the silhouette with understated accessories. Keep the palette tonal and let one tactile detail do the talking."}</p></div>
       </div>
     </div>
