@@ -1,7 +1,9 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Heart, Share2 } from "lucide-react";
-import { useState } from "react";
+import { ArrowLeft, Heart, Share2, ShoppingBag } from "lucide-react";
+import { useEffect, useState } from "react";
+import { addToOfffeedCart } from "@/lib/cart";
+import { readSavedLookIds, readLikedLookIds, toggleSavedLook, toggleLikedLook } from "@/lib/look-collections";
 import { Button } from "@/components/ui/button";
 import { PublicProductCard } from "@/components/public-product-card";
 import { LookCard } from "@/components/look-card";
@@ -25,6 +27,15 @@ function LookDetail() {
   const { space } = useStyleSpace();
   const otherLooks = (space === "him" ? himLooks : looks).filter((item) => item.id !== look.id);
   const [saved, setSaved] = useState(false);
+  const [liked, setLiked] = useState(false);
+  const [addedToBag, setAddedToBag] = useState(false);
+  useEffect(() => { setSaved(readSavedLookIds().includes(look.id)); setLiked(readLikedLookIds().includes(look.id)); }, [look.id]);
+  function addLookToBag() {
+    const products = shopProducts.data ?? [];
+    products.forEach((product) => addToOfffeedCart(product));
+    setAddedToBag(products.length > 0);
+    if (products.length === 0) document.getElementById("shop-the-look-heading")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
   const shopProducts = useQuery({
     queryKey: ["shop-the-look", look.id, space],
     queryFn: () => getShopTheLookProducts({ data: { audience: space, aesthetic: look.aesthetic } }),
@@ -39,7 +50,7 @@ function LookDetail() {
         <h1 className="mt-4 font-display text-6xl font-medium leading-none">{look.title}</h1>
         <p className="mt-6 max-w-md text-lg leading-8 text-muted-foreground">{look.description}</p>
         <dl className="mt-10 grid grid-cols-3 border-y border-border py-6 text-sm"><div><dt className="text-muted-foreground">Aesthetic</dt><dd className="mt-1 font-medium">{look.aesthetic}</dd></div><div><dt className="text-muted-foreground">Occasion</dt><dd className="mt-1 font-medium">{look.occasion}</dd></div><div><dt className="text-muted-foreground">Season</dt><dd className="mt-1 font-medium">{look.season}</dd></div></dl>
-        <div className="mt-8 flex flex-wrap gap-3"><Button size="lg" onClick={() => setSaved((value) => !value)}><Heart className={saved ? "fill-current" : ""}/> {saved ? "Saved" : "Save"}</Button><Button size="lg" variant="outline"><Heart/> Like</Button><Button size="lg" variant="outline"><Share2/> Share</Button></div>
+        <div className="mt-8 flex flex-wrap gap-3"><Button size="lg" onClick={() => { toggleSavedLook(look); setSaved((value) => !value); }}><Heart className={saved ? "fill-current" : ""}/> {saved ? "Saved" : "Save look"}</Button><Button size="lg" variant="outline" onClick={() => { toggleLikedLook(look); setLiked((value) => !value); }}><Heart className={liked ? "fill-current" : ""}/> {liked ? "Liked" : "Like"}</Button><Button size="lg" variant="outline" onClick={() => { if (navigator.share) void navigator.share({ title: look.title, text: look.description, url: window.location.href }); else void navigator.clipboard.writeText(window.location.href); }}><Share2/> Share</Button><Button size="lg" variant="default" onClick={addLookToBag} disabled={shopProducts.isPending || !shopProducts.data?.length}><ShoppingBag /> {addedToBag ? "Added to bag" : "Add look pieces to bag"}</Button></div>
         <div className="mt-12"><p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Style notes</p><p className="mt-3 leading-7 text-muted-foreground">{space === "him" ? "Keep the palette grounded, build with texture, and let one strong layer set the tone." : "Balance the silhouette with understated accessories. Keep the palette tonal and let one tactile detail do the talking."}</p></div>
       </div>
     </div>
