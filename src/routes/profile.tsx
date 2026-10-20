@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Heart, LoaderCircle, Package, MapPin, UserRound, LogIn, ArrowRight, RefreshCw } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { himLooks, looks, type Look } from "@/lib/offfeed-data";
 import { readLikedLookIds, syncWishlistWithAccount } from "@/lib/look-collections";
@@ -112,5 +112,5 @@ function ProfilePage() {
   </main>;
 }
 function Loading() { return <div className="flex items-center gap-2 py-10 text-sm text-muted-foreground"><LoaderCircle className="size-4 animate-spin"/> Loading…</div>; }
-function Empty({title,body,action}:{title:string;body:string;action?:React.ReactNode}) { return <div className="mt-5 rounded-2xl border border-dashed border-border px-6 py-12 text-center"><h3 className="font-display text-2xl">{title}</h3><p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">{body}</p>{action && <div className="mt-5">{action}</div>}</div>; }
+function Empty({title,body,action}:{title:string;body:string;action?:ReactNode}) { return <div className="mt-5 rounded-2xl border border-dashed border-border px-6 py-12 text-center"><h3 className="font-display text-2xl">{title}</h3><p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">{body}</p>{action && <div className="mt-5">{action}</div>}</div>; }
 function LookTile({ look }: { look: Look }) { return <Link to="/look/$lookId" params={{ lookId: look.id }} className="group block"><img src={look.image} alt={look.title} className="aspect-[3/4] w-full rounded-xl object-cover transition group-hover:opacity-90"/><p className="mt-2 text-xs uppercase tracking-wider text-primary">{look.aesthetic}</p><p className="mt-1 font-medium">{look.title}</p></Link>; }
