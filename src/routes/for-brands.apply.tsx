@@ -237,7 +237,7 @@ function BrandApplicationPage() {
     setBusy(true); setNotice("");
     try {
       const result = authMode === "signup"
-        ? await supabase.auth.signUp({ email: values.email.trim(), password, options: { data: { full_name: values.contactName.trim() } } })
+        ? await supabase.auth.signUp({ email: values.email.trim(), password, options: { data: { full_name: values.contactName.trim(), account_type: "brand" } } })
         : await supabase.auth.signInWithPassword({ email: values.email.trim(), password });
       if (result.error) {
         if (authMode === "signup" && /already registered|already exists/i.test(result.error.message)) {
@@ -253,6 +253,15 @@ function BrandApplicationPage() {
         setAuthMode("signin");
         setNotice("Check your inbox to confirm your email. Once confirmed, sign in here to continue your application.");
         return;
+      }
+      if (session.user.user_metadata?.account_type === "customer") {
+        await supabase.auth.signOut();
+        setNotice("This is a customer account. Use a separate email address to apply as a brand.");
+        return;
+      }
+      if (!session.user.user_metadata?.account_type) {
+        const { error: roleError } = await supabase.auth.updateUser({ data: { ...session.user.user_metadata, account_type: "brand" } });
+        if (roleError) throw roleError;
       }
       setUserId(session.user.id);
       setStep(2);
