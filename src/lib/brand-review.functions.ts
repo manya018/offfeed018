@@ -55,14 +55,10 @@ export const decideBrandApplication = createServerFn({ method: "POST" })
     if (readError || !current) throw new Error("This application could not be found.");
     const nextStatus = data.action === "approve" ? "approved" : "declined";
 
-    // Allow the reviewer to resend the notification for an already-decided application.
-    // Never allow this endpoint to reverse a previous decision.
-    if (current.status !== "under_review" && current.status !== nextStatus) {
-      return { status: current.status, brandName: current.brand_name, emailSent: null as boolean | null };
-    }
-
-    if (current.status === "under_review") {
-      const { error } = await supabaseAdmin.from("brand_applications").update({ status: nextStatus }).eq("id", payload.applicationId).eq("status", "under_review");
+    // The secure review link also lets the reviewer correct a previous decision.
+    // Update the status before sending the matching notification email.
+    if (current.status !== nextStatus) {
+      const { error } = await supabaseAdmin.from("brand_applications").update({ status: nextStatus }).eq("id", payload.applicationId);
       if (error) throw new Error("The application status could not be updated.");
     }
 
