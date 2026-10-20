@@ -24,6 +24,8 @@ export const Route = createFileRoute("/_authenticated/brand/dashboard")({
 });
 
 type DraftProduct = {
+  listingType: "product" | "bundle";
+  bundleItems: string;
   name: string;
   description: string;
   category: string;
@@ -47,7 +49,7 @@ type ImportedProduct = {
   category: string;
 };
 
-const blankProduct: DraftProduct = { name: "", description: "", category: "Fashion", price: "", productUrl: "", sizes: "", colors: "", tags: "", audience: ["her"] };
+const blankProduct: DraftProduct = { listingType: "product", bundleItems: "", name: "", description: "", category: "Fashion", price: "", productUrl: "", sizes: "", colors: "", tags: "", audience: ["her"] };
 const fieldClass = "mt-2 h-11 rounded-lg border-border/80 bg-card px-3";
 const parseList = (value: string) => value.split(",").map((item) => item.trim().replace(/^#/, "")).filter(Boolean);
 
@@ -177,6 +179,7 @@ function BrandDashboard() {
   const submitManual = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!image || !application) { setError("Add a product photo before saving."); return; }
+    if (draft.listingType === "bundle" && !draft.bundleItems.trim()) { setError("List the pieces included in this complete look."); return; }
     if (!draft.audience.length || draft.audience.some((value) => !supportedAudience.includes(value))) { setError("Choose an audience available to your brand."); return; }
     const price = Number(draft.price);
     if (!Number.isFinite(price) || price <= 0) { setError("Enter a price greater than ₹0."); return; }
@@ -190,8 +193,8 @@ function BrandDashboard() {
     try {
       await createBrandProduct({ data: {
         name: draft.name,
-        description: draft.description,
-        category: draft.category,
+        description: draft.listingType === "bundle" ? `${draft.description.trim()}\n\nIncluded in this look:\n${draft.bundleItems.split(",").map((item) => item.trim()).filter(Boolean).join("\n")}` : draft.description,
+        category: draft.listingType === "bundle" ? `Complete Look / ${draft.category}` : draft.category,
         price,
         productUrl: draft.productUrl.trim() || null,
         imagePath: path,
@@ -307,10 +310,12 @@ function BrandDashboard() {
       <div className="grid gap-10 py-9 lg:grid-cols-[minmax(0,1fr)_260px]">
         <section className="min-w-0">
           {mode === "manual" && <section className="mb-9 border-b border-border/70 pb-9" aria-labelledby="manual-heading">
-            <div className="flex items-start justify-between gap-4"><div><p className="text-xs font-semibold uppercase tracking-[0.15em] text-primary">MANUAL LISTING</p><h2 id="manual-heading" className="mt-2 font-display text-3xl">Add a product</h2></div><Button variant="ghost" size="icon" aria-label="Close product form" onClick={() => { setMode(null); setError(""); }}><X/></Button></div>
+            <div className="flex items-start justify-between gap-4"><div><p className="text-xs font-semibold uppercase tracking-[0.15em] text-primary">MANUAL LISTING</p><h2 id="manual-heading" className="mt-2 font-display text-3xl">{draft.listingType === "bundle" ? "Add a complete look" : "Add a product"}</h2></div><Button variant="ghost" size="icon" aria-label="Close product form" onClick={() => { setMode(null); setError(""); }}><X/></Button></div>
             <form onSubmit={(event) => void submitManual(event)} className="mt-6 grid gap-5 sm:grid-cols-2">
+              <div className="sm:col-span-2"><p className="text-sm font-medium">What are you listing?</p><div className="mt-2 flex flex-wrap gap-2"><Button type="button" variant={draft.listingType === "product" ? "default" : "outline"} onClick={() => { setDraft((current) => ({ ...current, listingType: "product" })); setError(""); }}>Individual product</Button><Button type="button" variant={draft.listingType === "bundle" ? "default" : "outline"} onClick={() => { setDraft((current) => ({ ...current, listingType: "bundle" })); setError(""); }}>Complete look / outfit bundle</Button></div><p className="mt-2 text-xs text-muted-foreground">Both listing types are saved as drafts first and require approval before appearing in your storefront.</p></div>
               <div className="sm:col-span-2"><Label htmlFor="product-name">Product name</Label><Input id="product-name" value={draft.name} onChange={(event) => updateDraft("name", event.target.value)} maxLength={160} required className={fieldClass}/></div>
               <div className="sm:col-span-2"><Label htmlFor="product-description">Description</Label><Textarea id="product-description" value={draft.description} onChange={(event) => updateDraft("description", event.target.value)} maxLength={2000} minLength={10} required className="mt-2 min-h-28 rounded-lg border-border/80 bg-card px-3 py-3"/></div>
+              {draft.listingType === "bundle" && <div className="sm:col-span-2"><Label htmlFor="bundle-items">Pieces included in this look</Label><Textarea id="bundle-items" value={draft.bundleItems} onChange={(event) => setDraft((current) => ({ ...current, bundleItems: event.target.value }))} placeholder="Blazer, trousers, shirt, belt — list included pieces separated by commas" required minLength={2} className="mt-2 min-h-24 rounded-lg border-border/80 bg-card px-3 py-3"/><p className="mt-2 text-xs text-muted-foreground">Be clear about exactly what the bundle price includes.</p></div>}
               <div><Label htmlFor="product-category">Category</Label><Input id="product-category" value={draft.category} onChange={(event) => updateDraft("category", event.target.value)} maxLength={80} required className={fieldClass}/></div>
               <div><Label htmlFor="product-price">Price (₹)</Label><Input id="product-price" type="number" min="1" step="0.01" value={draft.price} onChange={(event) => updateDraft("price", event.target.value)} required className={fieldClass}/><p className="mt-2 text-xs text-muted-foreground">At ₹{Number(draft.price || 0).toLocaleString("en-IN")}, you receive ₹{(Number(draft.price || 0) * (1 - commission)).toLocaleString("en-IN", { maximumFractionDigits: 2 })} after OFFFEED’s 18% fee.</p></div>
               <div><Label htmlFor="product-link">Product link <span className="font-normal text-muted-foreground">(optional)</span></Label><Input id="product-link" type="url" value={draft.productUrl} onChange={(event) => updateDraft("productUrl", event.target.value)} placeholder="https://yourbrand.com/product" className={fieldClass}/></div>
