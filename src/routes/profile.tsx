@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { LoaderCircle, Package, MapPin, UserRound, LogIn, ArrowRight, RefreshCw } from "lucide-react";
+import { LoaderCircle, Package, MapPin, UserRound, LogIn, ArrowRight, RefreshCw, Pencil, LogOut, Save, X } from "lucide-react";
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 
@@ -18,7 +18,12 @@ function ProfilePage() {
   const [user, setUser] = useState<any>(null);
   const [orders, setOrders] = useState<Order[]>([]);
   const [addresses, setAddresses] = useState<Address[]>([]);
-  const [activeTab, setActiveTab] = useState<"overview" | "orders" | "addresses" | "wishlist">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "orders" | "addresses">("overview");
+  const [editingProfile, setEditingProfile] = useState(false);
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [profileName, setProfileName] = useState("");
+  const [profilePhone, setProfilePhone] = useState("");
+  const [signingOut, setSigningOut] = useState(false);
 
   const loadAccount = useCallback(async () => {
     setAccountLoading(true);
@@ -26,6 +31,8 @@ function ProfilePage() {
       const client = supabase as any;
       const { data: { user: currentUser } } = await supabase.auth.getUser();
       setUser(currentUser);
+      setProfileName(currentUser?.user_metadata?.full_name || currentUser?.user_metadata?.name || "");
+      setProfilePhone(currentUser?.user_metadata?.phone || currentUser?.phone || "");
       if (currentUser) {
         const [orderResult, addressResult] = await Promise.all([
           client.from("brand_orders").select("id,order_number,product_name,quantity,unit_price,status,created_at,estimated_delivery_start,estimated_delivery_end,tracking_url").eq("customer_user_id", currentUser.id).order("created_at", { ascending: false }),
@@ -48,6 +55,37 @@ function ProfilePage() {
     return () => { subscription.unsubscribe(); };
   }, [loadAccount]);
 
+  const saveProfile = async () => {
+    if (!user) return;
+    setSavingProfile(true);
+    try {
+      const { data, error } = await supabase.auth.updateUser({
+        data: { ...user.user_metadata, full_name: profileName.trim(), name: profileName.trim(), phone: profilePhone.trim() },
+      });
+      if (error) throw error;
+      setUser(data.user);
+      setEditingProfile(false);
+      toast.success("Profile updated successfully");
+    } catch (error) {
+      console.error("Profile update failed:", error);
+      toast.error(error instanceof Error ? error.message : "Could not update profile. Please try again.");
+    } finally { setSavingProfile(false); }
+  };
+
+  const signOut = async () => {
+    setSigningOut(true);
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      toast.success("You’ve signed out");
+      window.location.href = "/";
+    } catch (error) {
+      console.error("Sign out failed:", error);
+      toast.error("Could not sign out. Please try again.");
+      setSigningOut(false);
+    }
+  };
+
   const tabs = [
     { id: "overview" as const, label: "Overview", icon: UserRound },
     { id: "orders" as const, label: "My Orders", icon: Package },
@@ -56,7 +94,7 @@ function ProfilePage() {
   return <main className="mx-auto max-w-6xl px-5 py-10 lg:px-10 lg:py-14">
     <div className="flex flex-wrap items-end justify-between gap-4">
       <div><p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">OFFFEED / PERSONAL SPACE</p><h1 className="mt-2 font-display text-5xl">{user ? `Hello, ${user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split("@")[0] || "there"}` : "My Account"}</h1><p className="mt-3 text-muted-foreground">Your account, orders, delivery details and favourite finds — all in one place.</p></div>
-      <Button variant="outline" onClick={() => { void loadAccount(); }} disabled={accountLoading}><RefreshCw className={`mr-2 size-4 ${accountLoading ? "animate-spin" : ""}`}/>Refresh</Button>
+      {user && <div className="flex gap-2"><Button variant="outline" onClick={() => { setProfileName(user.user_metadata?.full_name || user.user_metadata?.name || ""); setProfilePhone(user.user_metadata?.phone || user.phone || ""); setEditingProfile((value) => !value); }}><Pencil className="mr-2 size-4"/>{editingProfile ? "Cancel edit" : "Edit profile"}</Button><Button variant="outline" onClick={() => void signOut()} disabled={signingOut}>{signingOut ? <LoaderCircle className="mr-2 size-4 animate-spin"/> : <LogOut className="mr-2 size-4"/>}Sign out</Button></div> }
     </div>
 
     {!accountLoading && !user && <div className="mt-8 flex flex-col items-start gap-3 rounded-2xl border border-border bg-card p-6 sm:flex-row sm:items-center sm:justify-between"><div><h2 className="font-display text-2xl">Sign in to your OFFFEED account</h2><p className="mt-1 text-sm text-muted-foreground">Access your account details, orders and delivery addresses.</p></div><Button onClick={() => toast.info("Use the account sign-in option on OFFFEED to sign in.")}><LogIn className="mr-2 size-4"/>Account sign-in</Button></div>}
@@ -68,7 +106,7 @@ function ProfilePage() {
       <div className="min-w-0">
         {activeTab==="overview" && <div className="space-y-6">
           <section className="rounded-2xl border border-border bg-card p-6"><div className="flex items-center gap-3"><span className="grid size-11 place-items-center rounded-full bg-secondary"><UserRound/></span><div><h2 className="font-display text-2xl">Account details</h2><p className="text-sm text-muted-foreground">Your sign-in information</p></div></div>
-            {accountLoading ? <p className="mt-5 text-sm text-muted-foreground">Loading account…</p> : user ? <dl className="mt-6 grid gap-4 sm:grid-cols-2"><div><dt className="text-xs uppercase tracking-wider text-muted-foreground">Name</dt><dd className="mt-1 font-medium">{user.user_metadata?.full_name || user.user_metadata?.name || "Not set"}</dd></div><div><dt className="text-xs uppercase tracking-wider text-muted-foreground">Email</dt><dd className="mt-1 break-all font-medium">{user.email || "Not available"}</dd></div><div><dt className="text-xs uppercase tracking-wider text-muted-foreground">Phone</dt><dd className="mt-1 font-medium">{user.phone || user.user_metadata?.phone || "Not added"}</dd></div><div><dt className="text-xs uppercase tracking-wider text-muted-foreground">Account status</dt><dd className="mt-1 font-medium">Signed in</dd></div></dl> : <p className="mt-5 text-sm text-muted-foreground">You’re browsing as a guest. Sign in to see your personal account details.</p>}
+            {accountLoading ? <p className="mt-5 text-sm text-muted-foreground">Loading account…</p> : user ? editingProfile ? <div className="mt-6 space-y-4"><div><label htmlFor="profile-name" className="mb-1.5 block text-xs uppercase tracking-wider text-muted-foreground">Full name</label><input id="profile-name" value={profileName} onChange={(event) => setProfileName(event.target.value)} autoComplete="name" className="w-full rounded-xl border border-border bg-background px-3 py-2.5 outline-none focus:ring-2 focus:ring-primary/30" maxLength={100}/></div><div><label htmlFor="profile-email" className="mb-1.5 block text-xs uppercase tracking-wider text-muted-foreground">Email (cannot be changed here)</label><input id="profile-email" value={user.email || ""} readOnly className="w-full rounded-xl border border-border bg-secondary/50 px-3 py-2.5 text-muted-foreground"/></div><div><label htmlFor="profile-phone" className="mb-1.5 block text-xs uppercase tracking-wider text-muted-foreground">Phone number</label><input id="profile-phone" type="tel" value={profilePhone} onChange={(event) => setProfilePhone(event.target.value)} autoComplete="tel" className="w-full rounded-xl border border-border bg-background px-3 py-2.5 outline-none focus:ring-2 focus:ring-primary/30" maxLength={25}/></div><div className="flex flex-wrap gap-2"><Button onClick={() => void saveProfile()} disabled={savingProfile || !profileName.trim()}>{savingProfile ? <LoaderCircle className="mr-2 size-4 animate-spin"/> : <Save className="mr-2 size-4"/>}Save changes</Button><Button variant="outline" onClick={() => setEditingProfile(false)} disabled={savingProfile}><X className="mr-2 size-4"/>Cancel</Button></div></div> : <dl className="mt-6 grid gap-4 sm:grid-cols-2"><div><dt className="text-xs uppercase tracking-wider text-muted-foreground">Name</dt><dd className="mt-1 font-medium">{user.user_metadata?.full_name || user.user_metadata?.name || "Not set"}</dd></div><div><dt className="text-xs uppercase tracking-wider text-muted-foreground">Email</dt><dd className="mt-1 break-all font-medium">{user.email || "Not available"}</dd></div><div><dt className="text-xs uppercase tracking-wider text-muted-foreground">Phone</dt><dd className="mt-1 font-medium">{user.user_metadata?.phone || user.phone || "Not added"}</dd></div><div><dt className="text-xs uppercase tracking-wider text-muted-foreground">Account status</dt><dd className="mt-1 font-medium">Signed in</dd></div></dl> : <p className="mt-5 text-sm text-muted-foreground">You’re browsing as a guest. Sign in to see your personal account details.</p>}
           </section>
           <div className="grid gap-4 sm:grid-cols-2">
             <button onClick={() => setActiveTab("orders")} className="rounded-2xl border border-border bg-card p-5 text-left transition hover:border-primary/50"><Package className="size-5 text-primary"/><p className="mt-4 font-display text-2xl">My Orders</p><p className="mt-1 text-sm text-muted-foreground">{orders.length} order items</p><span className="mt-4 inline-flex items-center text-sm">View orders <ArrowRight className="ml-2 size-4"/></span></button>
