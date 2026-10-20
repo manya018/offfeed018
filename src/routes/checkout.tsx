@@ -56,7 +56,11 @@ function CheckoutPage() {
         const savedAddresses: SavedAddress[] = data.map((row) => ({ id: row.id, label: row.label, line1: row.line1, line2: row.line2 ?? "", city: row.city, state: row.state, landmark: row.landmark ?? "", pinCode: row.pin_code, isDefault: row.is_default }));
         setAddresses(savedAddresses);
         const preferred = savedAddresses.find((address) => address.isDefault) ?? savedAddresses[0];
-        if (preferred) chooseAddress(preferred.id);
+        if (preferred) {
+          setSelectedAddressId(preferred.id);
+          setAddressLabel(preferred.label);
+          setForm((current) => ({ ...current, line1: preferred.line1, line2: preferred.line2, city: preferred.city, state: preferred.state, landmark: preferred.landmark, pinCode: preferred.pinCode }));
+        }
         return;
       }
     }
