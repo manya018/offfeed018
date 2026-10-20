@@ -5,6 +5,11 @@ import { Button } from "@/components/ui/button";
 import { clearOfffeedCart, offfeedCartEventName, readOfffeedCart, writeOfffeedCart, type OfffeedCartItem } from "@/lib/cart";
 import { createOfffeedCheckoutOrders, type OfffeedCheckoutResult } from "@/lib/checkout.functions";
 
+type SavedAddress = { id: string; label: string; line1: string; line2: string; city: string; state: string; landmark: string; pinCode: string; isDefault: boolean };
+const ADDRESS_BOOK_KEY = "offfeed-address-book-v1";
+function readAddressBook(): SavedAddress[] { try { const value = JSON.parse(localStorage.getItem(ADDRESS_BOOK_KEY) ?? "[]"); return Array.isArray(value) ? value : []; } catch { return []; } }
+function persistAddressBook(value: SavedAddress[]) { localStorage.setItem(ADDRESS_BOOK_KEY, JSON.stringify(value)); }
+
 export const Route = createFileRoute("/checkout")({
   head: () => ({ meta: [
     { title: "Checkout — OFFFEED" },
@@ -18,6 +23,9 @@ function CheckoutPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [orders, setOrders] = useState<OfffeedCheckoutResult[]>([]);
+  const [addresses, setAddresses] = useState<SavedAddress[]>([]);
+  const [addressLabel, setAddressLabel] = useState("Home");
+  const [selectedAddressId, setSelectedAddressId] = useState("");
   const [form, setForm] = useState({
     customerName: "", customerEmail: "", customerPhone: "",
     line1: "", line2: "", city: "", state: "", landmark: "", pinCode: "",
@@ -26,6 +34,10 @@ function CheckoutPage() {
   useEffect(() => {
     const sync = () => setItems(readOfffeedCart());
     sync();
+    const savedAddresses = readAddressBook();
+    setAddresses(savedAddresses);
+    const defaultAddress = savedAddresses.find((address) => address.isDefault) ?? savedAddresses[0];
+    if (defaultAddress) { setSelectedAddressId(defaultAddress.id); setForm((current) => ({ ...current, line1: defaultAddress.line1, line2: defaultAddress.line2, city: defaultAddress.city, state: defaultAddress.state, landmark: defaultAddress.landmark, pinCode: defaultAddress.pinCode })); }
     window.addEventListener(offfeedCartEventName(), sync);
     window.addEventListener("storage", sync);
     return () => {
@@ -35,6 +47,32 @@ function CheckoutPage() {
   }, []);
 
   const total = useMemo(() => items.reduce((sum, item) => sum + item.price * item.quantity, 0), [items]);
+
+  function saveCurrentAddress() {
+    if (!form.line1.trim() || !form.city.trim() || !form.state.trim() || !/^[1-9][0-9]{5}$/.test(form.pinCode)) { setError("Enter a complete address and valid 6-digit PIN code before saving."); return; }
+    const id = selectedAddressId || (typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : String(Date.now()));
+    const existing = addresses.find((address) => address.id === id);
+    const nextAddress: SavedAddress = { id, label: addressLabel.trim() || "Other", line1: form.line1, line2: form.line2, city: form.city, state: form.state, landmark: form.landmark, pinCode: form.pinCode, isDefault: existing?.isDefault ?? addresses.length === 0 };
+    const next = existing ? addresses.map((address) => address.id === id ? nextAddress : address) : [...addresses, nextAddress];
+    setAddresses(next); persistAddressBook(next); setSelectedAddressId(id); setError("");
+  }
+  function chooseAddress(id: string) {
+    setSelectedAddressId(id);
+    const address = addresses.find((entry) => entry.id === id);
+    if (!address) return;
+    setAddressLabel(address.label);
+    setForm((current) => ({ ...current, line1: address.line1, line2: address.line2, city: address.city, state: address.state, landmark: address.landmark, pinCode: address.pinCode }));
+  }
+  function setDefaultAddress(id: string) {
+    const next = addresses.map((address) => ({ ...address, isDefault: address.id === id }));
+    setAddresses(next); persistAddressBook(next);
+  }
+  function deleteAddress(id: string) {
+    const next = addresses.filter((address) => address.id !== id);
+    setAddresses(next); persistAddressBook(next);
+    if (selectedAddressId === id) { setSelectedAddressId(""); setAddressLabel("Home"); setForm((current) => ({ ...current, line1: "", line2: "", city: "", state: "", landmark: "", pinCode: "" })); }
+    if (next.length && !next.some((address) => address.isDefault)) { const fixed = next.map((address, index) => ({ ...address, isDefault: index === 0 })); setAddresses(fixed); persistAddressBook(fixed); }
+  }
 
   function updateItem(index: number, patch: Partial<OfffeedCartItem>) {
     const next = items.map((item, itemIndex) => itemIndex === index ? { ...item, ...patch } : item);
@@ -171,10 +209,12 @@ function CheckoutPage() {
           <div className="border border-border/70 p-5 sm:p-6">
             <h2 className="font-display text-2xl">Delivery details</h2>
             <p className="mt-1 text-xs text-muted-foreground">Where should your independent-brand finds go?</p>
+            {addresses.length > 0 && <div className="mt-5 space-y-2"><label className="block text-xs font-medium">Choose a saved address<select value={selectedAddressId} onChange={(event) => chooseAddress(event.target.value)} className="mt-1.5 h-10 w-full border border-input bg-background px-3 text-sm"><option value="">Enter a new address</option>{addresses.map((address) => <option key={address.id} value={address.id}>{address.label} — {address.city}{address.isDefault ? " (Default)" : ""}</option>)}</select></label><div className="flex flex-wrap gap-2">{addresses.filter((address) => address.id === selectedAddressId).map((address) => <div key={address.id} className="flex flex-wrap items-center gap-2 text-xs"><button type="button" className="underline" onClick={() => setDefaultAddress(address.id)}>{address.isDefault ? "Default address" : "Set as default"}</button><button type="button" className="underline text-destructive" onClick={() => deleteAddress(address.id)}>Delete address</button></div>)}</div></div>}
             <form onSubmit={submitOrder} className="mt-5 space-y-4">
               <Field label="Full name" value={form.customerName} onChange={(value) => setForm({ ...form, customerName: value })} required autoComplete="name" />
               <Field label="Email address" type="email" value={form.customerEmail} onChange={(value) => setForm({ ...form, customerEmail: value })} required autoComplete="email" />
               <Field label="Phone number" type="tel" value={form.customerPhone} onChange={(value) => setForm({ ...form, customerPhone: value })} required autoComplete="tel" />
+              <div className="rounded-md border border-border/70 p-3"><label className="block text-xs font-medium">Address label<input value={addressLabel} onChange={(event) => setAddressLabel(event.target.value)} maxLength={40} placeholder="Home, Office, Other" className="mt-1.5 h-10 w-full border border-input bg-background px-3 text-sm" /></label></div>
               <Field label="House / flat, street, area" value={form.line1} onChange={(value) => setForm({ ...form, line1: value })} required autoComplete="address-line1" />
               <Field label="Apartment / landmark (optional)" value={form.line2} onChange={(value) => setForm({ ...form, line2: value })} autoComplete="address-line2" />
               <div className="grid grid-cols-2 gap-3">
@@ -183,6 +223,7 @@ function CheckoutPage() {
               </div>
               <Field label="PIN code" value={form.pinCode} onChange={(value) => setForm({ ...form, pinCode: value.replace(/\D/g, "").slice(0, 6) })} required inputMode="numeric" autoComplete="postal-code" />
               <Field label="Nearby landmark (optional)" value={form.landmark} onChange={(value) => setForm({ ...form, landmark: value })} />
+              <Button type="button" variant="outline" className="w-full" onClick={saveCurrentAddress}><Plus className="size-4" /> {selectedAddressId ? "Update saved address" : "Save this address"}</Button>
               {error && <p role="alert" className="border border-destructive/40 bg-destructive/5 p-3 text-sm text-destructive">{error}</p>}
               <div className="border-y border-border/70 py-4">
                 <div className="flex items-center justify-between text-sm"><span>Items subtotal</span><span>₹{total.toLocaleString("en-IN")}</span></div>
