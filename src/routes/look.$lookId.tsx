@@ -1,6 +1,6 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Heart, ShoppingBag } from "lucide-react";
+import { ArrowLeft, Heart, ShoppingBag, Share2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { addToOfffeedCart } from "@/lib/cart";
@@ -30,17 +30,40 @@ function LookDetail() {
   const [liked, setLiked] = useState(false);
   const [addedToBag, setAddedToBag] = useState(false);
   useEffect(() => { setLiked(readLikedLookIds().includes(look.id)); }, [look.id]);
+
   function addLookToBag() {
     const products = shopProducts.data ?? [];
-    products.forEach((product) => addToOfffeedCart(product));
-    setAddedToBag(products.length > 0);
     if (products.length > 0) {
-      toast.success(`${products.length} ${products.length === 1 ? "piece" : "pieces"} added to your bag`);
+      products.forEach((product) => addToOfffeedCart(product));
+      setAddedToBag(true);
+      toast.success(`${products.length} ${products.length === 1 ? "piece" : "pieces"} added to your cart`);
     } else {
-      toast.info("This look is inspiration for now. There are no purchasable pieces linked to it yet.");
+      toast.info("No purchasable pieces are linked to this look yet.");
       document.getElementById("shop-the-look-heading")?.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   }
+
+  async function shareLook() {
+    const url = window.location.href;
+    const shareData = { title: `${look.title} — OFFFEED`, text: `Check out this OFFFEED look: ${look.title}`, url };
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        await navigator.clipboard.writeText(url);
+        toast.success("Look link copied — share it anywhere");
+      }
+    } catch (error) {
+      if (error instanceof Error && error.name === "AbortError") return;
+      try {
+        await navigator.clipboard.writeText(url);
+        toast.success("Look link copied — share it anywhere");
+      } catch {
+        toast.error("Could not share automatically. Copy the page link from your browser.");
+      }
+    }
+  }
+
   const shopProducts = useQuery({
     queryKey: ["shop-the-look", look.id, space],
     queryFn: () => getShopTheLookProducts({ data: { audience: space, aesthetic: look.aesthetic } }),
@@ -55,7 +78,11 @@ function LookDetail() {
         <h1 className="mt-4 font-display text-6xl font-medium leading-none">{look.title}</h1>
         <p className="mt-6 max-w-md text-lg leading-8 text-muted-foreground">{look.description}</p>
         <dl className="mt-10 grid grid-cols-3 border-y border-border py-6 text-sm"><div><dt className="text-muted-foreground">Aesthetic</dt><dd className="mt-1 font-medium">{look.aesthetic}</dd></div><div><dt className="text-muted-foreground">Occasion</dt><dd className="mt-1 font-medium">{look.occasion}</dd></div><div><dt className="text-muted-foreground">Season</dt><dd className="mt-1 font-medium">{look.season}</dd></div></dl>
-        <div className="mt-8 flex flex-wrap gap-3"><Button size="lg" onClick={addLookToBag}><ShoppingBag /> {addedToBag ? "Added to cart" : "Add to cart"}</Button><Button size="lg" variant="outline" onClick={() => { toggleLikedLook(look); setLiked((value) => !value); }}><Heart className={liked ? "fill-current" : ""}/> {liked ? "Liked" : "Like"}</Button></div>
+        <div className="mt-8 flex flex-wrap gap-3">
+          <Button size="lg" onClick={addLookToBag}><ShoppingBag /> {addedToBag ? "Saved to cart" : "Save"}</Button>
+          <Button size="lg" variant="outline" onClick={() => { toggleLikedLook(look); setLiked((value) => !value); }}><Heart className={liked ? "fill-current" : ""}/> {liked ? "Liked" : "Like"}</Button>
+          <Button size="lg" variant="outline" onClick={shareLook}><Share2 /> Share</Button>
+        </div>
         <div className="mt-12"><p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Style notes</p><p className="mt-3 leading-7 text-muted-foreground">{space === "him" ? "Keep the palette grounded, build with texture, and let one strong layer set the tone." : "Balance the silhouette with understated accessories. Keep the palette tonal and let one tactile detail do the talking."}</p></div>
       </div>
     </div>
