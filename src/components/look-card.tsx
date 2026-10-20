@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { Heart, Share2, ShoppingBag } from "lucide-react";
+import { Heart, ShoppingBag } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import type { Look } from "@/lib/offfeed-data";
@@ -21,7 +21,7 @@ export function LookCard({ look, tall = false }: { look: Look; tall?: boolean })
       </div>
       <div className="flex items-start justify-between gap-3 px-1 pt-3">
         <div><p className="text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-primary">{look.aesthetic}</p><h3 className="mt-1 font-display text-lg">{look.title}</h3></div>
-        <div className="flex items-center gap-1"><Button variant="ghost" size="icon" aria-label={liked ? "Unlike look" : "Like look"} onClick={() => { toggleLikedLook(look); setLiked((value) => !value); }}><Heart className={liked ? "fill-current text-primary" : ""} /></Button><Link to="/look/$lookId" params={{ lookId: look.id }} aria-label={`Shop ${look.title}`}><Button variant="ghost" size="icon" aria-label="Open look to add to bag"><ShoppingBag /></Button></Link><Button variant="ghost" size="icon" aria-label="Share"><Share2 /></Button></div>
+        <div className="flex items-center gap-1"><Button variant="ghost" size="icon" aria-label={liked ? "Unlike look" : "Like look"} onClick={() => { toggleLikedLook(look); setLiked((value) => !value); }}><Heart className={liked ? "fill-current text-primary" : ""} /></Button><Link to="/look/$lookId" params={{ lookId: look.id }} aria-label={`Shop ${look.title}`}><Button variant="ghost" size="icon" aria-label="Open look to add to bag"><ShoppingBag /></Button></Link></div>
       </div>
     </article>
   );
