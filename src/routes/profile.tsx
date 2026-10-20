@@ -30,6 +30,7 @@ function ProfilePage() {
   const [authBusy, setAuthBusy] = useState(false);
   const [authNotice, setAuthNotice] = useState("");
   const [authMode, setAuthMode] = useState<"signin" | "signup">("signin");
+  const [registrationType, setRegistrationType] = useState<"customer" | "brand">("customer");
   const [forgotPassword, setForgotPassword] = useState(false);
   const [newPassword, setNewPassword] = useState("");
   const [resetPasswordScreen, setResetPasswordScreen] = useState(false);
@@ -80,8 +81,13 @@ function ProfilePage() {
       const email = authEmail.trim();
       const result = authMode === "signin"
         ? await supabase.auth.signInWithPassword({ email, password: authPassword })
-        : await supabase.auth.signUp({ email, password: authPassword, options: { emailRedirectTo: window.location.origin + "/profile" } });
+        : await supabase.auth.signUp({ email, password: authPassword, options: { data: { account_type: "customer" }, emailRedirectTo: window.location.origin + "/profile" } });
       if (result.error) throw result.error;
+      if (authMode === "signin" && result.data.user?.user_metadata?.account_type === "brand") {
+        await supabase.auth.signOut();
+        setAuthNotice("This is a brand account. Please sign in through For Brands.");
+        return;
+      }
       if (authMode === "signup" && !result.data.session) {
         setAuthNotice("Account created. Check your email to confirm your address, then sign in here.");
       } else {
@@ -174,6 +180,7 @@ function ProfilePage() {
     {resetPasswordScreen && <section className="mt-6 max-w-xl rounded-2xl border border-border bg-card p-6"><h2 className="font-display text-2xl">Choose a new password</h2><p className="mt-2 text-sm text-muted-foreground">Set a new password for your OFFFEED account.</p><form onSubmit={(event) => void saveNewPassword(event)} className="mt-5 space-y-4"><div><label htmlFor="new-account-password" className="mb-1.5 block text-sm">New password</label><input id="new-account-password" type="password" autoComplete="new-password" required minLength={8} maxLength={128} value={newPassword} onChange={(event) => setNewPassword(event.target.value)} className="w-full rounded-xl border border-border bg-background px-3 py-2.5"/></div><Button type="submit" disabled={authBusy}>{authBusy ? "Saving…" : "Update password"}</Button>{authNotice && <p role="status" className="text-sm text-muted-foreground">{authNotice}</p>}</form></section>}
     {!user && showSignIn && <section className="mt-6 max-w-xl rounded-2xl border border-border bg-card p-6">
       <div className="mb-5 flex gap-2"><Button type="button" variant={authMode === "signin" ? "default" : "outline"} onClick={() => { setAuthMode("signin"); setForgotPassword(false); setAuthNotice(""); }}>Sign in</Button><Button type="button" variant={authMode === "signup" ? "default" : "outline"} onClick={() => { setAuthMode("signup"); setForgotPassword(false); setAuthNotice(""); }}>Create account</Button></div>
+      {authMode === "signup" && <div className="mb-4 rounded-xl border border-border p-4"><p className="mb-3 text-sm font-medium">What kind of account are you creating?</p><div className="grid grid-cols-2 gap-2"><Button type="button" variant={registrationType === "customer" ? "default" : "outline"} onClick={() => setRegistrationType("customer")}>Customer</Button><Button type="button" variant={registrationType === "brand" ? "default" : "outline"} onClick={() => { setRegistrationType("brand"); window.location.href = "/for-brands/apply"; }}>Brand</Button></div><p className="mt-2 text-xs text-muted-foreground">Brands register through a separate application and are reviewed before approval.</p></div>}
       {forgotPassword ? <div className="space-y-4"><p className="text-sm text-muted-foreground">Enter your account email and we’ll send you a password-reset link.</p><div><label htmlFor="account-reset-email" className="mb-1.5 block text-sm">Email address</label><input id="account-reset-email" type="email" autoComplete="email" required value={authEmail} onChange={(event) => setAuthEmail(event.target.value)} className="w-full rounded-xl border border-border bg-background px-3 py-2.5"/></div><Button type="button" disabled={authBusy} onClick={() => void requestPasswordReset()}>{authBusy ? "Sending…" : "Send reset link"}</Button><button type="button" onClick={() => { setForgotPassword(false); setAuthNotice(""); }} className="ml-3 text-sm underline">Back to sign in</button>{authNotice && <p role="status" className="text-sm text-muted-foreground">{authNotice}</p>}</div> : <form onSubmit={(event) => void submitAuth(event)} className="space-y-4">
         <div><label htmlFor="account-email" className="mb-1.5 block text-sm">Email address</label><input id="account-email" type="email" autoComplete="email" required maxLength={255} value={authEmail} onChange={(event) => setAuthEmail(event.target.value)} className="w-full rounded-xl border border-border bg-background px-3 py-2.5 outline-none focus:ring-2 focus:ring-primary/30" /></div>
         <div><label htmlFor="account-password" className="mb-1.5 block text-sm">Password</label><input id="account-password" type="password" autoComplete={authMode === "signin" ? "current-password" : "new-password"} required minLength={8} maxLength={128} value={authPassword} onChange={(event) => setAuthPassword(event.target.value)} className="w-full rounded-xl border border-border bg-background px-3 py-2.5 outline-none focus:ring-2 focus:ring-primary/30" /></div>
