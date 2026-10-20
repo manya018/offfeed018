@@ -5,8 +5,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import type { ProductWithBrand } from "@/lib/public-brand.functions";
 import { addToOfffeedCart } from "@/lib/cart";
-
-const PRODUCT_WISHLIST_KEY = "offfeed-liked-products-v1";
+import { readLikedProductIds, setWishlistItem } from "@/lib/look-collections";
 
 export function PublicProductCard({ product }: { product: ProductWithBrand }) {
   const [added, setAdded] = useState(false);
@@ -14,18 +13,16 @@ export function PublicProductCard({ product }: { product: ProductWithBrand }) {
 
   useEffect(() => {
     try {
-      const ids = JSON.parse(localStorage.getItem(PRODUCT_WISHLIST_KEY) ?? "[]") as string[];
-      setLiked(ids.includes(product.id));
+      setLiked(readLikedProductIds().includes(product.id));
     } catch { setLiked(false); }
   }, [product.id]);
 
   function toggleWishlist() {
     try {
-      const ids = JSON.parse(localStorage.getItem(PRODUCT_WISHLIST_KEY) ?? "[]") as string[];
-      const next = ids.includes(product.id) ? ids.filter((id) => id !== product.id) : [...ids, product.id];
-      localStorage.setItem(PRODUCT_WISHLIST_KEY, JSON.stringify(next));
-      setLiked(next.includes(product.id));
-      toast.success(next.includes(product.id) ? "Added to wishlist" : "Removed from wishlist");
+      const nextLiked = !readLikedProductIds().includes(product.id);
+      setLiked(nextLiked);
+      void setWishlistItem("product", product.id, nextLiked);
+      toast.success(nextLiked ? "Added to wishlist" : "Removed from wishlist");
     } catch { toast.error("Could not update wishlist on this device."); }
   }
 
