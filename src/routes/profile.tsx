@@ -24,6 +24,37 @@ function ProfilePage() {
   const [profileName, setProfileName] = useState("");
   const [profilePhone, setProfilePhone] = useState("");
   const [signingOut, setSigningOut] = useState(false);
+  const [showSignIn, setShowSignIn] = useState(false);
+  const [authEmail, setAuthEmail] = useState("");
+  const [authPassword, setAuthPassword] = useState("");
+  const [authBusy, setAuthBusy] = useState(false);
+  const [authNotice, setAuthNotice] = useState("");
+  const [authMode, setAuthMode] = useState<"signin" | "signup">("signin");
+
+  const submitAuth = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setAuthBusy(true);
+    setAuthNotice("");
+    try {
+      const email = authEmail.trim();
+      const result = authMode === "signin"
+        ? await supabase.auth.signInWithPassword({ email, password: authPassword })
+        : await supabase.auth.signUp({ email, password: authPassword, options: { emailRedirectTo: window.location.origin + "/profile" } });
+      if (result.error) throw result.error;
+      if (authMode === "signup" && !result.data.session) {
+        setAuthNotice("Account created. Check your email to confirm your address, then sign in here.");
+      } else {
+        setAuthNotice("Signed in successfully.");
+        setShowSignIn(false);
+        setAuthPassword("");
+        await loadAccount();
+      }
+    } catch (error) {
+      setAuthNotice(error instanceof Error ? error.message : "Sign-in failed. Please check your details and try again.");
+    } finally {
+      setAuthBusy(false);
+    }
+  };
 
   const loadAccount = useCallback(async () => {
     setAccountLoading(true);
@@ -97,8 +128,17 @@ function ProfilePage() {
       {user && <div className="flex gap-2"><Button variant="outline" onClick={() => { setProfileName(user.user_metadata?.full_name || user.user_metadata?.name || ""); setProfilePhone(user.user_metadata?.phone || user.phone || ""); setEditingProfile((value) => !value); }}><Pencil className="mr-2 size-4"/>{editingProfile ? "Cancel edit" : "Edit profile"}</Button><Button variant="outline" onClick={() => void signOut()} disabled={signingOut}>{signingOut ? <LoaderCircle className="mr-2 size-4 animate-spin"/> : <LogOut className="mr-2 size-4"/>}Sign out</Button></div> }
     </div>
 
-    {!accountLoading && !user && <div className="mt-8 flex flex-col items-start gap-3 rounded-2xl border border-border bg-card p-6 sm:flex-row sm:items-center sm:justify-between"><div><h2 className="font-display text-2xl">Sign in to your OFFFEED account</h2><p className="mt-1 text-sm text-muted-foreground">Access your account details, orders and delivery addresses.</p></div><Button onClick={() => toast.info("Use the account sign-in option on OFFFEED to sign in.")}><LogIn className="mr-2 size-4"/>Account sign-in</Button></div>}
+    {!accountLoading && !user && <div className="mt-8 flex flex-col items-start gap-3 rounded-2xl border border-border bg-card p-6 sm:flex-row sm:items-center sm:justify-between"><div><h2 className="font-display text-2xl">Sign in to your OFFFEED account</h2><p className="mt-1 text-sm text-muted-foreground">Access your account details, orders and delivery addresses.</p></div><Button onClick={() => { setShowSignIn((value) => !value); setAuthNotice(""); }}><LogIn className="mr-2 size-4"/>{showSignIn ? "Close sign-in" : "Account sign-in"}</Button></div>}
 
+    {!user && showSignIn && <section className="mt-6 max-w-xl rounded-2xl border border-border bg-card p-6">
+      <div className="mb-5 flex gap-2"><Button type="button" variant={authMode === "signin" ? "default" : "outline"} onClick={() => { setAuthMode("signin"); setAuthNotice(""); }}>Sign in</Button><Button type="button" variant={authMode === "signup" ? "default" : "outline"} onClick={() => { setAuthMode("signup"); setAuthNotice(""); }}>Create account</Button></div>
+      <form onSubmit={(event) => void submitAuth(event)} className="space-y-4">
+        <div><label htmlFor="account-email" className="mb-1.5 block text-sm">Email address</label><input id="account-email" type="email" autoComplete="email" required maxLength={255} value={authEmail} onChange={(event) => setAuthEmail(event.target.value)} className="w-full rounded-xl border border-border bg-background px-3 py-2.5 outline-none focus:ring-2 focus:ring-primary/30" /></div>
+        <div><label htmlFor="account-password" className="mb-1.5 block text-sm">Password</label><input id="account-password" type="password" autoComplete={authMode === "signin" ? "current-password" : "new-password"} required minLength={8} maxLength={128} value={authPassword} onChange={(event) => setAuthPassword(event.target.value)} className="w-full rounded-xl border border-border bg-background px-3 py-2.5 outline-none focus:ring-2 focus:ring-primary/30" /></div>
+        <Button type="submit" disabled={authBusy} className="w-full">{authBusy ? <LoaderCircle className="mr-2 size-4 animate-spin"/> : <LogIn className="mr-2 size-4"/>}{authBusy ? "Please wait…" : authMode === "signin" ? "Sign in" : "Create account"}</Button>
+        {authNotice && <p role="status" className="break-words text-sm text-muted-foreground">{authNotice}</p>}
+      </form>
+    </section>}
     <div className="mt-9 grid gap-8 lg:grid-cols-[230px_1fr]">
       <nav className="flex gap-2 overflow-x-auto lg:flex-col" aria-label="Account sections">
         {tabs.map(({id,label,icon:Icon}) => <button key={id} onClick={() => setActiveTab(id)} className={`flex shrink-0 items-center gap-3 rounded-xl px-4 py-3 text-left text-sm transition ${activeTab===id ? "bg-primary text-primary-foreground" : "bg-card hover:bg-secondary"}`}><Icon className="size-4"/>{label}{id==="orders" && <span className="ml-auto text-xs opacity-80">{orders.length}</span>}</button>)}
