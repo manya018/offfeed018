@@ -18,6 +18,7 @@ import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as DiscoverRouteImport } from './routes/discover'
 import { Route as ExploreRouteImport } from './routes/explore'
 import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as WishlistRouteImport } from './routes/wishlist'
 import { Route as BrandBrandHandleRouteImport } from './routes/brand.$brandHandle'
 import { Route as ForBrandsApplyRouteImport } from './routes/for-brands.apply'
 import { Route as LookLookIdRouteImport } from './routes/look.$lookId'
@@ -67,6 +68,11 @@ const ProfileRoute = ProfileRouteImport.update({
   path: '/profile',
   getParentRoute: () => rootRouteImport,
 } as any)
+const WishlistRoute = WishlistRouteImport.update({
+  id: '/wishlist',
+  path: '/wishlist',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const BrandBrandHandleRoute = BrandBrandHandleRouteImport.update({
   id: '/brand/$brandHandle',
   path: '/brand/$brandHandle',
@@ -98,6 +104,7 @@ export interface FileRoutesByFullPath {
   '/discover': typeof DiscoverRoute
   '/explore': typeof ExploreRoute
   '/profile': typeof ProfileRoute
+  '/wishlist': typeof WishlistRoute
   '/brand/$brandHandle': typeof BrandBrandHandleRoute
   '/for-brands/apply': typeof ForBrandsApplyRoute
   '/look/$lookId': typeof LookLookIdRoute
@@ -112,6 +119,7 @@ export interface FileRoutesByTo {
   '/discover': typeof DiscoverRoute
   '/explore': typeof ExploreRoute
   '/profile': typeof ProfileRoute
+  '/wishlist': typeof WishlistRoute
   '/brand/$brandHandle': typeof BrandBrandHandleRoute
   '/for-brands/apply': typeof ForBrandsApplyRoute
   '/look/$lookId': typeof LookLookIdRoute
@@ -144,6 +152,7 @@ export interface FileRouteTypes {
     | '/discover'
     | '/explore'
     | '/profile'
+    | '/wishlist'
     | '/brand/$brandHandle'
     | '/for-brands/apply'
     | '/look/$lookId'
@@ -189,6 +198,7 @@ export interface RootRouteChildren {
   DiscoverRoute: typeof DiscoverRoute
   ExploreRoute: typeof ExploreRoute
   ProfileRoute: typeof ProfileRoute
+  WishlistRoute: typeof WishlistRoute
   BrandBrandHandleRoute: typeof BrandBrandHandleRoute
   ForBrandsApplyRoute: typeof ForBrandsApplyRoute
   LookLookIdRoute: typeof LookLookIdRoute
@@ -257,6 +267,13 @@ declare module '@tanstack/react-router' {
       path: '/explore'
       fullPath: '/explore'
       preLoaderRoute: typeof ExploreRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/wishlist': {
+      id: '/wishlist'
+      path: '/wishlist'
+      fullPath: '/wishlist'
+      preLoaderRoute: typeof WishlistRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/profile': {
