@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Search, Sparkles } from "lucide-react";
+import { Search, Sparkles, Heart, Share2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { PublicProductCard } from "@/components/public-product-card";
 import { getShopTheLookProducts, type ProductWithBrand } from "@/lib/public-brand.functions";
@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { LookCard } from "@/components/look-card";
 import { himLooks, himMoodImages, himMoods, looks, moodImages, moods } from "@/lib/offfeed-data";
 import { useStyleSpace } from "@/lib/style-space";
+import { readLikedLookIds, setWishlistItem } from "@/lib/look-collections";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/discover")({
   validateSearch: (search: Record<string, unknown>) => ({ category: typeof search.category === "string" ? search.category : undefined }),
@@ -34,6 +36,10 @@ function DiscoverPage() {
   const [categoryProducts, setCategoryProducts] = useState<ProductWithBrand[]>([]);
   const [categoryLoading, setCategoryLoading] = useState(false);
   const [categoryError, setCategoryError] = useState(false);
+  const [likedReferenceItems, setLikedReferenceItems] = useState<string[]>([]);
+  useEffect(() => { setLikedReferenceItems(readLikedLookIds()); }, []);
+  const toggleReferenceLike = (id: string) => { const next = !likedReferenceItems.includes(id); setLikedReferenceItems((current) => next ? [...current, id] : current.filter((value) => value !== id)); void setWishlistItem("look", id, next); toast.success(next ? "Added to wishlist" : "Removed from wishlist"); };
+  const shareReference = async (item: { title: string; src: string }) => { const url = new URL(`/discover?category=${category ?? "jewellery"}`, window.location.origin).toString(); try { if (navigator.share) await navigator.share({ title: `${item.title} — OFFFEED`, text: `Found this style on OFFFEED`, url }); else { await navigator.clipboard.writeText(url); toast.success("Link copied to share"); } } catch (error) { if (error instanceof Error && error.name === "AbortError") return; try { await navigator.clipboard.writeText(url); toast.success("Link copied to share"); } catch { toast.error("Could not share this item."); } } };
   useEffect(() => { setFilter("All"); setQuery(""); setVisible(6); }, [space]);
   useEffect(() => {
     if (category !== "jewellery" && category !== "accessories") return;
@@ -129,7 +135,7 @@ function DiscoverPage() {
           </figure>)}
         </div> : <div className="columns-1 gap-5 sm:columns-2 lg:columns-3">
           {referenceImages.map((item, index) => <article key={item.title} className="group mb-5 break-inside-avoid overflow-hidden rounded-[1.35rem] border border-border/50 bg-card/80 shadow-soft">
-            <div className="relative overflow-hidden bg-secondary/30"><img src={item.src} alt={item.title} loading="lazy" className={`w-full object-cover transition-transform duration-700 group-hover:scale-[1.035] ${index % 4 === 1 ? "aspect-[4/5]" : index % 4 === 2 ? "aspect-[3/4]" : index % 4 === 3 ? "aspect-[5/6]" : "aspect-[4/5]"}`} /><span className="absolute bottom-3 left-3 rounded-full border border-white/40 bg-white/80 px-3 py-1.5 text-[10px] font-medium tracking-[0.08em] text-stone-700 shadow-sm backdrop-blur-md">♡ saved for the mood</span></div>
+            <div className="relative overflow-hidden bg-secondary/30"><img src={item.src} alt={item.title} loading="lazy" className={`w-full object-cover transition-transform duration-700 group-hover:scale-[1.035] ${index % 4 === 1 ? "aspect-[4/5]" : index % 4 === 2 ? "aspect-[3/4]" : index % 4 === 3 ? "aspect-[5/6]" : "aspect-[4/5]"}`} /><div className="absolute right-3 top-3 flex gap-1 rounded-full border border-white/40 bg-white/85 p-1 shadow-sm backdrop-blur-md"><Button variant="ghost" size="icon" aria-label="Like this look" onClick={(event) => { event.preventDefault(); toggleReferenceLike(`reference-${category}-${item.title}`); }}><Heart className={`size-4 ${likedReferenceItems.includes(`reference-${category}-${item.title}`) ? "fill-current text-primary" : ""}`} /></Button><Button variant="ghost" size="icon" aria-label="Share this look" onClick={(event) => { event.preventDefault(); void shareReference(item); }}><Share2 className="size-4" /></Button></div></div>
             <div className="px-4 pb-4 pt-3"><h3 className="font-display text-xl">{item.title}</h3><p className="mt-1 text-sm leading-6 text-muted-foreground">{item.note}</p></div>
           </article>)}
         </div>}
