@@ -30,6 +30,47 @@ function ProfilePage() {
   const [authBusy, setAuthBusy] = useState(false);
   const [authNotice, setAuthNotice] = useState("");
   const [authMode, setAuthMode] = useState<"signin" | "signup">("signin");
+  const [forgotPassword, setForgotPassword] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [resetPasswordScreen, setResetPasswordScreen] = useState(false);
+
+  useEffect(() => {
+    const checkRecovery = () => setResetPasswordScreen(window.location.hash.includes("reset-password") || window.location.hash.includes("type=recovery"));
+    checkRecovery();
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "PASSWORD_RECOVERY") setResetPasswordScreen(true);
+    });
+    window.addEventListener("hashchange", checkRecovery);
+    return () => { subscription.unsubscribe(); window.removeEventListener("hashchange", checkRecovery); };
+  }, []);
+
+  const requestPasswordReset = async () => {
+    if (!authEmail.trim()) { setAuthNotice("Enter your email address first."); return; }
+    setAuthBusy(true); setAuthNotice("");
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(authEmail.trim(), { redirectTo: window.location.origin + "/profile#reset-password" });
+      if (error) throw error;
+      setAuthNotice("If an account exists for that email, a password-reset link has been sent. Check your inbox.");
+      setForgotPassword(false);
+    } catch (error) {
+      setAuthNotice(error instanceof Error ? error.message : "Could not send the reset email. Please try again.");
+    } finally { setAuthBusy(false); }
+  };
+
+  const saveNewPassword = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (newPassword.length < 8) { setAuthNotice("Use at least 8 characters for your new password."); return; }
+    setAuthBusy(true); setAuthNotice("");
+    try {
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      if (error) throw error;
+      window.history.replaceState(null, "", window.location.pathname);
+      setResetPasswordScreen(false); setNewPassword(""); setAuthNotice("Password updated. You can now use your new password.");
+      await loadAccount();
+    } catch (error) {
+      setAuthNotice(error instanceof Error ? error.message : "Could not update password. Please open the latest reset link and try again.");
+    } finally { setAuthBusy(false); }
+  };
 
   const submitAuth = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -131,8 +172,8 @@ function ProfilePage() {
     {!accountLoading && !user && <div className="mt-8 flex flex-col items-start gap-3 rounded-2xl border border-border bg-card p-6 sm:flex-row sm:items-center sm:justify-between"><div><h2 className="font-display text-2xl">Sign in to your OFFFEED account</h2><p className="mt-1 text-sm text-muted-foreground">Access your account details, orders and delivery addresses.</p></div><Button onClick={() => { setShowSignIn((value) => !value); setAuthNotice(""); }}><LogIn className="mr-2 size-4"/>{showSignIn ? "Close sign-in" : "Account sign-in"}</Button></div>}
 
     {!user && showSignIn && <section className="mt-6 max-w-xl rounded-2xl border border-border bg-card p-6">
-      <div className="mb-5 flex gap-2"><Button type="button" variant={authMode === "signin" ? "default" : "outline"} onClick={() => { setAuthMode("signin"); setAuthNotice(""); }}>Sign in</Button><Button type="button" variant={authMode === "signup" ? "default" : "outline"} onClick={() => { setAuthMode("signup"); setAuthNotice(""); }}>Create account</Button></div>
-      <form onSubmit={(event) => void submitAuth(event)} className="space-y-4">
+      <div className="mb-5 flex gap-2"><Button type="button" variant={authMode === "signin" ? "default" : "outline"} onClick={() => { setAuthMode("signin"); setForgotPassword(false); setAuthNotice(""); }}>Sign in</Button><Button type="button" variant={authMode === "signup" ? "default" : "outline"} onClick={() => { setAuthMode("signup"); setForgotPassword(false); setAuthNotice(""); }}>Create account</Button></div>
+      {forgotPassword ? <div className="space-y-4"><p className="text-sm text-muted-foreground">Enter your account email and we’ll send you a password-reset link.</p><div><label htmlFor="account-reset-email" className="mb-1.5 block text-sm">Email address</label><input id="account-reset-email" type="email" autoComplete="email" required value={authEmail} onChange={(event) => setAuthEmail(event.target.value)} className="w-full rounded-xl border border-border bg-background px-3 py-2.5"/></div><Button type="button" disabled={authBusy} onClick={() => void requestPasswordReset()}>{authBusy ? "Sending…" : "Send reset link"}</Button><button type="button" onClick={() => { setForgotPassword(false); setAuthNotice(""); }} className="ml-3 text-sm underline">Back to sign in</button>{authNotice && <p role="status" className="text-sm text-muted-foreground">{authNotice}</p>}</div> : <form onSubmit={(event) => void submitAuth(event)} className="space-y-4">
         <div><label htmlFor="account-email" className="mb-1.5 block text-sm">Email address</label><input id="account-email" type="email" autoComplete="email" required maxLength={255} value={authEmail} onChange={(event) => setAuthEmail(event.target.value)} className="w-full rounded-xl border border-border bg-background px-3 py-2.5 outline-none focus:ring-2 focus:ring-primary/30" /></div>
         <div><label htmlFor="account-password" className="mb-1.5 block text-sm">Password</label><input id="account-password" type="password" autoComplete={authMode === "signin" ? "current-password" : "new-password"} required minLength={8} maxLength={128} value={authPassword} onChange={(event) => setAuthPassword(event.target.value)} className="w-full rounded-xl border border-border bg-background px-3 py-2.5 outline-none focus:ring-2 focus:ring-primary/30" /></div>
         <Button type="submit" disabled={authBusy} className="w-full">{authBusy ? <LoaderCircle className="mr-2 size-4 animate-spin"/> : <LogIn className="mr-2 size-4"/>}{authBusy ? "Please wait…" : authMode === "signin" ? "Sign in" : "Create account"}</Button>
