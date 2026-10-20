@@ -74,6 +74,7 @@ function BrandApplicationPage() {
   const [values, setValues] = useState<ApplicationValues>(defaultValues);
   const [password, setPassword] = useState("");
   const [authMode, setAuthMode] = useState<"signup" | "signin">("signup");
+  const [forgotPassword, setForgotPassword] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [uploads, setUploads] = useState<Record<UploadKind, UploadItem | null>>({ logo: null, cover: null, proof: null });
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -208,6 +209,19 @@ function BrandApplicationPage() {
     }
     setErrors(nextErrors);
     return Object.keys(nextErrors).length === 0;
+  };
+
+  const requestPasswordReset = async () => {
+    const email = values.email.trim();
+    if (!z.string().email().safeParse(email).success) { setErrors((current) => ({ ...current, email: "Enter a valid email address first." })); return; }
+    setBusy(true); setNotice("");
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + "/profile#reset-password" });
+      if (error) throw error;
+      setNotice("If a brand account exists for this email, a password-reset link has been sent. Check your inbox.");
+      setForgotPassword(false);
+    } catch { setNotice("We couldn't send the reset email. Please check the email address and try again."); }
+    finally { setBusy(false); }
   };
 
   const authenticate = async () => {
@@ -351,11 +365,13 @@ function BrandApplicationPage() {
                 <Field label="Your name" htmlFor="contact-name" error={errors["contactName"]}><Input id="contact-name" autoComplete="name" value={values.contactName} onChange={(event) => update("contactName", event.target.value)} placeholder="Alex Morgan" className={fieldClass} maxLength={120} aria-invalid={Boolean(errors["contactName"])} /></Field>
                 <Field label="Work email" htmlFor="contact-email" error={errors["email"]}><Input id="contact-email" type="email" autoComplete="email" value={values.email} onChange={(event) => update("email", event.target.value)} placeholder="you@yourbrand.com" className={fieldClass} maxLength={255} aria-invalid={Boolean(errors["email"])} /></Field>
                 {!userId && <div className="sm:col-span-2"><Field label={authMode === "signup" ? "Create a password" : "Password"} htmlFor="account-password" error={errors["password"]}><Input id="account-password" type="password" autoComplete={authMode === "signup" ? "new-password" : "current-password"} value={password} onChange={(event) => { setPassword(event.target.value); setErrors((current) => ({ ...current, password: "" })); }} placeholder="At least 8 characters" className={fieldClass} maxLength={128} aria-invalid={Boolean(errors["password"])} /></Field></div>}</div>
+              {!userId && authMode === "signin" && <div className="mt-4"><button type="button" onClick={() => { setForgotPassword(true); setNotice(""); }} className="text-sm font-medium text-primary underline underline-offset-4">Forgot password?</button></div>}
+              {forgotPassword && !userId && <div className="mt-4 rounded-xl border border-border bg-secondary/40 p-4"><p className="text-sm text-muted-foreground">We’ll email a secure reset link to your brand account email.</p><div className="mt-3 flex flex-wrap gap-3"><Button type="button" onClick={() => void requestPasswordReset()} disabled={busy}>{busy ? <LoaderCircle className="animate-spin"/> : <MailCheck/>}Send reset link</Button><Button type="button" variant="outline" onClick={() => { setForgotPassword(false); setNotice(""); }}>Back to sign in</Button></div></div>}
               <div className="mt-7 flex flex-wrap items-center gap-3">
                 <Button onClick={() => void authenticate()} disabled={busy}>{busy && <LoaderCircle className="animate-spin"/>}{userId ? "Continue" : authMode === "signup" ? "Create account & continue" : "Sign in & continue"}<ArrowRight/></Button>
                 {!userId && <Button variant="outline" onClick={() => void signInWithGoogle()} disabled={busy}><span className="font-semibold">G</span> Continue with Google</Button>}
               </div>
-              {!userId && <p className="mt-4 text-xs text-muted-foreground">{authMode === "signup" ? <>Already have an account? <button type="button" onClick={() => { setAuthMode("signin"); setNotice(""); }} className="font-medium text-primary underline underline-offset-4">Sign in</button></> : <>New to OFFFEED? <button type="button" onClick={() => { setAuthMode("signup"); setNotice(""); }} className="font-medium text-primary underline underline-offset-4">Create an account</button></>}</p>}
+              {!userId && <p className="mt-4 text-xs text-muted-foreground">{authMode === "signup" ? <>Already have an account? <button type="button" onClick={() => { setAuthMode("signin"); setForgotPassword(false); setNotice(""); }} className="font-medium text-primary underline underline-offset-4">Sign in</button></> : <>New to OFFFEED? <button type="button" onClick={() => { setAuthMode("signup"); setForgotPassword(false); setNotice(""); }} className="font-medium text-primary underline underline-offset-4">Create an account</button></>}</p>}
               {notice && <p role="status" className="mt-4 rounded-md border border-primary/25 bg-secondary px-4 py-3 text-sm leading-6">{notice}</p>}
             </div>}
 
