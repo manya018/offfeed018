@@ -83,6 +83,51 @@ export type Database = {
         }
         Relationships: []
       }
+      customer_addresses: {
+        Row: {
+          city: string
+          created_at: string
+          id: string
+          is_default: boolean
+          label: string
+          landmark: string | null
+          line1: string
+          line2: string | null
+          pin_code: string
+          state: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          city: string
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          label?: string
+          landmark?: string | null
+          line1: string
+          line2?: string | null
+          pin_code: string
+          state: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          city?: string
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          label?: string
+          landmark?: string | null
+          line1?: string
+          line2?: string | null
+          pin_code?: string
+          state?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       brand_orders: {
         Row: {
           brand_application_id: string
