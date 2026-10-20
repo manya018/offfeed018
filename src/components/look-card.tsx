@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
-import { Heart, ShoppingBag } from "lucide-react";
+import { Heart, ShoppingBag, Share2 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import type { Look } from "@/lib/offfeed-data";
 import { toggleLikedLook, readLikedLookIds } from "@/lib/look-collections";
@@ -8,6 +9,23 @@ import { toggleLikedLook, readLikedLookIds } from "@/lib/look-collections";
 export function LookCard({ look, tall = false }: { look: Look; tall?: boolean }) {
   const [liked, setLiked] = useState(false);
   useEffect(() => { setLiked(readLikedLookIds().includes(look.id)); }, [look.id]);
+
+  async function shareLook() {
+    const url = new URL(`/look/${look.id}`, window.location.origin).toString();
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: `${look.title} — OFFFEED`, text: `Check out this OFFFEED look: ${look.title}`, url });
+      } else {
+        await navigator.clipboard.writeText(url);
+        toast.success("Look link copied — share it anywhere");
+      }
+    } catch (error) {
+      if (error instanceof Error && error.name === "AbortError") return;
+      try { await navigator.clipboard.writeText(url); toast.success("Look link copied — share it anywhere"); }
+      catch { toast.error("Could not share automatically. Open the look to copy its link."); }
+    }
+  }
+
   return (
     <article className="mb-7 break-inside-avoid">
       <div className="group relative overflow-hidden rounded-[1.25rem] bg-card shadow-soft">
@@ -17,11 +35,14 @@ export function LookCard({ look, tall = false }: { look: Look; tall?: boolean })
             <span className="translate-y-2 rounded-full bg-background/90 px-4 py-2 text-xs font-medium opacity-0 backdrop-blur transition group-hover:translate-y-0 group-hover:opacity-100">View Look</span>
           </div>
         </Link>
-        <Button variant="soft" size="icon" className="absolute right-3 top-3 opacity-0 shadow-sm transition group-hover:opacity-100" aria-label="Like look" onClick={() => { toggleLikedLook(look); setLiked((value) => !value); }}><Heart className={liked ? "fill-current" : ""} /></Button>
       </div>
       <div className="flex items-start justify-between gap-3 px-1 pt-3">
         <div><p className="text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-primary">{look.aesthetic}</p><h3 className="mt-1 font-display text-lg">{look.title}</h3></div>
-        <div className="flex items-center gap-1"><Button variant="ghost" size="icon" aria-label={liked ? "Unlike look" : "Like look"} onClick={() => { toggleLikedLook(look); setLiked((value) => !value); }}><Heart className={liked ? "fill-current text-primary" : ""} /></Button><Link to="/look/$lookId" params={{ lookId: look.id }} aria-label={`Shop ${look.title}`}><Button variant="ghost" size="icon" aria-label="Open look to add to bag"><ShoppingBag /></Button></Link></div>
+        <div className="flex items-center gap-1">
+          <Button variant="ghost" size="icon" aria-label={liked ? "Unlike look" : "Like look"} onClick={() => { toggleLikedLook(look); setLiked((value) => !value); }}><Heart className={liked ? "fill-current text-primary" : ""} /></Button>
+          <Link to="/look/$lookId" params={{ lookId: look.id }} aria-label={`Save ${look.title} to cart`}><Button variant="ghost" size="icon" aria-label="Save to cart"><ShoppingBag /></Button></Link>
+          <Button variant="ghost" size="icon" aria-label={`Share ${look.title}`} onClick={shareLook}><Share2 /></Button>
+        </div>
       </div>
     </article>
   );
