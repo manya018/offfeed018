@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { LoaderCircle, Package, MapPin, UserRound, LogIn, ArrowRight, RefreshCw, Pencil, LogOut, Save, X } from "lucide-react";
-import { useCallback, useEffect, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useState, type ReactNode, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 
 import { toast } from "sonner";
@@ -31,7 +31,7 @@ function ProfilePage() {
   const [authNotice, setAuthNotice] = useState("");
   const [authMode, setAuthMode] = useState<"signin" | "signup">("signin");
 
-  const submitAuth = async (event: React.FormEvent<HTMLFormElement>) => {
+  const submitAuth = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setAuthBusy(true);
     setAuthNotice("");
