@@ -26,7 +26,7 @@ function ProfilePage() {
       <div className="flex items-center gap-2"><Bookmark className="size-5"/><h2 className="font-display text-3xl">Saved looks</h2></div>
       {saved.length ? <div className="mt-5 grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-4">{saved.map((look) => <LookTile key={look.id} look={look}/>)}</div> : <p className="mt-4 text-sm text-muted-foreground">Looks you save will appear here.</p>}
     </section>
-    <section className="mt-12 border-t border-border pt-8">
+    <section id="liked-looks" className="mt-12 border-t border-border pt-8">
       <div className="flex items-center gap-2"><Heart className="size-5"/><h2 className="font-display text-3xl">Wishlist — liked looks</h2></div>
       {liked.length ? <div className="mt-5 grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-4">{liked.map((look) => <LookTile key={look.id} look={look}/>)}</div> : <p className="mt-4 text-sm text-muted-foreground">Looks you like will appear in your wishlist.</p>}
     </section>
