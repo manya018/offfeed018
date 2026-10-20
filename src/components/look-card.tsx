@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { Heart, Share2 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import type { Look } from "@/lib/offfeed-data";
 import { toggleSavedLook, toggleLikedLook, readSavedLookIds, readLikedLookIds } from "@/lib/look-collections";
@@ -8,7 +8,7 @@ import { toggleSavedLook, toggleLikedLook, readSavedLookIds, readLikedLookIds } 
 export function LookCard({ look, tall = false }: { look: Look; tall?: boolean }) {
   const [liked, setLiked] = useState(false);
   const [saved, setSaved] = useState(false);
-  useState(() => { if (typeof window !== "undefined") { setSaved(readSavedLookIds().includes(look.id)); setLiked(readLikedLookIds().includes(look.id)); } return null; });
+  useEffect(() => { setSaved(readSavedLookIds().includes(look.id)); setLiked(readLikedLookIds().includes(look.id)); }, [look.id]);
   return (
     <article className="mb-7 break-inside-avoid">
       <div className="group relative overflow-hidden rounded-[1.25rem] bg-card shadow-soft">
