@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { himLooks, looks, type Look } from "@/lib/offfeed-data";
 import { readLikedLookIds, syncWishlistWithAccount } from "@/lib/look-collections";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/profile")({
   head: () => ({ meta: [{ title: "My Wishlist — OFFFEED" }, { name: "description", content: "Your liked OFFFEED looks and fashion inspiration." }] }),
@@ -35,10 +36,10 @@ function ProfilePage() {
     void refreshWishlist();
     const onWishlistUpdated = () => { const ids = readLikedLookIds(); setLiked([...looks, ...himLooks].filter((look) => ids.includes(look.id))); };
     window.addEventListener("offfeed-wishlist-updated", onWishlistUpdated);
-    const { data: { subscription } } = (async () => ({ data: { subscription: null as any } }))() as any;
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => { void refreshWishlist(); });
     return () => {
       window.removeEventListener("offfeed-wishlist-updated", onWishlistUpdated);
-      subscription?.unsubscribe?.();
+      subscription.unsubscribe();
     };
   }, [refreshWishlist]);
 
