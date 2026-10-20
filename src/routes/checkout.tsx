@@ -4,6 +4,7 @@ import { ArrowLeft, Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { clearOfffeedCart, offfeedCartEventName, readOfffeedCart, writeOfffeedCart, type OfffeedCartItem } from "@/lib/cart";
 import { createOfffeedCheckoutOrders, type OfffeedCheckoutResult } from "@/lib/checkout.functions";
+import { supabase } from "@/integrations/supabase/client";
 
 type SavedAddress = { id: string; label: string; line1: string; line2: string; city: string; state: string; landmark: string; pinCode: string; isDefault: boolean };
 const ADDRESS_BOOK_KEY = "offfeed-address-book-v1";
@@ -34,8 +35,7 @@ function CheckoutPage() {
   useEffect(() => {
     const sync = () => setItems(readOfffeedCart());
     sync();
-    const savedAddresses = readAddressBook();
-    setAddresses(savedAddresses);
+    void loadSavedAddresses();
     const defaultAddress = savedAddresses.find((address) => address.isDefault) ?? savedAddresses[0];
     if (defaultAddress) { setSelectedAddressId(defaultAddress.id); setForm((current) => ({ ...current, line1: defaultAddress.line1, line2: defaultAddress.line2, city: defaultAddress.city, state: defaultAddress.state, landmark: defaultAddress.landmark, pinCode: defaultAddress.pinCode })); }
     window.addEventListener(offfeedCartEventName(), sync);
@@ -48,12 +48,36 @@ function CheckoutPage() {
 
   const total = useMemo(() => items.reduce((sum, item) => sum + item.price * item.quantity, 0), [items]);
 
-  function saveCurrentAddress() {
+  async function loadSavedAddresses() {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data, error: addressError } = await supabase.from("customer_addresses").select("*").eq("user_id", user.id).order("is_default", { ascending: false }).order("created_at", { ascending: true });
+      if (!addressError && data) {
+        const savedAddresses: SavedAddress[] = data.map((row) => ({ id: row.id, label: row.label, line1: row.line1, line2: row.line2 ?? "", city: row.city, state: row.state, landmark: row.landmark ?? "", pinCode: row.pin_code, isDefault: row.is_default }));
+        setAddresses(savedAddresses);
+        const preferred = savedAddresses.find((address) => address.isDefault) ?? savedAddresses[0];
+        if (preferred) chooseAddress(preferred.id);
+        return;
+      }
+    }
+    const savedAddresses = readAddressBook(); setAddresses(savedAddresses);
+    const preferred = savedAddresses.find((address) => address.isDefault) ?? savedAddresses[0];
+    if (preferred) { setSelectedAddressId(preferred.id); setForm((current) => ({ ...current, line1: preferred.line1, line2: preferred.line2, city: preferred.city, state: preferred.state, landmark: preferred.landmark, pinCode: preferred.pinCode })); }
+  }
+
+  async function saveCurrentAddress() {
     if (!form.line1.trim() || !form.city.trim() || !form.state.trim() || !/^[1-9][0-9]{5}$/.test(form.pinCode)) { setError("Enter a complete address and valid 6-digit PIN code before saving."); return; }
     const id = selectedAddressId || (typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : String(Date.now()));
     const existing = addresses.find((address) => address.id === id);
     const nextAddress: SavedAddress = { id, label: addressLabel.trim() || "Other", line1: form.line1, line2: form.line2, city: form.city, state: form.state, landmark: form.landmark, pinCode: form.pinCode, isDefault: existing?.isDefault ?? addresses.length === 0 };
     const next = existing ? addresses.map((address) => address.id === id ? nextAddress : address) : [...addresses, nextAddress];
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const payload = { user_id: user.id, label: nextAddress.label, line1: nextAddress.line1, line2: nextAddress.line2 || null, city: nextAddress.city, state: nextAddress.state, landmark: nextAddress.landmark || null, pin_code: nextAddress.pinCode, is_default: nextAddress.isDefault };
+      const result = existing ? await supabase.from("customer_addresses").update(payload).eq("id", id).eq("user_id", user.id) : await supabase.from("customer_addresses").insert(payload);
+      if (result.error) { setError("Could not save this address to your account. Please sign in and try again."); return; }
+      await loadSavedAddresses(); setError(""); return;
+    }
     setAddresses(next); persistAddressBook(next); setSelectedAddressId(id); setError("");
   }
   function chooseAddress(id: string) {
@@ -66,10 +90,12 @@ function CheckoutPage() {
   function setDefaultAddress(id: string) {
     const next = addresses.map((address) => ({ ...address, isDefault: address.id === id }));
     setAddresses(next); persistAddressBook(next);
+    void (async () => { const { data: { user } } = await supabase.auth.getUser(); if (user) { await supabase.from("customer_addresses").update({ is_default: false }).eq("user_id", user.id); await supabase.from("customer_addresses").update({ is_default: true }).eq("id", id).eq("user_id", user.id); } })();
   }
   function deleteAddress(id: string) {
     const next = addresses.filter((address) => address.id !== id);
     setAddresses(next); persistAddressBook(next);
+    void (async () => { const { data: { user } } = await supabase.auth.getUser(); if (user) await supabase.from("customer_addresses").delete().eq("id", id).eq("user_id", user.id); })();
     if (selectedAddressId === id) { setSelectedAddressId(""); setAddressLabel("Home"); setForm((current) => ({ ...current, line1: "", line2: "", city: "", state: "", landmark: "", pinCode: "" })); }
     if (next.length && !next.some((address) => address.isDefault)) { const fixed = next.map((address, index) => ({ ...address, isDefault: index === 0 })); setAddresses(fixed); persistAddressBook(fixed); }
   }
