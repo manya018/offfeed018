@@ -33,12 +33,16 @@ function BrandReviewPage() {
   }, [loadReview, token]);
 
   const decide = async (action: "approve" | "decline") => {
+    if (application && application.status !== "under_review" && application.status !== (action === "approve" ? "approved" : "declined")) {
+      const confirmed = window.confirm(`This brand is currently ${application.status}. Change the decision to ${action === "approve" ? "approved" : "declined"}? The brand will receive a new email.`);
+      if (!confirmed) return;
+    }
     setDecision(action); setNotice("");
     try {
       const result = await makeDecision({ data: { token, action, reason: reason || undefined } });
       setApplication((current) => current ? { ...current, status: result.status } : current);
-      if (result.emailSent === false) setNotice("The decision is saved, but the email send failed. You can retry with the button below.");
-      else if (result.emailSent === true) setNotice("Email send request accepted. If the brand still cannot find it, check Spam/Promotions and verify the application email address.");
+      if (result.emailSent === false) setNotice("The decision is saved, but the email send failed. Use the decision buttons to retry the notification.");
+      else if (result.emailSent === true) setNotice(`Decision updated to ${result.status}. The brand notification email was sent.`);
     } catch (error) {
       setNotice(error instanceof Error ? error.message : "The decision could not be saved.");
     } finally { setDecision(null); }
@@ -60,10 +64,10 @@ function BrandReviewPage() {
         <aside className="h-fit border-y border-border/70 py-6 lg:sticky lg:top-28">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Decision</p>
           <h2 className="mt-3 font-display text-3xl">{decided ? `Application ${application.status}.` : "Ready for your call."}</h2>
-          <p className="mt-3 text-sm leading-6 text-muted-foreground">{decided ? "This application has already received a decision." : "Review the brand details and files, then approve or decline from here."}</p>
+          <p className="mt-3 text-sm leading-6 text-muted-foreground">{decided ? "You can change this decision at any time. Changing it updates the brand status and sends a new notification email." : "Review the brand details and files, then approve or decline from here."}</p>
           <div className="mt-6 border-y border-border/70 py-4 text-sm"><div className="flex justify-between gap-4 py-2"><span className="text-muted-foreground">Platform commission</span><span className="font-medium">{application.commissionRate * 100}%</span></div><div className="flex justify-between gap-4 py-2"><span className="text-muted-foreground">Brand net payout</span><span className="font-medium">{100 - application.commissionRate * 100}%</span></div><div className="flex justify-between gap-4 py-2"><span className="text-muted-foreground">Agreement accepted</span><span className="font-medium">{application.commissionAgreedAt ? "Yes" : "No"}</span></div></div>
           <a href={application.proofUrl ?? undefined} target="_blank" rel="noreferrer" className={`mt-5 inline-flex items-center gap-2 text-sm ${application.proofUrl ? "text-primary underline underline-offset-4" : "pointer-events-none text-muted-foreground"}`}><FileText className="size-4" />{application.proofUrl ? "Open business proof" : "No business proof provided"}</a>
-          {!decided ? <><textarea value={reason} onChange={(event) => setReason(event.target.value)} placeholder="Optional note for a decline" className="mt-6 min-h-24 w-full resize-y rounded-lg border border-border bg-card px-3 py-3 text-sm outline-none focus-visible:ring-1 focus-visible:ring-ring" maxLength={500} /><div className="mt-4 grid gap-3 sm:grid-cols-2"><Button onClick={() => void decide("approve")} disabled={Boolean(decision)}><Check />{decision === "approve" ? "Approving…" : "Approve brand"}</Button><Button variant="outline" onClick={() => void decide("decline")} disabled={Boolean(decision)}><X />{decision === "decline" ? "Declining…" : "Decline"}</Button></div></> : <Button variant="outline" className="mt-6 w-full" onClick={() => void decide(application.status === "approved" ? "approve" : "decline")} disabled={Boolean(decision)}>{decision ? "Resending email…" : "Resend decision email"}</Button>}
+          <textarea value={reason} onChange={(event) => setReason(event.target.value)} placeholder="Optional note for a decline or changed decision" className="mt-6 min-h-24 w-full resize-y rounded-lg border border-border bg-card px-3 py-3 text-sm outline-none focus-visible:ring-1 focus-visible:ring-ring" maxLength={500} /><div className="mt-4 grid gap-3 sm:grid-cols-2"><Button onClick={() => void decide("approve")} disabled={Boolean(decision) || application.status === "approved"}><Check />{decision === "approve" ? "Approving…" : application.status === "approved" ? "Already approved" : "Approve / change to approved"}</Button><Button variant="outline" onClick={() => void decide("decline")} disabled={Boolean(decision) || application.status === "declined"}><X />{decision === "decline" ? "Declining…" : application.status === "declined" ? "Already declined" : "Decline / change to declined"}</Button></div>
           {notice && <p role="status" className={`mt-4 rounded-md border px-3 py-3 text-sm ${notice.startsWith("Email send request accepted") ? "border-border bg-muted text-foreground" : "border-destructive/30 bg-destructive/5 text-destructive"}`}>{notice}</p>}
         </aside>
       </div>
