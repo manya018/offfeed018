@@ -36,8 +36,6 @@ function CheckoutPage() {
     const sync = () => setItems(readOfffeedCart());
     sync();
     void loadSavedAddresses();
-    const defaultAddress = savedAddresses.find((address) => address.isDefault) ?? savedAddresses[0];
-    if (defaultAddress) { setSelectedAddressId(defaultAddress.id); setForm((current) => ({ ...current, line1: defaultAddress.line1, line2: defaultAddress.line2, city: defaultAddress.city, state: defaultAddress.state, landmark: defaultAddress.landmark, pinCode: defaultAddress.pinCode })); }
     window.addEventListener(offfeedCartEventName(), sync);
     window.addEventListener("storage", sync);
     return () => {
