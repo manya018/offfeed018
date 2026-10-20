@@ -56,7 +56,7 @@ function ProfilePage() {
   return <main className="mx-auto max-w-6xl px-5 py-10 lg:px-10 lg:py-14">
     <div className="flex flex-wrap items-end justify-between gap-4">
       <div><p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">OFFFEED / PERSONAL SPACE</p><h1 className="mt-2 font-display text-5xl">{user ? `Hello, ${user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split("@")[0] || "there"}` : "My Account"}</h1><p className="mt-3 text-muted-foreground">Your account, orders, delivery details and favourite finds — all in one place.</p></div>
-      <Button variant="outline" onClick={() => { void loadAccount(); void refreshWishlist(); }} disabled={accountLoading || loading}><RefreshCw className={`mr-2 size-4 ${accountLoading || loading ? "animate-spin" : ""}`}/>Refresh</Button>
+      <Button variant="outline" onClick={() => { void loadAccount(); }} disabled={accountLoading}><RefreshCw className={`mr-2 size-4 ${accountLoading ? "animate-spin" : ""}`}/>Refresh</Button>
     </div>
 
     {!accountLoading && !user && <div className="mt-8 flex flex-col items-start gap-3 rounded-2xl border border-border bg-card p-6 sm:flex-row sm:items-center sm:justify-between"><div><h2 className="font-display text-2xl">Sign in to your OFFFEED account</h2><p className="mt-1 text-sm text-muted-foreground">Access your account details, orders and delivery addresses.</p></div><Button onClick={() => toast.info("Use the account sign-in option on OFFFEED to sign in.")}><LogIn className="mr-2 size-4"/>Account sign-in</Button></div>}
