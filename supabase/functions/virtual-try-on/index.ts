@@ -26,6 +26,20 @@ Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") return json({ message: "Use POST to generate a try-on." }, 405);
 
+  // Require a real signed-in Supabase user before spending paid provider credits.
+  const authorization = req.headers.get("Authorization");
+  const supabaseUrl = Deno.env.get("SUPABASE_URL");
+  const anonKey = Deno.env.get("SUPABASE_ANON_KEY") ?? Deno.env.get("SUPABASE_ANON_KEY");
+  if (!authorization?.startsWith("Bearer ") || !supabaseUrl || !anonKey) {
+    return json({ message: "Sign in to use virtual try-on." }, 401);
+  }
+  const authCheck = await fetch(`${supabaseUrl}/auth/v1/user`, {
+    headers: { apikey: anonKey, Authorization: authorization },
+  });
+  if (!authCheck.ok) return json({ message: "Your session is invalid or expired. Please sign in again." }, 401);
+  const authenticatedUser = await authCheck.json().catch(() => null);
+  if (!authenticatedUser?.id) return json({ message: "Sign in to use virtual try-on." }, 401);
+
   const apiKey = Deno.env.get("SEGMIND_API_KEY");
   if (!apiKey) return json({ message: "The try-on service is not configured yet. Please add the SEGMIND_API_KEY secret to the Supabase Edge Function." }, 503);
 
