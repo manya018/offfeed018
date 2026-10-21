@@ -83,3 +83,30 @@ export function toggleLikedLook(look: Look) {
   const ids = readIds(LIKED_KEY);
   void setWishlistItem("look", look.id, !ids.includes(look.id));
 }
+
+
+export type ReferenceInspiration = { id: string; title: string; note: string; image: string; category: string };
+const REFERENCE_META_KEY = "offfeed-reference-inspirations-v1";
+const SAVED_REFERENCE_KEY = "offfeed-saved-reference-inspirations-v1";
+export function rememberReferenceInspiration(item: ReferenceInspiration) {
+  if (typeof window === "undefined") return;
+  try {
+    const current = JSON.parse(window.localStorage.getItem(REFERENCE_META_KEY) ?? "{}") as Record<string, ReferenceInspiration>;
+    current[item.id] = item;
+    window.localStorage.setItem(REFERENCE_META_KEY, JSON.stringify(current));
+  } catch { /* keep the page usable if browser storage is unavailable */ }
+}
+export function readReferenceInspirations(): ReferenceInspiration[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const value = JSON.parse(window.localStorage.getItem(REFERENCE_META_KEY) ?? "{}");
+    return value && typeof value === "object" ? Object.values(value).filter((item: any) => item && typeof item.id === "string") as ReferenceInspiration[] : [];
+  } catch { return []; }
+}
+export function toggleSavedReferenceInspiration(item: ReferenceInspiration) {
+  rememberReferenceInspiration(item);
+  const ids = readIds(SAVED_REFERENCE_KEY);
+  writeIds(SAVED_REFERENCE_KEY, ids.includes(item.id) ? ids.filter(id => id !== item.id) : [...ids, item.id]);
+  return !ids.includes(item.id);
+}
+export function readSavedReferenceInspirationIds() { return readIds(SAVED_REFERENCE_KEY); }
