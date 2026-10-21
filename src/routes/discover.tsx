@@ -114,7 +114,7 @@ function DiscoverPage() {
             { src: "https://images.unsplash.com/photo-1508296695146-257a814070b4?auto=format&fit=crop&w=1000&q=85", title: "Off-duty elegance", note: "Classic frames in a muted, editorial palette" },
             { src: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=1000&q=85", title: "Softly structured", note: "A timeless handbag in a warm, understated palette" },
             { src: "https://caitlynminimalist.com/cdn/shop/files/ANTIQUELOW-5316.jpg?v=1778434769&width=1024", title: "Collected treasures", note: "A vintage-inspired gold timepiece beside an iridescent shell" },
-            { src: "https://images.unsplash.com/photo-1523170335258-f5ed11844a49?auto=format&fit=crop&w=1000&q=85", title: "Soft gold details", note: "A classic analogue watch for a timeless everyday edit" },
+            { src: "https://images.unsplash.com/photo-1523170335258-f5ed11844a49?auto=format&fit=crop&w=1000&q=85", title: "Blue chronograph watch", note: "A stainless-steel analogue watch with a deep blue dial" },
           ]
     return <main className="mx-auto min-h-[70vh] max-w-[1440px] px-5 pb-24 pt-12 lg:px-10 lg:pt-16">
       <section className={(calmHerJewellery || calmHerAccessories) ? "mx-auto max-w-3xl pb-2 pt-2 text-center" : "mx-auto max-w-3xl text-center"}>
