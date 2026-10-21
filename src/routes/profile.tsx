@@ -187,7 +187,7 @@ function ProfilePage() {
         <Button type="submit" disabled={authBusy} className="w-full">{authBusy ? <LoaderCircle className="mr-2 size-4 animate-spin"/> : <LogIn className="mr-2 size-4"/>}{authBusy ? "Please wait…" : authMode === "signin" ? "Sign in" : "Create account"}</Button>
         {authMode === "signin" && <button type="button" onClick={() => { setForgotPassword(true); setAuthNotice(""); }} className="text-sm font-medium text-primary underline underline-offset-4">Forgot password?</button>}
         {authNotice && <p role="status" className="break-words text-sm text-muted-foreground">{authNotice}</p>}
-      </form>
+      </form>}
     </section>}
     <div className="mt-9 grid gap-8 lg:grid-cols-[230px_1fr]">
       <nav className="flex gap-2 overflow-x-auto lg:flex-col" aria-label="Account sections">
