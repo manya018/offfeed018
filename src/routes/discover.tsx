@@ -37,6 +37,7 @@ function DiscoverPage() {
   const [categoryLoading, setCategoryLoading] = useState(false);
   const [categoryError, setCategoryError] = useState(false);
   const [likedReferenceItems, setLikedReferenceItems] = useState<string[]>([]);
+  const [savedReferenceItems, setSavedReferenceItems] = useState<string[]>(() => readSavedReferenceInspirationIds());
   useEffect(() => { setLikedReferenceItems(readLikedLookIds()); }, []);
   const toggleReferenceLike = (id: string) => { const next = !likedReferenceItems.includes(id); setLikedReferenceItems((current) => next ? [...current, id] : current.filter((value) => value !== id)); void setWishlistItem("look", id, next); toast.success(next ? "Added to wishlist" : "Removed from wishlist"); };
   const shareReference = async (item: { title: string; src: string }) => { const url = new URL(`/discover?category=${category ?? "jewellery"}`, window.location.origin).toString(); try { if (navigator.share) await navigator.share({ title: `${item.title} — OFFFEED`, text: `Found this style on OFFFEED`, url }); else { await navigator.clipboard.writeText(url); toast.success("Link copied to share"); } } catch (error) { if (error instanceof Error && error.name === "AbortError") return; try { await navigator.clipboard.writeText(url); toast.success("Link copied to share"); } catch { toast.error("Could not share this item."); } } };
@@ -134,14 +135,14 @@ function DiscoverPage() {
             const referenceId = `reference-${category}-${item.title}`;
             const inspiration = { id: referenceId, title: item.title, note: item.note, image: item.src, category: category ?? "accessories" };
             const isLiked = likedReferenceItems.includes(referenceId);
-            const isSaved = readSavedReferenceInspirationIds().includes(referenceId);
+            const isSaved = savedReferenceItems.includes(referenceId);
             return <article key={item.title} className="group relative overflow-hidden rounded-[1rem] bg-[#f5f0eb]">
               <button type="button" className="block w-full cursor-zoom-in text-left" aria-label={`View ${item.title}`} onClick={() => { rememberReferenceInspiration(inspiration); window.open(item.src, "_blank", "noopener,noreferrer"); }}>
                 <img src={item.src} alt={item.title} loading="lazy" className={`block w-full object-cover transition-transform duration-500 group-hover:scale-[1.025] ${index % 5 === 1 ? "aspect-[4/5]" : index % 5 === 3 ? "aspect-[3/4]" : "aspect-[4/5]"}`} />
               </button>
               <div className="absolute right-2 top-2 flex gap-1 rounded-full border border-white/40 bg-white/90 p-1 shadow-sm backdrop-blur-md">
                 <Button type="button" variant="ghost" size="icon" aria-label={isLiked ? "Remove from wishlist" : "Add to wishlist"} onClick={() => { rememberReferenceInspiration(inspiration); toggleReferenceLike(referenceId); }}><Heart className={`size-4 ${isLiked ? "fill-current text-primary" : ""}`} /></Button>
-                <Button type="button" variant="ghost" size="icon" aria-label={isSaved ? "Remove saved inspiration" : "Save inspiration"} onClick={() => { const saved = toggleSavedReferenceInspiration(inspiration); toast.success(saved ? "Saved for later" : "Removed from saved items"); }}><ShoppingBag className={`size-4 ${isSaved ? "text-primary" : ""}`} /></Button>
+                <Button type="button" variant="ghost" size="icon" aria-label={isSaved ? "Remove saved inspiration" : "Save inspiration"} onClick={() => { const saved = toggleSavedReferenceInspiration(inspiration); setSavedReferenceItems((current) => saved ? [...current.filter((id) => id !== referenceId), referenceId] : current.filter((id) => id !== referenceId)); toast.success(saved ? "Saved for later" : "Removed from saved items"); }}><ShoppingBag className={`size-4 ${isSaved ? "text-primary" : ""}`} /></Button>
                 <Button type="button" variant="ghost" size="icon" aria-label={`Share ${item.title}`} onClick={() => { rememberReferenceInspiration(inspiration); void shareReference(item); }}><Share2 className="size-4" /></Button>
               </div>
               <div className="px-3 pb-3 pt-2"><h3 className="text-sm font-medium">{item.title}</h3><p className="mt-1 text-xs text-stone-500">{item.note}</p></div>
