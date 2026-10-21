@@ -64,7 +64,7 @@ export const decideBrandApplication = createServerFn({ method: "POST" })
 
     try {
       const { sendBrandDecisionEmail } = await import("./brand-notification.server");
-      await sendBrandDecisionEmail({ brandName: current.brand_name, email: current.email, approved: data.action === "approve", reason: data.reason, commissionRate: current.commission_rate });
+      await sendBrandDecisionEmail({ brandName: current.brand_name, email: current.email, approved: data.action === "approve", commissionRate: current.commission_rate });
       return { status: nextStatus, brandName: current.brand_name, emailSent: true };
     } catch (notifyError) {
       console.error("[brand-review] Decision saved, but the email failed to send", notifyError);
