@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Search, Sparkles, Heart, Share2 } from "lucide-react";
+import { Search, Sparkles, Heart, Share2, ShoppingBag } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { PublicProductCard } from "@/components/public-product-card";
 import { getShopTheLookProducts, type ProductWithBrand } from "@/lib/public-brand.functions";
@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { LookCard } from "@/components/look-card";
 import { himLooks, himMoodImages, himMoods, looks, moodImages, moods } from "@/lib/offfeed-data";
 import { useStyleSpace } from "@/lib/style-space";
-import { readLikedLookIds, setWishlistItem } from "@/lib/look-collections";
+import { readLikedLookIds, setWishlistItem, rememberReferenceInspiration, toggleSavedReferenceInspiration, readSavedReferenceInspirationIds } from "@/lib/look-collections";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/discover")({
@@ -130,9 +130,23 @@ function DiscoverPage() {
           <p className="max-w-sm text-sm leading-6 text-muted-foreground">{isHim ? "Considered details, collected inspiration." : jewellery ? "Pearls, warm gold, shell dishes and the kind of pieces you save just because they make you feel something." : "Structured bags, timeless sunglasses and gold-tone watches in warm, understated shades."}</p>
         </div>}
         {(calmHerJewellery || calmHerAccessories) ? <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4 lg:gap-6">
-          {referenceImages.map((item, index) => <figure key={item.title} className="overflow-hidden rounded-[1rem] bg-[#f5f0eb]">
-            <img src={item.src} alt={item.title} loading="lazy" className={`block w-full object-cover ${index % 5 === 1 ? "aspect-[4/5]" : index % 5 === 3 ? "aspect-[3/4]" : "aspect-[4/5]"}`} />
-          </figure>)}
+          {referenceImages.map((item, index) => {
+            const referenceId = `reference-${category}-${item.title}`;
+            const inspiration = { id: referenceId, title: item.title, note: item.note, image: item.src, category: category ?? "accessories" };
+            const isLiked = likedReferenceItems.includes(referenceId);
+            const isSaved = readSavedReferenceInspirationIds().includes(referenceId);
+            return <article key={item.title} className="group relative overflow-hidden rounded-[1rem] bg-[#f5f0eb]">
+              <button type="button" className="block w-full cursor-zoom-in text-left" aria-label={`View ${item.title}`} onClick={() => { rememberReferenceInspiration(inspiration); window.open(item.src, "_blank", "noopener,noreferrer"); }}>
+                <img src={item.src} alt={item.title} loading="lazy" className={`block w-full object-cover transition-transform duration-500 group-hover:scale-[1.025] ${index % 5 === 1 ? "aspect-[4/5]" : index % 5 === 3 ? "aspect-[3/4]" : "aspect-[4/5]"}`} />
+              </button>
+              <div className="absolute right-2 top-2 flex gap-1 rounded-full border border-white/40 bg-white/90 p-1 shadow-sm backdrop-blur-md">
+                <Button type="button" variant="ghost" size="icon" aria-label={isLiked ? "Remove from wishlist" : "Add to wishlist"} onClick={() => { rememberReferenceInspiration(inspiration); toggleReferenceLike(referenceId); }}><Heart className={`size-4 ${isLiked ? "fill-current text-primary" : ""}`} /></Button>
+                <Button type="button" variant="ghost" size="icon" aria-label={isSaved ? "Remove saved inspiration" : "Save inspiration"} onClick={() => { const saved = toggleSavedReferenceInspiration(inspiration); toast.success(saved ? "Saved for later" : "Removed from saved items"); }}><ShoppingBag className={`size-4 ${isSaved ? "text-primary" : ""}`} /></Button>
+                <Button type="button" variant="ghost" size="icon" aria-label={`Share ${item.title}`} onClick={() => { rememberReferenceInspiration(inspiration); void shareReference(item); }}><Share2 className="size-4" /></Button>
+              </div>
+              <div className="px-3 pb-3 pt-2"><h3 className="text-sm font-medium">{item.title}</h3><p className="mt-1 text-xs text-stone-500">{item.note}</p></div>
+            </article>;
+          })}
         </div> : <div className="columns-1 gap-5 sm:columns-2 lg:columns-3">
           {referenceImages.map((item, index) => <article key={item.title} className="group mb-5 break-inside-avoid overflow-hidden rounded-[1.35rem] border border-border/50 bg-card/80 shadow-soft">
             <div className="relative overflow-hidden bg-secondary/30"><img src={item.src} alt={item.title} loading="lazy" className={`w-full object-cover transition-transform duration-700 group-hover:scale-[1.035] ${index % 4 === 1 ? "aspect-[4/5]" : index % 4 === 2 ? "aspect-[3/4]" : index % 4 === 3 ? "aspect-[5/6]" : "aspect-[4/5]"}`} /><div className="absolute right-3 top-3 flex gap-1 rounded-full border border-white/40 bg-white/85 p-1 shadow-sm backdrop-blur-md"><Button variant="ghost" size="icon" aria-label="Like this look" onClick={(event) => { event.preventDefault(); toggleReferenceLike(`reference-${category}-${item.title}`); }}><Heart className={`size-4 ${likedReferenceItems.includes(`reference-${category}-${item.title}`) ? "fill-current text-primary" : ""}`} /></Button><Button variant="ghost" size="icon" aria-label="Share this look" onClick={(event) => { event.preventDefault(); void shareReference(item); }}><Share2 className="size-4" /></Button></div></div>
