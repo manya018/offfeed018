@@ -23,9 +23,11 @@ export const Route = createFileRoute("/_authenticated/brand/dashboard")({
   component: BrandDashboard,
 });
 
+type ProductDepartment = "Clothing" | "Jewellery" | "Accessories" | "Mixed look";
 type DraftProduct = {
   listingType: "product" | "bundle";
   bundleItems: string;
+  department: ProductDepartment;
   name: string;
   description: string;
   category: string;
@@ -49,7 +51,13 @@ type ImportedProduct = {
   category: string;
 };
 
-const blankProduct: DraftProduct = { listingType: "product", bundleItems: "", name: "", description: "", category: "Fashion", price: "", productUrl: "", sizes: "", colors: "", tags: "", audience: ["her"] };
+const blankProduct: DraftProduct = { listingType: "product", bundleItems: "", department: "Clothing", name: "", description: "", category: "Shirts & Tops", price: "", productUrl: "", sizes: "XS, S, M, L, XL", colors: "", tags: "", audience: ["her"] };
+const categoryOptions: Record<ProductDepartment, string[]> = {
+  Clothing: ["Shirts & Tops", "Trousers", "Dresses", "Ethnic Wear", "Outerwear", "Footwear", "Other Clothing"],
+  Jewellery: ["Earrings", "Necklaces", "Rings", "Bracelets", "Anklets", "Jewellery Sets", "Brooches", "Other Jewellery"],
+  Accessories: ["Bags", "Belts", "Sunglasses", "Watches", "Hats & Caps", "Scarves", "Wallets", "Other Accessories"],
+  "Mixed look": ["Complete Look"],
+};
 const fieldClass = "mt-2 h-11 rounded-lg border-border/80 bg-card px-3";
 const parseList = (value: string) => value.split(",").map((item) => item.trim().replace(/^#/, "")).filter(Boolean);
 
@@ -194,7 +202,7 @@ function BrandDashboard() {
       await createBrandProduct({ data: {
         name: draft.name,
         description: draft.listingType === "bundle" ? `${draft.description.trim()}\n\nIncluded in this look:\n${draft.bundleItems.split(",").map((item) => item.trim()).filter(Boolean).join("\n")}` : draft.description,
-        category: draft.listingType === "bundle" ? `Complete Look / ${draft.category}` : draft.category,
+        category: draft.listingType === "bundle" ? `Complete Look / ${draft.department}` : `${draft.department} / ${draft.category}`,
         price,
         productUrl: draft.productUrl.trim() || null,
         imagePath: path,
@@ -316,11 +324,12 @@ function BrandDashboard() {
               <div className="sm:col-span-2"><Label htmlFor="product-name">Product name</Label><Input id="product-name" value={draft.name} onChange={(event) => updateDraft("name", event.target.value)} maxLength={160} required className={fieldClass}/></div>
               <div className="sm:col-span-2"><Label htmlFor="product-description">Description</Label><Textarea id="product-description" value={draft.description} onChange={(event) => updateDraft("description", event.target.value)} maxLength={2000} minLength={10} required className="mt-2 min-h-28 rounded-lg border-border/80 bg-card px-3 py-3"/></div>
               {draft.listingType === "bundle" && <div className="sm:col-span-2"><Label htmlFor="bundle-items">Pieces included in this look</Label><Textarea id="bundle-items" value={draft.bundleItems} onChange={(event) => setDraft((current) => ({ ...current, bundleItems: event.target.value }))} placeholder="Blazer, trousers, shirt, belt — list included pieces separated by commas" required minLength={2} className="mt-2 min-h-24 rounded-lg border-border/80 bg-card px-3 py-3"/><p className="mt-2 text-xs text-muted-foreground">Be clear about exactly what the bundle price includes.</p></div>}
-              <div><Label htmlFor="product-category">Category</Label><Input id="product-category" value={draft.category} onChange={(event) => updateDraft("category", event.target.value)} maxLength={80} required className={fieldClass}/></div>
+              <div><Label htmlFor="product-department">Product department</Label><select id="product-department" value={draft.department} onChange={(event) => { const department = event.target.value as ProductDepartment; setDraft((current) => ({ ...current, department, category: categoryOptions[department][0], sizes: department === "Clothing" ? "XS, S, M, L, XL" : "" })); }} className={fieldClass}><option value="Clothing">Clothing</option><option value="Jewellery">Jewellery</option><option value="Accessories">Accessories</option><option value="Mixed look">Mixed look / outfit bundle</option></select><p className="mt-2 text-xs text-muted-foreground">Choose the department for this listing. You can create other listings in other departments too.</p></div>
+              <div><Label htmlFor="product-category">Specific category</Label><select id="product-category" value={draft.category} onChange={(event) => setDraft((current) => ({ ...current, category: event.target.value, sizes: current.department === "Jewellery" && event.target.value === "Rings" ? current.sizes : current.department === "Clothing" ? current.sizes : "" }))} className={fieldClass} required>{categoryOptions[draft.department].map((category) => <option key={category} value={category}>{category}</option>)}</select></div>
               <div><Label htmlFor="product-price">Price (₹)</Label><Input id="product-price" type="number" min="1" step="0.01" value={draft.price} onChange={(event) => updateDraft("price", event.target.value)} required className={fieldClass}/><p className="mt-2 text-xs text-muted-foreground">At ₹{Number(draft.price || 0).toLocaleString("en-IN")}, you receive ₹{(Number(draft.price || 0) * (1 - commission)).toLocaleString("en-IN", { maximumFractionDigits: 2 })} after OFFFEED’s 18% fee.</p></div>
               <div><Label htmlFor="product-link">Product link <span className="font-normal text-muted-foreground">(optional)</span></Label><Input id="product-link" type="url" value={draft.productUrl} onChange={(event) => updateDraft("productUrl", event.target.value)} placeholder="https://yourbrand.com/product" className={fieldClass}/></div>
-              <div><Label htmlFor="product-sizes">Sizes</Label><Input id="product-sizes" value={draft.sizes} onChange={(event) => updateDraft("sizes", event.target.value)} placeholder="XS, S, M, L" className={fieldClass}/></div>
-              <div><Label htmlFor="product-colors">Colors</Label><Input id="product-colors" value={draft.colors} onChange={(event) => updateDraft("colors", event.target.value)} placeholder="Ivory, Rose, Black" className={fieldClass}/></div>
+              {(draft.listingType === "product" && draft.department === "Clothing" || draft.listingType === "product" && draft.department === "Jewellery" && draft.category === "Rings") && <div><Label htmlFor="product-sizes">{draft.department === "Jewellery" ? "Ring sizes (optional)" : "Available sizes (optional)"}</Label><Input id="product-sizes" value={draft.sizes} onChange={(event) => updateDraft("sizes", event.target.value)} placeholder={draft.department === "Jewellery" ? "6, 7, 8 or 16, 17, 18" : "XS, S, M, L, XL or 28, 30, 32"} className={fieldClass}/></div>}
+              <div><Label htmlFor="product-colors">{draft.department === "Jewellery" ? "Metal / colour" : "Colours"}</Label><Input id="product-colors" value={draft.colors} onChange={(event) => updateDraft("colors", event.target.value)} placeholder={draft.department === "Jewellery" ? "Gold, silver, rose gold" : "Ivory, Rose, Black"} className={fieldClass}/></div>
               <div><Label htmlFor="product-tags">Tags</Label><Input id="product-tags" value={draft.tags} onChange={(event) => updateDraft("tags", event.target.value)} placeholder="#collegewear, #minimal, #pink" className={fieldClass}/></div>
               <div className="sm:col-span-2"><p className="text-sm font-medium">Show in</p><div className="mt-2 flex flex-wrap gap-2">{supportedAudience.map((item) => <Button key={item} type="button" size="sm" variant={draft.audience.includes(item) ? "default" : "outline"} aria-pressed={draft.audience.includes(item)} onClick={() => toggleDraftAudience(item)}>{draft.audience.includes(item) && <Check className="size-4"/>}{item === "her" ? "Her space" : "Him space"}</Button>)}</div></div>
               <div className="sm:col-span-2"><p className="text-sm font-medium">Product photo</p><input ref={fileInput} type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" onChange={handleImage}/><Button type="button" variant="outline" className="mt-2 h-12 w-full justify-start" onClick={() => fileInput.current?.click()}>{imagePreview ? <><img src={imagePreview} alt="Product preview" className="size-9 rounded object-cover"/>{image?.name}</> : <><ImagePlus/>Choose a product photo (JPG, PNG or WebP · up to 20 MB)</>}</Button></div>
