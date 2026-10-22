@@ -34,6 +34,13 @@ function DiscoverPage() {
   const [query, setQuery] = useState("");
   const [visible, setVisible] = useState(6);
   const [categoryProducts, setCategoryProducts] = useState<ProductWithBrand[]>([]);
+  const [productBrand, setProductBrand] = useState("All brands");
+  const [productColor, setProductColor] = useState("All colours");
+  const [productSize, setProductSize] = useState("All sizes");
+  const [productStyle, setProductStyle] = useState("All styles");
+  const [productSort, setProductSort] = useState("recommended");
+  const [productMinPrice, setProductMinPrice] = useState("");
+  const [productMaxPrice, setProductMaxPrice] = useState("");
   const [categoryLoading, setCategoryLoading] = useState(false);
   const [categoryError, setCategoryError] = useState(false);
   const [likedReferenceItems, setLikedReferenceItems] = useState<string[]>([]);
@@ -53,6 +60,27 @@ function DiscoverPage() {
       .finally(() => { if (active) setCategoryLoading(false); });
     return () => { active = false; };
   }, [category, space]);
+  const productFilterOptions = useMemo(() => ({
+    brands: [...new Set(categoryProducts.map((product) => product.brand.name))].sort(),
+    colors: [...new Set(categoryProducts.flatMap((product) => product.colors))].sort(),
+    sizes: [...new Set(categoryProducts.flatMap((product) => product.sizes))].sort(),
+    styles: [...new Set(categoryProducts.flatMap((product) => product.tags))].sort(),
+  }), [categoryProducts]);
+  const filteredCategoryProducts = useMemo(() => {
+    const filteredProducts = categoryProducts.filter((product) =>
+      (productBrand === "All brands" || product.brand.name === productBrand) &&
+      (productColor === "All colours" || product.colors.some((color) => color.toLowerCase() === productColor.toLowerCase())) &&
+      (productSize === "All sizes" || product.sizes.some((size) => size.toLowerCase() === productSize.toLowerCase())) &&
+      (productStyle === "All styles" || product.tags.some((tag) => tag.toLowerCase() === productStyle.toLowerCase())) &&
+      (!productMinPrice || product.price >= Number(productMinPrice)) &&
+      (!productMaxPrice || product.price <= Number(productMaxPrice))
+    );
+    if (productSort === "newest") filteredProducts.sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
+    else if (productSort === "price-low") filteredProducts.sort((a, b) => a.price - b.price);
+    else if (productSort === "price-high") filteredProducts.sort((a, b) => b.price - a.price);
+    return filteredProducts;
+  }, [categoryProducts, productBrand, productColor, productSize, productStyle, productMinPrice, productMaxPrice, productSort]);
+  const resetProductFilters = () => { setProductBrand("All brands"); setProductColor("All colours"); setProductSize("All sizes"); setProductStyle("All styles"); setProductMinPrice(""); setProductMaxPrice(""); setProductSort("recommended"); };
   const filtered = useMemo(() => collection.filter((look) => {
     const searchMatch = `${look.title} ${look.aesthetic} ${look.occasion} ${look.season}`.toLowerCase().includes(query.toLowerCase());
     if (!searchMatch) return false;
@@ -155,7 +183,21 @@ function DiscoverPage() {
 {!calmHerAccessories && (
       <section className="mt-16">
         <div className="mb-6"><p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Shop independent labels</p><h2 className="mt-2 font-display text-3xl sm:text-4xl">Pieces to make it yours.</h2></div>
-        {categoryLoading ? <p className="py-20 text-center text-muted-foreground">Finding pieces for your edit…</p> : categoryError ? <p className="py-20 text-center text-muted-foreground">We couldn’t load this edit right now. Please try again.</p> : categoryProducts.length ? <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 sm:gap-x-6 lg:grid-cols-4">{categoryProducts.map((product) => <PublicProductCard key={product.id} product={product} />)}</div> : <div className="mx-auto max-w-2xl border-y border-dashed border-border/70 py-12 text-center"><h2 className="font-display text-3xl">Good things are on their way.</h2><p className="mt-3 leading-7 text-muted-foreground">There aren’t any approved, published {jewellery ? "jewellery" : "accessory"} products in this edit yet. As brands publish matching products, they’ll appear here.</p></div>}
+        {categoryLoading ? <p className="py-20 text-center text-muted-foreground">Finding pieces for your edit…</p> : categoryError ? <p className="py-20 text-center text-muted-foreground">We couldn’t load this edit right now. Please try again.</p> : categoryProducts.length ? <>
+          <div className="mb-6 rounded-2xl border border-border/70 bg-card p-4">
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-3"><p className="text-sm font-medium">Refine your results · {filteredCategoryProducts.length} products</p><Button type="button" variant="ghost" size="sm" onClick={resetProductFilters}>Clear filters</Button></div>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+              <div><label htmlFor="shop-brand" className="text-xs text-muted-foreground">Brand</label><select id="shop-brand" value={productBrand} onChange={(e) => setProductBrand(e.target.value)} className="mt-1 h-10 w-full rounded-lg border border-border bg-background px-2 text-sm"><option>All brands</option>{productFilterOptions.brands.map((item) => <option key={item}>{item}</option>)}</select></div>
+              <div><label htmlFor="shop-color" className="text-xs text-muted-foreground">Colour</label><select id="shop-color" value={productColor} onChange={(e) => setProductColor(e.target.value)} className="mt-1 h-10 w-full rounded-lg border border-border bg-background px-2 text-sm"><option>All colours</option>{productFilterOptions.colors.map((item) => <option key={item}>{item}</option>)}</select></div>
+              <div><label htmlFor="shop-size" className="text-xs text-muted-foreground">Size</label><select id="shop-size" value={productSize} onChange={(e) => setProductSize(e.target.value)} className="mt-1 h-10 w-full rounded-lg border border-border bg-background px-2 text-sm"><option>All sizes</option>{productFilterOptions.sizes.map((item) => <option key={item}>{item}</option>)}</select></div>
+              <div><label htmlFor="shop-style" className="text-xs text-muted-foreground">Style / aesthetic</label><select id="shop-style" value={productStyle} onChange={(e) => setProductStyle(e.target.value)} className="mt-1 h-10 w-full rounded-lg border border-border bg-background px-2 text-sm"><option>All styles</option>{productFilterOptions.styles.map((item) => <option key={item}>{item}</option>)}</select></div>
+              <div><label htmlFor="shop-min-price" className="text-xs text-muted-foreground">Minimum price (₹)</label><input id="shop-min-price" type="number" min="0" value={productMinPrice} onChange={(e) => setProductMinPrice(e.target.value)} placeholder="₹0" className="mt-1 h-10 w-full rounded-lg border border-border bg-background px-3 text-sm"/></div>
+              <div><label htmlFor="shop-max-price" className="text-xs text-muted-foreground">Maximum price (₹)</label><input id="shop-max-price" type="number" min="0" value={productMaxPrice} onChange={(e) => setProductMaxPrice(e.target.value)} placeholder="No limit" className="mt-1 h-10 w-full rounded-lg border border-border bg-background px-3 text-sm"/></div>
+              <div className="col-span-2 sm:col-span-1"><label htmlFor="shop-sort" className="text-xs text-muted-foreground">Sort by</label><select id="shop-sort" value={productSort} onChange={(e) => setProductSort(e.target.value)} className="mt-1 h-10 w-full rounded-lg border border-border bg-background px-2 text-sm"><option value="recommended">Recommended</option><option value="newest">New arrivals</option><option value="price-low">Price: low to high</option><option value="price-high">Price: high to low</option></select></div>
+            </div>
+          </div>
+          {filteredCategoryProducts.length ? <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 sm:gap-x-6 lg:grid-cols-4">{filteredCategoryProducts.map((product) => <PublicProductCard key={product.id} product={product} />)}</div> : <p className="py-12 text-center text-muted-foreground">No products match these filters. Try changing or clearing them.</p>}
+        </> : <div className="mx-auto max-w-2xl border-y border-dashed border-border/70 py-12 text-center"><h2 className="font-display text-3xl">Good things are on their way.</h2><p className="mt-3 leading-7 text-muted-foreground">There aren’t any approved, published {jewellery ? "jewellery" : "accessory"} products in this edit yet. As brands publish matching products, they’ll appear here.</p></div>}
       </section>
       )}
     </main>;
