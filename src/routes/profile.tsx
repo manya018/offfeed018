@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
 type Order = { id: string; order_number: string; product_name: string; quantity: number; unit_price: number | string; status: string; created_at: string; estimated_delivery_start?: string | null; estimated_delivery_end?: string | null; tracking_url?: string | null };
-type Address = { id: string; label: string; line1: string; line2?: string | null; city: string; state: string; pin_code: string; is_default: boolean };
+type Address = { id: string; label: string; line1: string; line2?: string | null; city: string; state: string; pin_code: string; landmark?: string | null; is_default: boolean };
 
 export const Route = createFileRoute("/profile")({
   head: () => ({ meta: [{ title: "My Account — OFFFEED" }, { name: "description", content: "Manage your OFFFEED account, orders and delivery addresses." }] }),
@@ -18,6 +18,11 @@ function ProfilePage() {
   const [user, setUser] = useState<any>(null);
   const [orders, setOrders] = useState<Order[]>([]);
   const [addresses, setAddresses] = useState<Address[]>([]);
+  const [addressEditorOpen, setAddressEditorOpen] = useState(false);
+  const [addressSaving, setAddressSaving] = useState(false);
+  const [addressError, setAddressError] = useState("");
+  const [editingAddressId, setEditingAddressId] = useState<string | null>(null);
+  const [addressForm, setAddressForm] = useState({ label: "Home", line1: "", line2: "", city: "", state: "", pin_code: "", landmark: "" });
   const [activeTab, setActiveTab] = useState<"overview" | "orders" | "addresses">("overview");
   const [editingProfile, setEditingProfile] = useState(false);
   const [savingProfile, setSavingProfile] = useState(false);
@@ -114,7 +119,7 @@ function ProfilePage() {
       if (currentUser) {
         const [orderResult, addressResult] = await Promise.all([
           client.from("brand_orders").select("id,order_number,product_name,quantity,unit_price,status,created_at,estimated_delivery_start,estimated_delivery_end,tracking_url").eq("customer_user_id", currentUser.id).order("created_at", { ascending: false }),
-          client.from("customer_addresses").select("id,label,line1,line2,city,state,pin_code,is_default").eq("user_id", currentUser.id).order("is_default", { ascending: false }).order("created_at", { ascending: false }),
+          client.from("customer_addresses").select("id,label,line1,line2,city,state,pin_code,landmark,is_default").eq("user_id", currentUser.id).order("is_default", { ascending: false }).order("created_at", { ascending: false }),
         ]);
         if (orderResult.error) console.error("Could not load order history", orderResult.error);
         else setOrders(orderResult.data ?? []);
@@ -148,6 +153,87 @@ function ProfilePage() {
       console.error("Profile update failed:", error);
       toast.error(error instanceof Error ? error.message : "Could not update profile. Please try again.");
     } finally { setSavingProfile(false); }
+  };
+
+
+  const startAddressEditor = (address?: Address) => {
+    setEditingAddressId(address?.id ?? null);
+    setAddressForm(address ? {
+      label: address.label || "Home", line1: address.line1 || "", line2: address.line2 || "",
+      city: address.city || "", state: address.state || "", pin_code: address.pin_code || "",
+      landmark: address.landmark || "",
+    } : { label: addresses.length ? "Other" : "Home", line1: "", line2: "", city: "", state: "", pin_code: "", landmark: "" });
+    setAddressError("");
+    setAddressEditorOpen(true);
+  };
+
+  const saveAddress = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!user) { setAddressError("Please sign in to save delivery addresses."); return; }
+    const pin = addressForm.pin_code.trim();
+    if (!/^[1-9][0-9]{5}$/.test(pin)) { setAddressError("Enter a valid 6-digit Indian PIN code."); return; }
+    if (!addressForm.line1.trim() || !addressForm.city.trim() || !addressForm.state.trim()) {
+      setAddressError("Complete the street address, city, and state."); return;
+    }
+    setAddressSaving(true); setAddressError("");
+    try {
+      const isDefault = editingAddressId
+        ? Boolean(addresses.find((a) => a.id === editingAddressId)?.is_default)
+        : addresses.length === 0;
+      const payload = {
+        user_id: user.id, label: addressForm.label.trim() || "Other",
+        line1: addressForm.line1.trim(), line2: addressForm.line2.trim() || null,
+        city: addressForm.city.trim(), state: addressForm.state.trim(), pin_code: pin,
+        landmark: addressForm.landmark.trim() || null, is_default: isDefault,
+      };
+      if (isDefault) {
+        const cleared = await supabase.from("customer_addresses").update({ is_default: false }).eq("user_id", user.id);
+        if (cleared.error) throw cleared.error;
+      }
+      const result = editingAddressId
+        ? await supabase.from("customer_addresses").update(payload).eq("id", editingAddressId).eq("user_id", user.id).select("id").single()
+        : await supabase.from("customer_addresses").insert(payload).select("id").single();
+      if (result.error) throw result.error;
+      await loadAccount();
+      setAddressEditorOpen(false); setEditingAddressId(null);
+      toast.success(editingAddressId ? "Address updated" : "Address saved");
+    } catch (cause) {
+      console.error("Address save failed:", cause);
+      setAddressError(cause instanceof Error ? cause.message : "Could not save this address. Please try again.");
+    } finally { setAddressSaving(false); }
+  };
+
+  const makeDefaultAddress = async (address: Address) => {
+    if (!user) return;
+    try {
+      const cleared = await supabase.from("customer_addresses").update({ is_default: false }).eq("user_id", user.id);
+      if (cleared.error) throw cleared.error;
+      const updated = await supabase.from("customer_addresses").update({ is_default: true }).eq("id", address.id).eq("user_id", user.id);
+      if (updated.error) throw updated.error;
+      await loadAccount(); toast.success("Default delivery address updated");
+    } catch (cause) {
+      console.error("Default address update failed:", cause);
+      toast.error("Could not update the default address. Please try again.");
+      await loadAccount();
+    }
+  };
+
+  const removeAddress = async (address: Address) => {
+    if (!user || !window.confirm("Delete this delivery address?")) return;
+    try {
+      const removed = await supabase.from("customer_addresses").delete().eq("id", address.id).eq("user_id", user.id);
+      if (removed.error) throw removed.error;
+      const remaining = addresses.filter((entry) => entry.id !== address.id);
+      if (address.is_default && remaining.length) {
+        const defaulted = await supabase.from("customer_addresses").update({ is_default: true }).eq("id", remaining[0].id).eq("user_id", user.id);
+        if (defaulted.error) throw defaulted.error;
+      }
+      await loadAccount(); toast.success("Address deleted");
+    } catch (cause) {
+      console.error("Address deletion failed:", cause);
+      toast.error("Could not delete this address. Please try again.");
+      await loadAccount();
+    }
   };
 
   const signOut = async () => {
@@ -208,8 +294,26 @@ function ProfilePage() {
           {accountLoading ? <Loading/> : !user ? <Empty title="Sign in to view your orders" body="Your account orders will appear here after you sign in."/> : orders.length===0 ? <Empty title="No orders yet" body="When you place an order on OFFFEED, its status and delivery updates will appear here." action={<Button asChild><Link to="/discover">Discover brands</Link></Button>}/> : <div className="mt-5 space-y-3">{orders.map((order)=><article key={order.id} className="rounded-xl border border-border bg-card p-5"><div className="flex flex-wrap justify-between gap-3"><div><p className="text-xs text-muted-foreground">Order {order.order_number}</p><h3 className="mt-1 font-medium">{order.product_name} × {order.quantity}</h3><p className="mt-1 text-sm text-muted-foreground">Placed {new Date(order.created_at).toLocaleDateString("en-IN",{day:"numeric",month:"short",year:"numeric"})}</p></div><div className="text-right"><p className="font-medium">₹{(Number(order.unit_price)*order.quantity).toLocaleString("en-IN")}</p><span className="mt-2 inline-block rounded-full bg-secondary px-3 py-1 text-xs capitalize">{order.status.replaceAll("_"," ")}</span></div></div>{(order.estimated_delivery_start || order.estimated_delivery_end) && <p className="mt-3 text-sm text-muted-foreground">Estimated delivery: {order.estimated_delivery_start ? new Date(order.estimated_delivery_start).toLocaleDateString("en-IN") : "—"} – {order.estimated_delivery_end ? new Date(order.estimated_delivery_end).toLocaleDateString("en-IN") : "—"}</p>}{order.tracking_url && <a className="mt-3 inline-block text-sm underline underline-offset-4" href={order.tracking_url} target="_blank" rel="noreferrer">Track shipment</a>}</article>)}</div>}
         </section>}
 
-        {activeTab==="addresses" && <section><h2 className="font-display text-3xl">Saved addresses</h2><p className="mt-1 text-sm text-muted-foreground">Delivery addresses saved to your account.</p>
-          {accountLoading ? <Loading/> : !user ? <Empty title="Sign in to view saved addresses" body="Sign in to sync delivery details across devices."/> : addresses.length===0 ? <Empty title="No saved addresses" body="Your address book will appear here after you save an address during checkout." action={<Button asChild><Link to="/checkout">Go to checkout</Link></Button>}/> : <div className="mt-5 grid gap-3 sm:grid-cols-2">{addresses.map((address)=><article key={address.id} className="rounded-xl border border-border bg-card p-5"><div className="flex items-center justify-between gap-2"><h3 className="font-medium">{address.label}</h3>{address.is_default && <span className="rounded-full bg-secondary px-2 py-1 text-xs">Default</span>}</div><p className="mt-3 text-sm leading-6 text-muted-foreground">{address.line1}{address.line2 ? `, ${address.line2}` : ""}<br/>{address.city}, {address.state} {address.pin_code}</p></article>)}</div>}
+
+        {activeTab==="addresses" && <section>
+          <div className="flex flex-wrap items-end justify-between gap-3"><div><h2 className="font-display text-3xl">Saved addresses</h2><p className="mt-1 text-sm text-muted-foreground">Manage where your OFFFEED finds are delivered.</p></div>{user && <Button onClick={() => startAddressEditor()}><MapPin className="mr-2 size-4"/>Add address</Button>}</div>
+          {!user ? <div className="mt-5"><Empty title="Sign in to manage addresses" body="Saved addresses are private to your account and sync across devices."/></div> : null}
+          {user && addressEditorOpen && <form onSubmit={(event) => void saveAddress(event)} className="mt-5 rounded-2xl border border-border bg-card p-5 sm:p-6">
+            <h3 className="font-display text-2xl">{editingAddressId ? "Edit address" : "Add a delivery address"}</h3>
+            <div className="mt-5 grid gap-4 sm:grid-cols-2">
+              <div><label htmlFor="address-label" className="mb-1.5 block text-sm">Label</label><input id="address-label" value={addressForm.label} onChange={(e) => setAddressForm({...addressForm,label:e.target.value})} maxLength={40} placeholder="Home, Office, Other" className="w-full rounded-xl border border-border bg-background px-3 py-2.5"/></div>
+              <div><label htmlFor="address-pin" className="mb-1.5 block text-sm">PIN code</label><input id="address-pin" value={addressForm.pin_code} onChange={(e) => setAddressForm({...addressForm,pin_code:e.target.value.replace(/\D/g,"").slice(0,6)})} inputMode="numeric" autoComplete="postal-code" required pattern="[1-9][0-9]{5}" className="w-full rounded-xl border border-border bg-background px-3 py-2.5"/></div>
+              <div className="sm:col-span-2"><label htmlFor="address-line1" className="mb-1.5 block text-sm">House / flat, street, area</label><input id="address-line1" value={addressForm.line1} onChange={(e) => setAddressForm({...addressForm,line1:e.target.value})} autoComplete="address-line1" required maxLength={220} className="w-full rounded-xl border border-border bg-background px-3 py-2.5"/></div>
+              <div className="sm:col-span-2"><label htmlFor="address-line2" className="mb-1.5 block text-sm">Apartment / additional details (optional)</label><input id="address-line2" value={addressForm.line2} onChange={(e) => setAddressForm({...addressForm,line2:e.target.value})} autoComplete="address-line2" maxLength={220} className="w-full rounded-xl border border-border bg-background px-3 py-2.5"/></div>
+              <div><label htmlFor="address-city" className="mb-1.5 block text-sm">City</label><input id="address-city" value={addressForm.city} onChange={(e) => setAddressForm({...addressForm,city:e.target.value})} autoComplete="address-level2" required maxLength={100} className="w-full rounded-xl border border-border bg-background px-3 py-2.5"/></div>
+              <div><label htmlFor="address-state" className="mb-1.5 block text-sm">State</label><input id="address-state" value={addressForm.state} onChange={(e) => setAddressForm({...addressForm,state:e.target.value})} autoComplete="address-level1" required maxLength={100} className="w-full rounded-xl border border-border bg-background px-3 py-2.5"/></div>
+              <div className="sm:col-span-2"><label htmlFor="address-landmark" className="mb-1.5 block text-sm">Nearby landmark (optional)</label><input id="address-landmark" value={addressForm.landmark} onChange={(e) => setAddressForm({...addressForm,landmark:e.target.value})} maxLength={160} className="w-full rounded-xl border border-border bg-background px-3 py-2.5"/></div>
+            </div>
+            {addressError && <p role="alert" className="mt-4 text-sm text-destructive">{addressError}</p>}
+            <div className="mt-5 flex flex-wrap gap-2"><Button type="submit" disabled={addressSaving}>{addressSaving ? <LoaderCircle className="mr-2 size-4 animate-spin"/> : <Save className="mr-2 size-4"/>}{addressSaving ? "Saving…" : editingAddressId ? "Save changes" : "Save address"}</Button><Button type="button" variant="outline" onClick={() => {setAddressEditorOpen(false);setEditingAddressId(null);setAddressError("");}} disabled={addressSaving}><X className="mr-2 size-4"/>Cancel</Button></div>
+          </form>}
+          {accountLoading ? <Loading/> : user && addresses.length===0 && !addressEditorOpen ? <Empty title="No saved addresses yet" body="Add your first delivery address here, or save one during checkout." action={<Button onClick={() => startAddressEditor()}><MapPin className="mr-2 size-4"/>Add your first address</Button>}/> : null}
+          {user && addresses.length>0 && <div className="mt-5 grid gap-3 sm:grid-cols-2">{addresses.map((address)=><article key={address.id} className="rounded-xl border border-border bg-card p-5"><div className="flex items-center justify-between gap-2"><h3 className="font-medium">{address.label}</h3>{address.is_default && <span className="rounded-full bg-secondary px-2 py-1 text-xs">Default</span>}</div><p className="mt-3 text-sm leading-6 text-muted-foreground">{address.line1}{address.line2 ? ", " + address.line2 : ""}<br/>{address.city}, {address.state} {address.pin_code}{address.landmark ? <><br/>Near {address.landmark}</> : null}</p><div className="mt-4 flex flex-wrap gap-2"><Button type="button" size="sm" variant="outline" onClick={() => startAddressEditor(address)}><Pencil className="mr-1 size-3.5"/>Edit</Button>{!address.is_default && <Button type="button" size="sm" variant="outline" onClick={() => void makeDefaultAddress(address)}>Set as default</Button>}<Button type="button" size="sm" variant="outline" onClick={() => void removeAddress(address)}><X className="mr-1 size-3.5"/>Delete</Button></div></article>)}</div>}
         </section>}
 
       </div>
