@@ -235,7 +235,7 @@ function CreateLookPage() {
           <Button onClick={shareRecipe} className="rounded-full"><Share2 className="mr-2 size-4" /> Share my style</Button>
         </div>
         <div className="mt-6 text-center"><Link to="/discover" className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline">Explore OFFFEED looks <ArrowRight className="size-4" /></Link></div>
-      </section>
+      </section>}
       <section className="mt-12">
         <div className="text-center">
           <span className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">Your recipe, your finds</span>
