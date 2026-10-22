@@ -10,6 +10,7 @@ const shopInput = z.object({
   categoryOnly: z.boolean().optional(),
   minPrice: z.number().nonnegative().optional(),
   maxPrice: z.number().positive().optional(),
+  requireMatch: z.boolean().optional(),
 });
 
 type Audience = "her" | "him";
@@ -65,7 +66,7 @@ function getImageUrl(path: string | null, signedUrls: Map<string, string>) {
 
 function relevanceScore(product: ProductWithBrand, aesthetic: string) {
   const tokens = aesthetic.toLowerCase().split(/[^a-z0-9]+/).filter((token) => token.length > 2);
-  const searchable = [product.productName, product.category, product.description, product.brand.category, ...product.tags]
+  const searchable = [product.productName, product.category, product.description, product.brand.category, ...product.tags, ...product.colors]
     .join(" ")
     .toLowerCase();
   return tokens.reduce((score, token) => score + (searchable.includes(token) ? 1 : 0), 0);
@@ -207,7 +208,7 @@ export const getShopTheLookProducts = createServerFn({ method: "GET" })
       .filter((product) => data.minPrice === undefined || product.price >= data.minPrice)
       .filter((product) => data.maxPrice === undefined || product.price <= data.maxPrice)
       .map((product) => ({ product, score: relevanceScore(product, data.aesthetic) }))
-      .filter(({ score }) => !data.categoryOnly || score > 0)
+      .filter(({ score }) => (!data.categoryOnly || score > 0) && (!data.requireMatch || score > 0))
       .sort((left, right) => right.score - left.score);
     return ranked
       .slice(0, data.categoryOnly ? 60 : 8)
