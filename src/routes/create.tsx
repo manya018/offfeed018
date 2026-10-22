@@ -1,399 +1,209 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useRef, useState } from "react";
 import {
   ArrowRight,
   Check,
+  Copy,
+  Heart,
   ImagePlus,
-  LoaderCircle,
-  RefreshCw,
-  ScanSearch,
-  Shirt,
+  RotateCcw,
+  Share2,
   Sparkles,
   Upload,
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
-type Match = {
-  id?: string;
-  name: string;
-  brand?: string;
-  price?: string | number;
-  imageUrl?: string;
-  productUrl?: string;
-  matchType?: "exact" | "similar";
-};
-
-type TryOnResponse = {
-  imageUrl?: string;
-  products?: Match[];
-  message?: string;
-};
+const vibes = ["Minimal", "Streetwear", "Soft romantic", "Old money", "Indie", "Y2K", "Boho", "Quiet luxury"];
+const occasions = ["Everyday", "College", "Date night", "Party", "Festive", "Work", "Vacation"];
+const budgets = ["Under ₹1,000", "₹1,000–₹2,500", "₹2,500–₹5,000", "No limit"];
+const palettes = ["Neutrals", "Earthy tones", "Black & white", "Pastels", "Bold colours", "Denim blues"];
 
 function CreateLookPage() {
-  const [personFile, setPersonFile] = useState<File | null>(null);
   const [outfitFile, setOutfitFile] = useState<File | null>(null);
-  const [personPreview, setPersonPreview] = useState("");
   const [outfitPreview, setOutfitPreview] = useState("");
-  const [resultUrl, setResultUrl] = useState("");
-  const [matches, setMatches] = useState<Match[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const personInput = useRef<HTMLInputElement>(null);
-  const outfitInput = useRef<HTMLInputElement>(null);
+  const [vibe, setVibe] = useState("Indie");
+  const [occasion, setOccasion] = useState("Everyday");
+  const [budget, setBudget] = useState("₹1,000–₹2,500");
+  const [palette, setPalette] = useState("Earthy tones");
+  const [details, setDetails] = useState("");
+  const [recipe, setRecipe] = useState("");
+  const [saved, setSaved] = useState(false);
+  const fileInput = useRef<HTMLInputElement>(null);
 
-  const acceptImage = (
-    file: File | undefined,
-    type: "person" | "outfit",
-  ) => {
+  const acceptImage = (file?: File) => {
     if (!file) return;
     if (!file.type.startsWith("image/")) {
-      setError("Please choose an image file (JPG, PNG or WEBP).");
+      toast.error("Please choose an image file.");
       return;
     }
     if (file.size > 10 * 1024 * 1024) {
-      setError("Please choose an image smaller than 10 MB.");
+      toast.error("Choose an image smaller than 10 MB.");
       return;
     }
-    const preview = URL.createObjectURL(file);
-    setError("");
-    setResultUrl("");
-    setMatches([]);
-    if (type === "person") {
-      setPersonFile(file);
-      setPersonPreview(preview);
-    } else {
-      setOutfitFile(file);
-      setOutfitPreview(preview);
+    if (outfitPreview) URL.revokeObjectURL(outfitPreview);
+    setOutfitFile(file);
+    setOutfitPreview(URL.createObjectURL(file));
+    setRecipe("");
+    setSaved(false);
+  };
+
+  const buildRecipe = () => {
+    const extra = details.trim() ? `\nSignature details: ${details.trim()}` : "";
+    const text = `MY OFFFEED STYLE DNA ✦\nVibe: ${vibe}\nOccasion: ${occasion}\nColour story: ${palette}\nBudget: ${budget}${extra}\n\nFind it before your feed does. #OFFFEED`;
+    setRecipe(text);
+    setSaved(false);
+  };
+
+  const saveRecipe = () => {
+    if (!recipe) return;
+    try {
+      const previous = JSON.parse(localStorage.getItem("offfeed-style-dna") || "[]");
+      const entries = Array.isArray(previous) ? previous : [];
+      localStorage.setItem("offfeed-style-dna", JSON.stringify([
+        { id: `style-${Date.now()}`, recipe, createdAt: new Date().toISOString() },
+        ...entries,
+      ].slice(0, 20)));
+      setSaved(true);
+      toast.success("Your Style DNA is saved on this device.");
+    } catch {
+      toast.error("Could not save on this device. You can still copy your Style DNA.");
     }
   };
 
-  const generateTryOn = async () => {
-    if (!personFile || !outfitFile) {
-      setError("Upload both your photo and the outfit photo to continue.");
-      return;
-    }
-    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined;
-    const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined;
-    if (!supabaseUrl || !supabaseKey) {
-      setError("OFFFEED's secure try-on service is not configured yet. Please try again later.");
-      return;
-    }
-
-    setLoading(true);
-    setError("");
+  const copyRecipe = async () => {
+    if (!recipe) return;
     try {
-      const form = new FormData();
-      form.append("person_image", personFile);
-      form.append("outfit_image", outfitFile);
-      const response = await fetch(`${supabaseUrl}/functions/v1/virtual-try-on`, {
-        method: "POST",
-        headers: {
-          apikey: supabaseKey,
-          Authorization: `Bearer ${supabaseKey}`,
-        },
-        body: form,
-      });
-      if (!response.ok) {
-        let message = "The try-on service could not process these images. Please try again.";
-        try {
-          const errorData = (await response.json()) as { message?: string };
-          if (errorData.message) message = errorData.message;
-        } catch {
-          // Keep the friendly fallback message when the server returns non-JSON.
-        }
-        if (response.status === 429) message = "The try-on service is busy. Please try again shortly.";
-        throw new Error(message);
-      }
-      const data = (await response.json()) as TryOnResponse;
-      if (!data.imageUrl) {
-        throw new Error("The AI service did not return a try-on image.");
-      }
-      setResultUrl(data.imageUrl);
-      setMatches(Array.isArray(data.products) ? data.products : []);
-    } catch (cause) {
-      setError(
-        cause instanceof Error
-          ? cause.message
-          : "Something went wrong. Please try again.",
-      );
-    } finally {
-      setLoading(false);
+      await navigator.clipboard.writeText(recipe);
+      toast.success("Style DNA copied. Share it anywhere!");
+    } catch {
+      toast.error("Copy isn't available in this browser. Select the text to copy it.");
+    }
+  };
+
+  const shareRecipe = async () => {
+    if (!recipe) return;
+    try {
+      if (navigator.share) await navigator.share({ title: "My OFFFEED Style DNA", text: recipe });
+      else await copyRecipe();
+    } catch (error) {
+      if (error instanceof Error && error.name === "AbortError") return;
+      await copyRecipe();
     }
   };
 
   const reset = () => {
-    setPersonFile(null);
+    if (outfitPreview) URL.revokeObjectURL(outfitPreview);
     setOutfitFile(null);
-    setPersonPreview("");
     setOutfitPreview("");
-    setResultUrl("");
-    setMatches([]);
-    setError("");
-    if (personInput.current) personInput.current.value = "";
-    if (outfitInput.current) outfitInput.current.value = "";
+    setVibe("Indie");
+    setOccasion("Everyday");
+    setBudget("₹1,000–₹2,500");
+    setPalette("Earthy tones");
+    setDetails("");
+    setRecipe("");
+    setSaved(false);
+    if (fileInput.current) fileInput.current.value = "";
   };
 
   return (
     <main className="mx-auto max-w-6xl px-5 py-12 sm:py-16">
-      <div className="mx-auto max-w-2xl text-center">
+      <div className="mx-auto max-w-3xl text-center">
         <span className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-2 text-sm text-primary">
-          <Sparkles className="size-4" /> OFFFEED AI STUDIO
+          <Sparkles className="size-4" /> YOUR PERSONAL STYLE LAB
         </span>
         <h1 className="mt-6 font-display text-4xl leading-tight sm:text-6xl">
-          See the fit on you.
+          Create a look that feels like <em className="font-normal text-primary">you.</em>
         </h1>
-        <p className="mx-auto mt-4 max-w-xl text-muted-foreground">
-          Bring an outfit you love. Preview it on yourself, then discover
-          independent brands with pieces that match your vibe.
+        <p className="mx-auto mt-4 max-w-2xl text-muted-foreground">
+          Save an outfit that caught your eye, build its Style DNA, and turn your taste into a shareable style recipe. No AI try-on, no credits — just your style, your way.
         </p>
       </div>
 
-      <div className="mt-10 grid gap-5 md:grid-cols-2">
+      <div className="mt-10 grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
         <section className="rounded-3xl border bg-card p-5 sm:p-6">
           <div className="flex items-start gap-3">
-            <div className="rounded-2xl bg-primary/10 p-3 text-primary">
-              <ImagePlus className="size-5" />
-            </div>
+            <div className="rounded-2xl bg-primary/10 p-3 text-primary"><ImagePlus className="size-5" /></div>
             <div>
-              <h2 className="font-display text-2xl">01. Your photo</h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Choose a clear, well-lit photo where your outfit area is visible.
-              </p>
+              <h2 className="font-display text-2xl">01. Keep the inspiration</h2>
+              <p className="mt-1 text-sm text-muted-foreground">Upload a look you love from anywhere. The image stays in this page and is not sent to an AI service.</p>
             </div>
           </div>
-          <input
-            ref={personInput}
-            type="file"
-            accept="image/png,image/jpeg,image/webp"
-            className="sr-only"
-            aria-label="Upload your photo"
-            onChange={(event) => acceptImage(event.target.files?.[0], "person")}
-          />
-          <button
-            type="button"
-            onClick={() => personInput.current?.click()}
-            className="mt-5 flex min-h-64 w-full flex-col items-center justify-center overflow-hidden rounded-2xl border border-dashed border-primary/40 bg-muted/30 transition hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-          >
-            {personPreview ? (
-              <img
-                src={personPreview}
-                alt="Your uploaded photo preview"
-                className="h-80 w-full object-contain"
-              />
-            ) : (
-              <>
-                <Upload className="size-8 text-primary" />
-                <span className="mt-3 font-medium">Upload your photo</span>
-                <span className="mt-1 text-xs text-muted-foreground">
-                  JPG, PNG or WEBP · up to 10 MB
-                </span>
-              </>
-            )}
+          <input ref={fileInput} type="file" accept="image/png,image/jpeg,image/webp" className="sr-only" aria-label="Upload outfit inspiration" onChange={(event) => acceptImage(event.target.files?.[0])} />
+          <button type="button" onClick={() => fileInput.current?.click()} className="mt-5 flex min-h-72 w-full flex-col items-center justify-center overflow-hidden rounded-2xl border border-dashed border-primary/40 bg-muted/30 transition hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+            {outfitPreview ? <img src={outfitPreview} alt="Your outfit inspiration" className="h-96 w-full object-contain" /> : <>
+              <Upload className="size-8 text-primary" />
+              <span className="mt-3 font-medium">Upload outfit inspiration</span>
+              <span className="mt-1 text-xs text-muted-foreground">JPG, PNG or WEBP · up to 10 MB</span>
+            </>}
           </button>
-          {personFile && (
-            <p className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
-              <Check className="size-4 text-primary" />
-              {personFile.name}
-              <button
-                type="button"
-                aria-label="Remove your photo"
-                onClick={() => {
-                  setPersonFile(null);
-                  setPersonPreview("");
-                  if (personInput.current) personInput.current.value = "";
-                  setResultUrl("");
-                }}
-                className="ml-auto rounded-full p-1 hover:bg-muted"
-              >
-                <X className="size-4" />
-              </button>
-            </p>
-          )}
+          {outfitFile && <p className="mt-3 flex items-center gap-2 text-sm text-muted-foreground"><Check className="size-4 text-primary" />{outfitFile.name}<button type="button" aria-label="Remove inspiration image" onClick={() => { if (outfitPreview) URL.revokeObjectURL(outfitPreview); setOutfitFile(null); setOutfitPreview(""); if (fileInput.current) fileInput.current.value = ""; }} className="ml-auto rounded-full p-1 hover:bg-muted"><X className="size-4" /></button></p>}
+          <div className="mt-5 rounded-2xl bg-muted/40 p-4">
+            <p className="text-sm font-medium">The OFFFEED twist</p>
+            <p className="mt-1 text-sm leading-6 text-muted-foreground">Your choices become a little Style DNA card — a mood, colour story, occasion and budget you can save or share with friends.</p>
+          </div>
         </section>
 
         <section className="rounded-3xl border bg-card p-5 sm:p-6">
           <div className="flex items-start gap-3">
-            <div className="rounded-2xl bg-primary/10 p-3 text-primary">
-              <Shirt className="size-5" />
-            </div>
+            <div className="rounded-2xl bg-primary/10 p-3 text-primary"><Heart className="size-5" /></div>
             <div>
-              <h2 className="font-display text-2xl">02. Your inspiration</h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Upload the outfit you found on Instagram, Pinterest or anywhere else.
-              </p>
+              <h2 className="font-display text-2xl">02. Define your Style DNA</h2>
+              <p className="mt-1 text-sm text-muted-foreground">Make the inspiration yours with a few quick choices.</p>
             </div>
           </div>
-          <input
-            ref={outfitInput}
-            type="file"
-            accept="image/png,image/jpeg,image/webp"
-            className="sr-only"
-            aria-label="Upload an outfit photo"
-            onChange={(event) => acceptImage(event.target.files?.[0], "outfit")}
-          />
-          <button
-            type="button"
-            onClick={() => outfitInput.current?.click()}
-            className="mt-5 flex min-h-64 w-full flex-col items-center justify-center overflow-hidden rounded-2xl border border-dashed border-primary/40 bg-muted/30 transition hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-          >
-            {outfitPreview ? (
-              <img
-                src={outfitPreview}
-                alt="Outfit inspiration preview"
-                className="h-80 w-full object-contain"
-              />
-            ) : (
-              <>
-                <ImagePlus className="size-8 text-primary" />
-                <span className="mt-3 font-medium">Upload outfit image</span>
-                <span className="mt-1 text-xs text-muted-foreground">
-                  A full look works best
-                </span>
-              </>
-            )}
-          </button>
-          {outfitFile && (
-            <p className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
-              <Check className="size-4 text-primary" />
-              {outfitFile.name}
-              <button
-                type="button"
-                aria-label="Remove outfit photo"
-                onClick={() => {
-                  setOutfitFile(null);
-                  setOutfitPreview("");
-                  if (outfitInput.current) outfitInput.current.value = "";
-                  setResultUrl("");
-                }}
-                className="ml-auto rounded-full p-1 hover:bg-muted"
-              >
-                <X className="size-4" />
-              </button>
-            </p>
-          )}
+          <div className="mt-6 space-y-6">
+            <fieldset>
+              <legend className="mb-3 text-sm font-medium">Your vibe</legend>
+              <div className="flex flex-wrap gap-2">{vibes.map((item) => <button key={item} type="button" onClick={() => { setVibe(item); setRecipe(""); }} className={`rounded-full border px-3 py-2 text-sm transition ${vibe === item ? "border-primary bg-primary text-primary-foreground" : "border-border hover:border-primary/50"}`}>{item}</button>)}</div>
+            </fieldset>
+            <fieldset>
+              <legend className="mb-3 text-sm font-medium">Where are you wearing it?</legend>
+              <div className="flex flex-wrap gap-2">{occasions.map((item) => <button key={item} type="button" onClick={() => { setOccasion(item); setRecipe(""); }} className={`rounded-full border px-3 py-2 text-sm transition ${occasion === item ? "border-primary bg-primary text-primary-foreground" : "border-border hover:border-primary/50"}`}>{item}</button>)}</div>
+            </fieldset>
+            <fieldset>
+              <legend className="mb-3 text-sm font-medium">Colour story</legend>
+              <div className="flex flex-wrap gap-2">{palettes.map((item) => <button key={item} type="button" onClick={() => { setPalette(item); setRecipe(""); }} className={`rounded-full border px-3 py-2 text-sm transition ${palette === item ? "border-primary bg-primary text-primary-foreground" : "border-border hover:border-primary/50"}`}>{item}</button>)}</div>
+            </fieldset>
+            <fieldset>
+              <legend className="mb-3 text-sm font-medium">Shopping budget</legend>
+              <div className="grid grid-cols-2 gap-2">{budgets.map((item) => <button key={item} type="button" onClick={() => { setBudget(item); setRecipe(""); }} className={`rounded-xl border px-3 py-3 text-sm transition ${budget === item ? "border-primary bg-primary text-primary-foreground" : "border-border hover:border-primary/50"}`}>{item}</button>)}</div>
+            </fieldset>
+            <div>
+              <label htmlFor="style-details" className="mb-2 block text-sm font-medium">Your signature detail <span className="font-normal text-muted-foreground">(optional)</span></label>
+              <input id="style-details" value={details} onChange={(event) => { setDetails(event.target.value); setRecipe(""); }} maxLength={120} placeholder="e.g. silver jewellery, oversized layers, vintage denim" className="w-full rounded-xl border bg-background px-4 py-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20" />
+            </div>
+          </div>
+          <Button size="lg" className="mt-7 min-h-12 w-full rounded-full" onClick={buildRecipe}><Sparkles className="mr-2 size-4" /> Build my Style DNA <ArrowRight className="ml-2 size-4" /></Button>
         </section>
       </div>
 
-      {error && (
-        <div
-          role="alert"
-          className="mx-auto mt-5 max-w-3xl rounded-2xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm"
-        >
-          {error}
+      {recipe && <section className="mx-auto mt-10 max-w-3xl rounded-3xl border bg-card p-6 shadow-sm sm:p-8">
+        <div className="text-center">
+          <span className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">Your style, decoded</span>
+          <h2 className="mt-3 font-display text-3xl sm:text-4xl">The Style DNA card</h2>
+          <p className="mt-2 text-sm text-muted-foreground">A little style recipe to keep, send to a friend or use as your next shopping brief.</p>
         </div>
-      )}
+        <div className="mt-6 rounded-2xl border border-primary/20 bg-primary/5 p-5 sm:p-7">
+          {outfitPreview && <img src={outfitPreview} alt="Style inspiration for your Style DNA" className="mb-5 max-h-72 w-full rounded-xl object-contain" />}
+          <p className="font-display text-2xl">MY OFFFEED STYLE DNA <span className="text-primary">✦</span></p>
+          <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">{[["VIBE", vibe], ["OCCASION", occasion], ["COLOUR STORY", palette], ["BUDGET", budget]].map(([label, value]) => <div key={label} className="rounded-xl bg-background/80 p-3"><p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">{label}</p><p className="mt-1 text-sm font-medium">{value}</p></div>)}</div>
+          {details.trim() && <p className="mt-4 text-sm"><span className="font-medium">Signature detail:</span> {details.trim()}</p>}
+          <p className="mt-5 text-xs tracking-wide text-muted-foreground">FIND IT BEFORE YOUR FEED DOES. · #OFFFEED</p>
+        </div>
+        <div className="mt-5 flex flex-col justify-center gap-3 sm:flex-row">
+          <Button onClick={saveRecipe} variant="outline" className="rounded-full">{saved ? <Check className="mr-2 size-4" /> : <Heart className="mr-2 size-4" />}{saved ? "Saved on this device" : "Save Style DNA"}</Button>
+          <Button onClick={copyRecipe} variant="outline" className="rounded-full"><Copy className="mr-2 size-4" /> Copy recipe</Button>
+          <Button onClick={shareRecipe} className="rounded-full"><Share2 className="mr-2 size-4" /> Share my style</Button>
+        </div>
+        <div className="mt-6 text-center"><Link to="/discover" className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline">Explore OFFFEED looks <ArrowRight className="size-4" /></Link></div>
+      </section>}
 
-      <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
-        <Button
-          size="lg"
-          className="min-h-12 rounded-full px-7"
-          onClick={generateTryOn}
-          disabled={loading}
-        >
-          {loading ? (
-            <LoaderCircle className="mr-2 size-4 animate-spin" />
-          ) : (
-            <Sparkles className="mr-2 size-4" />
-          )}
-          {loading ? "Creating your preview…" : "Try this outfit on me"}
-          {!loading && <ArrowRight className="ml-2 size-4" />}
-        </Button>
-        <Button
-          size="lg"
-          variant="outline"
-          className="min-h-12 rounded-full px-7"
-          onClick={reset}
-          disabled={loading}
-        >
-          <RefreshCw className="mr-2 size-4" /> Start over
-        </Button>
+      <div className="mt-8 flex justify-center">
+        <Button variant="ghost" className="rounded-full" onClick={reset}><RotateCcw className="mr-2 size-4" /> Start a new look</Button>
       </div>
-      <p className="mt-4 text-center text-xs text-muted-foreground">
-        Your photos stay on this page unless you choose to generate a preview.
-        AI results are visual estimates, not a guarantee of fit.
-      </p>
-
-      {resultUrl && (
-        <section className="mt-14">
-          <div className="text-center">
-            <p className="text-sm font-medium uppercase tracking-[0.18em] text-primary">
-              Your OFFFEED preview
-            </p>
-            <h2 className="mt-2 font-display text-3xl sm:text-4xl">
-              A little outfit magic.
-            </h2>
-          </div>
-          <div className="mx-auto mt-6 max-w-md overflow-hidden rounded-3xl border bg-card p-3 shadow-sm">
-            <img
-              src={resultUrl}
-              alt="AI virtual try-on result"
-              className="max-h-[680px] w-full rounded-2xl object-contain"
-            />
-          </div>
-          {matches.length > 0 && (
-            <div className="mt-12">
-              <div className="text-center">
-                <ScanSearch className="mx-auto size-6 text-primary" />
-                <h3 className="mt-3 font-display text-3xl">Find your fit</h3>
-                <p className="mt-2 text-muted-foreground">
-                  Pieces from independent brands that match your inspiration.
-                </p>
-              </div>
-              <div className="mt-6 grid grid-cols-2 gap-4 md:grid-cols-4">
-                {matches.map((match, index) => (
-                  <article
-                    key={match.id ?? `${match.name}-${index}`}
-                    className="overflow-hidden rounded-2xl border bg-card"
-                  >
-                    {match.imageUrl ? (
-                      <img
-                        src={match.imageUrl}
-                        alt={match.name}
-                        className="aspect-[3/4] w-full object-cover"
-                      />
-                    ) : (
-                      <div className="flex aspect-[3/4] items-center justify-center bg-muted">
-                        <Shirt className="size-8 text-muted-foreground" />
-                      </div>
-                    )}
-                    <div className="p-3">
-                      <p className="font-medium">{match.name}</p>
-                      {match.brand && (
-                        <p className="mt-1 text-sm text-muted-foreground">
-                          {match.brand}
-                        </p>
-                      )}
-                      {match.price !== undefined && (
-                        <p className="mt-1 text-sm">
-                          {typeof match.price === "number"
-                            ? `₹${match.price.toLocaleString("en-IN")}`
-                            : match.price}
-                        </p>
-                      )}
-                      <p className="mt-1 text-xs text-muted-foreground">
-                        {match.matchType === "exact"
-                          ? "Exact match"
-                          : "Similar style"}
-                      </p>
-                      {match.productUrl && (
-                        <a
-                          href={match.productUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="mt-3 inline-flex items-center text-sm font-medium text-primary hover:underline"
-                        >
-                          View product <ArrowRight className="ml-1 size-3" />
-                        </a>
-                      )}
-                    </div>
-                  </article>
-                ))}
-              </div>
-            </div>
-          )}
-        </section>
-      )}
+      <p className="mt-4 text-center text-xs text-muted-foreground">No AI try-on or paid generation API is used. Uploaded inspiration is previewed locally in your browser.</p>
     </main>
   );
 }
@@ -401,17 +211,10 @@ function CreateLookPage() {
 export const Route = createFileRoute("/create")({
   head: () => ({
     meta: [
-      { title: "AI Virtual Try-On — OFFFEED" },
-      {
-        name: "description",
-        content:
-          "Upload your photo and an outfit you love to preview the look and discover independent fashion brands.",
-      },
-      { property: "og:title", content: "AI Virtual Try-On — OFFFEED" },
-      {
-        property: "og:description",
-        content: "See the fit on you. Discover it on OFFFEED.",
-      },
+      { title: "Create your Style DNA — OFFFEED" },
+      { name: "description", content: "Build a personal style recipe from an outfit you love. Choose your vibe, occasion, colour story and budget, then save or share it." },
+      { property: "og:title", content: "Create your Style DNA — OFFFEED" },
+      { property: "og:description", content: "Turn outfit inspiration into a style recipe with OFFFEED." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
