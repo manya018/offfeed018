@@ -31,6 +31,7 @@ type DraftProduct = {
   name: string;
   description: string;
   category: string;
+  aesthetic: string;
   price: string;
   productUrl: string;
   sizes: string;
@@ -51,7 +52,8 @@ type ImportedProduct = {
   category: string;
 };
 
-const blankProduct: DraftProduct = { listingType: "product", bundleItems: "", department: "Clothing", name: "", description: "", category: "Shirts & Tops", price: "", productUrl: "", sizes: "XS, S, M, L, XL", colors: "", tags: "", audience: ["her"] };
+const aestheticOptions = ["Romantic & Dreamy", "Minimalist", "Old Money", "Streetwear", "Coquette", "Y2K", "Boho", "Elegant & Classic", "Edgy", "Cottagecore", "Vintage / Retro", "Dark Academia", "Sporty", "Casual Everyday", "Party / Glam", "Ethnic / Traditional", "Gothic", "Quiet Luxury", "Experimental / Avant-Garde", "Other"];
+const blankProduct: DraftProduct = { listingType: "product", bundleItems: "", department: "Clothing", name: "", description: "", category: "Shirts & Tops", aesthetic: "Romantic & Dreamy", price: "", productUrl: "", sizes: "XS, S, M, L, XL", colors: "", tags: "", audience: ["her"] };
 const categoryOptions: Record<ProductDepartment, string[]> = {
   Clothing: ["Shirts & Tops", "Trousers", "Dresses", "Ethnic Wear", "Outerwear", "Footwear", "Other Clothing"],
   Jewellery: ["Earrings", "Necklaces", "Rings", "Bracelets", "Anklets", "Jewellery Sets", "Brooches", "Other Jewellery"],
@@ -208,7 +210,7 @@ function BrandDashboard() {
         imagePath: path,
         sizes: parseList(draft.sizes),
         colors: parseList(draft.colors),
-        tags: parseList(draft.tags),
+        tags: [...new Set([...parseList(draft.tags), draft.aesthetic].filter(Boolean))],
         audience: draft.audience,
       } });
       toast.success("Product saved as a draft.");
@@ -326,6 +328,7 @@ function BrandDashboard() {
               {draft.listingType === "bundle" && <div className="sm:col-span-2"><Label htmlFor="bundle-items">Pieces included in this look</Label><Textarea id="bundle-items" value={draft.bundleItems} onChange={(event) => setDraft((current) => ({ ...current, bundleItems: event.target.value }))} placeholder="Blazer, trousers, shirt, belt — list included pieces separated by commas" required minLength={2} className="mt-2 min-h-24 rounded-lg border-border/80 bg-card px-3 py-3"/><p className="mt-2 text-xs text-muted-foreground">Be clear about exactly what the bundle price includes.</p></div>}
               <div><Label htmlFor="product-department">Product department</Label><select id="product-department" value={draft.department} onChange={(event) => { const department = event.target.value as ProductDepartment; setDraft((current) => ({ ...current, department, category: categoryOptions[department][0], sizes: department === "Clothing" ? "XS, S, M, L, XL" : "" })); }} className={fieldClass}><option value="Clothing">Clothing</option><option value="Jewellery">Jewellery</option><option value="Accessories">Accessories</option><option value="Mixed look">Mixed look / outfit bundle</option></select><p className="mt-2 text-xs text-muted-foreground">Choose the department for this listing. You can create other listings in other departments too.</p></div>
               <div><Label htmlFor="product-category">Specific category</Label><select id="product-category" value={draft.category} onChange={(event) => setDraft((current) => ({ ...current, category: event.target.value, sizes: current.department === "Jewellery" && event.target.value === "Rings" ? current.sizes : current.department === "Clothing" ? current.sizes : "" }))} className={fieldClass} required>{categoryOptions[draft.department].map((category) => <option key={category} value={category}>{category}</option>)}</select></div>
+              <div><Label htmlFor="product-aesthetic">Style / aesthetic</Label><select id="product-aesthetic" value={draft.aesthetic} onChange={(event) => updateDraft("aesthetic", event.target.value)} className={fieldClass}>{aestheticOptions.map((aesthetic) => <option key={aesthetic} value={aesthetic}>{aesthetic}</option>)}</select><p className="mt-2 text-xs text-muted-foreground">Choose the vibe shoppers should associate with this listing. It will be saved as a product tag.</p></div>
               <div><Label htmlFor="product-price">Price (₹)</Label><Input id="product-price" type="number" min="1" step="0.01" value={draft.price} onChange={(event) => updateDraft("price", event.target.value)} required className={fieldClass}/><p className="mt-2 text-xs text-muted-foreground">At ₹{Number(draft.price || 0).toLocaleString("en-IN")}, you receive ₹{(Number(draft.price || 0) * (1 - commission)).toLocaleString("en-IN", { maximumFractionDigits: 2 })} after OFFFEED’s 18% fee.</p></div>
               <div><Label htmlFor="product-link">Product link <span className="font-normal text-muted-foreground">(optional)</span></Label><Input id="product-link" type="url" value={draft.productUrl} onChange={(event) => updateDraft("productUrl", event.target.value)} placeholder="https://yourbrand.com/product" className={fieldClass}/></div>
               {(draft.listingType === "product" && draft.department === "Clothing" || draft.listingType === "product" && draft.department === "Jewellery" && draft.category === "Rings") && <div><Label htmlFor="product-sizes">{draft.department === "Jewellery" ? "Ring sizes (optional)" : "Available sizes (optional)"}</Label><Input id="product-sizes" value={draft.sizes} onChange={(event) => updateDraft("sizes", event.target.value)} placeholder={draft.department === "Jewellery" ? "6, 7, 8 or 16, 17, 18" : "XS, S, M, L, XL or 28, 30, 32"} className={fieldClass}/></div>}
