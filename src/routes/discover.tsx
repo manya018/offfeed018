@@ -180,10 +180,9 @@ function DiscoverPage() {
           </article>)}
         </div>}
       </section>
-{!calmHerAccessories && (
-      <section className="mt-16">
+<section className="mt-16">
         <div className="mb-6"><p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Shop independent labels</p><h2 className="mt-2 font-display text-3xl sm:text-4xl">Pieces to make it yours.</h2></div>
-        {categoryLoading ? <p className="py-20 text-center text-muted-foreground">Finding pieces for your edit…</p> : categoryError ? <p className="py-20 text-center text-muted-foreground">We couldn’t load this edit right now. Please try again.</p> : categoryProducts.length ? <>
+        {categoryError && <p className="mb-4 text-center text-muted-foreground">We couldn’t load this edit right now. Please try again.</p>}{categoryLoading && <p className="mb-4 text-center text-muted-foreground">Finding pieces for your edit…</p>}{!categoryError && <>
           <div className="mb-6 rounded-2xl border border-border/70 bg-card p-4">
             <div className="mb-3 flex flex-wrap items-center justify-between gap-3"><p className="text-sm font-medium">Refine your results · {filteredCategoryProducts.length} products</p><Button type="button" variant="ghost" size="sm" onClick={resetProductFilters}>Clear filters</Button></div>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
@@ -196,10 +195,9 @@ function DiscoverPage() {
               <div className="col-span-2 sm:col-span-1"><label htmlFor="shop-sort" className="text-xs text-muted-foreground">Sort by</label><select id="shop-sort" value={productSort} onChange={(e) => setProductSort(e.target.value)} className="mt-1 h-10 w-full rounded-lg border border-border bg-background px-2 text-sm"><option value="recommended">Recommended</option><option value="newest">New arrivals</option><option value="price-low">Price: low to high</option><option value="price-high">Price: high to low</option></select></div>
             </div>
           </div>
-          {filteredCategoryProducts.length ? <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 sm:gap-x-6 lg:grid-cols-4">{filteredCategoryProducts.map((product) => <PublicProductCard key={product.id} product={product} />)}</div> : <p className="py-12 text-center text-muted-foreground">No products match these filters. Try changing or clearing them.</p>}
-        </> : <div className="mx-auto max-w-2xl border-y border-dashed border-border/70 py-12 text-center"><h2 className="font-display text-3xl">Good things are on their way.</h2><p className="mt-3 leading-7 text-muted-foreground">There aren’t any approved, published {jewellery ? "jewellery" : "accessory"} products in this edit yet. As brands publish matching products, they’ll appear here.</p></div>}
+          {categoryLoading ? null : filteredCategoryProducts.length ? <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 sm:gap-x-6 lg:grid-cols-4">{filteredCategoryProducts.map((product) => <PublicProductCard key={product.id} product={product} />)}</div> : <div className="mx-auto max-w-2xl border-y border-dashed border-border/70 py-12 text-center"><h2 className="font-display text-3xl">Good things are on their way.</h2><p className="mt-3 leading-7 text-muted-foreground">{categoryProducts.length ? "No products match these filters. Try changing or clearing them." : "There are no approved, published products in this edit yet. As brands publish matching products, they will appear here."}</p></div>}
+        </>}
       </section>
-      )}
     </main>;
   }
 
