@@ -50,12 +50,12 @@ function DiscoverPage() {
   const shareReference = async (item: { title: string; src: string }) => { const url = new URL(`/discover?category=${category ?? "jewellery"}`, window.location.origin).toString(); try { if (navigator.share) await navigator.share({ title: `${item.title} — OFFFEED`, text: `Found this style on OFFFEED`, url }); else { await navigator.clipboard.writeText(url); toast.success("Link copied to share"); } } catch (error) { if (error instanceof Error && error.name === "AbortError") return; try { await navigator.clipboard.writeText(url); toast.success("Link copied to share"); } catch { toast.error("Could not share this item."); } } };
   useEffect(() => { setFilter("All"); setQuery(""); setVisible(6); }, [space]);
   useEffect(() => {
-    if (category !== "jewellery" && category !== "accessories") return;
     let active = true;
+    const isClothingFeed = category !== "jewellery" && category !== "accessories";
     setCategoryLoading(true);
     setCategoryError(false);
-    getShopTheLookProducts({ data: { audience: space, aesthetic: category, categoryOnly: true } })
-      .then((products) => { if (active) setCategoryProducts(products); })
+    getShopTheLookProducts({ data: { audience: space, aesthetic: isClothingFeed ? "clothing" : category!, categoryOnly: true } })
+      .then((products) => { if (active) setCategoryProducts(isClothingFeed ? products.filter((product) => product.category.toLowerCase().includes("clothing") || product.category.toLowerCase().includes("complete look") || product.category.toLowerCase().includes("mixed look")) : products); })
       .catch(() => { if (active) { setCategoryProducts([]); setCategoryError(true); } })
       .finally(() => { if (active) setCategoryLoading(false); });
     return () => { active = false; };
@@ -212,6 +212,24 @@ function DiscoverPage() {
       <div className="mx-auto mt-4 flex max-w-5xl flex-wrap justify-center gap-2"><Button variant="outline" className="rounded-full" onClick={() => { window.location.href = "/discover?category=jewellery"; }}>✧ Jewellery</Button><Button variant="outline" className="rounded-full" onClick={() => { window.location.href = "/discover?category=accessories"; }}>✧ Accessories</Button></div>
     </section>
 
+    <section className="mx-auto max-w-[1440px] px-5 pt-4 lg:px-10">
+      <div className="mb-6"><p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Shop independent brands</p><h2 className="mt-2 font-display text-3xl sm:text-4xl">Find pieces that feel like you.</h2></div>
+      {categoryLoading ? <p className="py-12 text-center text-muted-foreground">Loading clothing from independent brands…</p> : categoryError ? <p className="py-12 text-center text-muted-foreground">We couldn’t load products right now. Please try again.</p> : categoryProducts.length ? <>
+        <div className="mb-6 rounded-2xl border border-border/70 bg-card p-4">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-3"><p className="text-sm font-medium">Refine clothing · {filteredCategoryProducts.length} products</p><Button type="button" variant="ghost" size="sm" onClick={resetProductFilters}>Clear filters</Button></div>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+            <div><label htmlFor="clothes-brand" className="text-xs text-muted-foreground">Brand</label><select id="clothes-brand" value={productBrand} onChange={(e) => setProductBrand(e.target.value)} className="mt-1 h-10 w-full rounded-lg border border-border bg-background px-2 text-sm"><option>All brands</option>{productFilterOptions.brands.map((item) => <option key={item}>{item}</option>)}</select></div>
+            <div><label htmlFor="clothes-color" className="text-xs text-muted-foreground">Colour</label><select id="clothes-color" value={productColor} onChange={(e) => setProductColor(e.target.value)} className="mt-1 h-10 w-full rounded-lg border border-border bg-background px-2 text-sm"><option>All colours</option>{productFilterOptions.colors.map((item) => <option key={item}>{item}</option>)}</select></div>
+            <div><label htmlFor="clothes-size" className="text-xs text-muted-foreground">Size</label><select id="clothes-size" value={productSize} onChange={(e) => setProductSize(e.target.value)} className="mt-1 h-10 w-full rounded-lg border border-border bg-background px-2 text-sm"><option>All sizes</option>{productFilterOptions.sizes.map((item) => <option key={item}>{item}</option>)}</select></div>
+            <div><label htmlFor="clothes-style" className="text-xs text-muted-foreground">Style / aesthetic</label><select id="clothes-style" value={productStyle} onChange={(e) => setProductStyle(e.target.value)} className="mt-1 h-10 w-full rounded-lg border border-border bg-background px-2 text-sm"><option>All styles</option>{productFilterOptions.styles.map((item) => <option key={item}>{item}</option>)}</select></div>
+            <div><label htmlFor="clothes-min-price" className="text-xs text-muted-foreground">Minimum price (₹)</label><input id="clothes-min-price" type="number" min="0" value={productMinPrice} onChange={(e) => setProductMinPrice(e.target.value)} placeholder="₹0" className="mt-1 h-10 w-full rounded-lg border border-border bg-background px-3 text-sm"/></div>
+            <div><label htmlFor="clothes-max-price" className="text-xs text-muted-foreground">Maximum price (₹)</label><input id="clothes-max-price" type="number" min="0" value={productMaxPrice} onChange={(e) => setProductMaxPrice(e.target.value)} placeholder="No limit" className="mt-1 h-10 w-full rounded-lg border border-border bg-background px-3 text-sm"/></div>
+            <div className="col-span-2 sm:col-span-1"><label htmlFor="clothes-sort" className="text-xs text-muted-foreground">Sort by</label><select id="clothes-sort" value={productSort} onChange={(e) => setProductSort(e.target.value)} className="mt-1 h-10 w-full rounded-lg border border-border bg-background px-2 text-sm"><option value="recommended">Recommended</option><option value="newest">New arrivals</option><option value="price-low">Price: low to high</option><option value="price-high">Price: high to low</option></select></div>
+          </div>
+        </div>
+        {filteredCategoryProducts.length ? <div className="mb-8 grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 sm:gap-x-6 lg:grid-cols-4">{filteredCategoryProducts.map((product) => <PublicProductCard key={product.id} product={product} />)}</div> : <p className="py-8 text-center text-muted-foreground">No clothing matches these filters. Try clearing a filter.</p>}
+      </> : <p className="mb-8 rounded-xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">No approved clothing listings are available yet. As brands publish clothing products, they’ll appear here.</p>}
+    </section>
     <section className="mx-auto max-w-[1440px] px-5 lg:px-10"><div className="mb-6 flex items-end justify-between"><div><p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">{isHim ? "The menswear index" : "Aesthetic index"}</p><h2 className="mt-2 font-display text-4xl">{isHim ? "Find your point of view" : "Pick your mood"}</h2></div><span className="hidden text-sm text-muted-foreground sm:block">Drag to wander →</span></div>
       <div className="flex snap-x gap-4 overflow-x-auto pb-5">{moodList.map((mood, index) => <Button variant="ghost" key={mood} onClick={() => { setQuery(mood); setFilter("All"); }} className="group relative h-64 min-w-44 snap-start overflow-hidden rounded-[1.25rem] p-0 text-left shadow-soft"><img src={moodArtwork[index % moodArtwork.length]} alt={`${mood} aesthetic`} width={1024} height={1376} loading="lazy" className="h-full w-full object-cover transition duration-500 group-hover:scale-105"/><span className="absolute inset-0 bg-gradient-to-t from-foreground/65 via-transparent to-transparent"/><span className="absolute bottom-4 left-4 font-display text-xl text-primary-foreground">{mood}</span></Button>)}</div>
     </section>
