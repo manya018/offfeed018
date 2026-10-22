@@ -77,6 +77,7 @@ function CreateLookPage() {
           audience: space === "him" ? "him" : "her",
           aesthetic: [vibe, occasion, palette, details.trim()].filter(Boolean).join(" ").slice(0, 80),
           ...budgetRange,
+          requireMatch: true,
         },
       });
       setMatchedProducts(products.filter((product) =>
