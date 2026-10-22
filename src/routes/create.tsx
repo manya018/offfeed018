@@ -251,7 +251,6 @@ function CreateLookPage() {
       <div className="mt-8 flex justify-center">
         <Button variant="ghost" className="rounded-full" onClick={reset}><RotateCcw className="mr-2 size-4" /> Start a new look</Button>
       </div>
-      <p className="mt-4 text-center text-xs text-muted-foreground">No AI try-on or paid generation API is used. Uploaded inspiration is previewed locally in your browser.</p>
     </main>
   );
 }
