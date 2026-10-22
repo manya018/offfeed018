@@ -8,6 +8,8 @@ const shopInput = z.object({
   audience: z.enum(["her", "him"]),
   aesthetic: z.string().trim().min(1).max(80),
   categoryOnly: z.boolean().optional(),
+  minPrice: z.number().nonnegative().optional(),
+  maxPrice: z.number().positive().optional(),
 });
 
 type Audience = "her" | "him";
@@ -202,6 +204,8 @@ export const getShopTheLookProducts = createServerFn({ method: "GET" })
       }];
     });
     const ranked = products
+      .filter((product) => data.minPrice === undefined || product.price >= data.minPrice)
+      .filter((product) => data.maxPrice === undefined || product.price <= data.maxPrice)
       .map((product) => ({ product, score: relevanceScore(product, data.aesthetic) }))
       .filter(({ score }) => !data.categoryOnly || score > 0)
       .sort((left, right) => right.score - left.score);
