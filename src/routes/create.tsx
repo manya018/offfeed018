@@ -13,6 +13,9 @@ import {
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { PublicProductCard } from "@/components/public-product-card";
+import { getShopTheLookProducts, type ProductWithBrand } from "@/lib/public-brand.functions";
+import { useStyleSpace } from "@/lib/style-space";
 import { toast } from "sonner";
 
 const vibes = ["Minimal", "Streetwear", "Soft romantic", "Old money", "Indie", "Y2K", "Boho", "Quiet luxury"];
@@ -30,6 +33,10 @@ function CreateLookPage() {
   const [details, setDetails] = useState("");
   const [recipe, setRecipe] = useState("");
   const [saved, setSaved] = useState(false);
+  const [matching, setMatching] = useState(false);
+  const [matchError, setMatchError] = useState("");
+  const [matchedProducts, setMatchedProducts] = useState<ProductWithBrand[]>([]);
+  const { space } = useStyleSpace();
   const fileInput = useRef<HTMLInputElement>(null);
 
   const acceptImage = (file?: File) => {
@@ -49,11 +56,38 @@ function CreateLookPage() {
     setSaved(false);
   };
 
-  const buildRecipe = () => {
+  const buildRecipe = async () => {
     const extra = details.trim() ? `\nSignature details: ${details.trim()}` : "";
     const text = `MY OFFFEED STYLE DNA ✦\nVibe: ${vibe}\nOccasion: ${occasion}\nColour story: ${palette}\nBudget: ${budget}${extra}\n\nFind it before your feed does. #OFFFEED`;
     setRecipe(text);
     setSaved(false);
+    setMatchError("");
+    setMatchedProducts([]);
+    setMatching(true);
+    const budgetRange = budget === "Under ₹1,000"
+      ? { minPrice: undefined, maxPrice: 999.99 }
+      : budget === "₹1,000–₹2,500"
+        ? { minPrice: 1000, maxPrice: 2500 }
+        : budget === "₹2,500–₹5,000"
+          ? { minPrice: 2500, maxPrice: 5000 }
+          : {};
+    try {
+      const products = await getShopTheLookProducts({
+        data: {
+          audience: space === "him" ? "him" : "her",
+          aesthetic: [vibe, occasion, palette, details.trim()].filter(Boolean).join(" ").slice(0, 80),
+          ...budgetRange,
+        },
+      });
+      setMatchedProducts(products.filter((product) =>
+        (budgetRange.minPrice === undefined || product.price >= budgetRange.minPrice) &&
+        (budgetRange.maxPrice === undefined || product.price <= budgetRange.maxPrice)
+      ).slice(0, 8));
+    } catch {
+      setMatchError("We couldn't load matching products just now. Your Style DNA is ready — try matching again in a moment.");
+    } finally {
+      setMatching(false);
+    }
   };
 
   const saveRecipe = () => {
@@ -104,6 +138,8 @@ function CreateLookPage() {
     setDetails("");
     setRecipe("");
     setSaved(false);
+    setMatchedProducts([]);
+    setMatchError("");
     if (fileInput.current) fileInput.current.value = "";
   };
 
@@ -198,7 +234,18 @@ function CreateLookPage() {
           <Button onClick={shareRecipe} className="rounded-full"><Share2 className="mr-2 size-4" /> Share my style</Button>
         </div>
         <div className="mt-6 text-center"><Link to="/discover" className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline">Explore OFFFEED looks <ArrowRight className="size-4" /></Link></div>
-      </section>}
+      </section>
+      <section className="mt-12">
+        <div className="text-center">
+          <span className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">Your recipe, your finds</span>
+          <h2 className="mt-2 font-display text-3xl sm:text-4xl">Pieces that match your mood.</h2>
+          <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-muted-foreground">We’ll look through approved, published OFFFEED brand listings for pieces that fit your style choices and budget.</p>
+        </div>
+        {matching ? <p className="py-12 text-center text-sm text-muted-foreground">Finding your kind of pieces…</p>
+          : matchError ? <p role="status" className="mx-auto mt-6 max-w-xl rounded-2xl border p-4 text-center text-sm text-muted-foreground">{matchError}</p>
+          : matchedProducts.length > 0 ? <div className="mt-7 grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 sm:gap-x-6 lg:grid-cols-4">{matchedProducts.map((product) => <PublicProductCard key={product.id} product={product} />)}</div>
+          : <div className="mx-auto mt-7 max-w-xl rounded-2xl border border-dashed p-6 text-center"><p className="font-medium">Your Style DNA is ready to explore.</p><p className="mt-2 text-sm leading-6 text-muted-foreground">When approved independent brands list products that match your choices and budget, they’ll show up here. You can also browse all looks in Discover.</p><Link to="/discover" className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline">Explore Discover <ArrowRight className="size-4" /></Link></div>}
+      </section>
 
       <div className="mt-8 flex justify-center">
         <Button variant="ghost" className="rounded-full" onClick={reset}><RotateCcw className="mr-2 size-4" /> Start a new look</Button>
