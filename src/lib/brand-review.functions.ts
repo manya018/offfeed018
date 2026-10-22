@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 const reviewInput = z.object({ token: z.string().min(1).max(1200) });
-const decisionInput = reviewInput.extend({ action: z.enum(["approve", "decline"]), reason: z.string().trim().max(500).optional() });
+const decisionInput = reviewInput.extend({ action: z.enum(["approve", "decline"]) });
 
 const getApplication = async (token: string) => {
   const { verifyBrandApprovalToken } = await import("./brand-approval.server");
