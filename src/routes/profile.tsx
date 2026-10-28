@@ -17,6 +17,7 @@ function ProfilePage() {
   const [accountLoading, setAccountLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
   const [orders, setOrders] = useState<Order[]>([]);
+  const [returnRequests, setReturnRequests] = useState<Array<{ id: string; order_id: string; status: string; reason: string; brand_response: string; refund_status: string; updated_at: string }>>([]);
   const [returnOrderId, setReturnOrderId] = useState("");
   const [returnReason, setReturnReason] = useState("size_fit");
   const [returnDetails, setReturnDetails] = useState("");
@@ -131,15 +132,16 @@ function ProfilePage() {
       setProfileName(currentUser?.user_metadata?.full_name || currentUser?.user_metadata?.name || "");
       setProfilePhone(currentUser?.user_metadata?.phone || currentUser?.phone || "");
       if (currentUser) {
-        const [orderResult, addressResult] = await Promise.all([
+        const [orderResult, addressResult, returnResult] = await Promise.all([
           client.from("brand_orders").select("id,order_number,product_name,quantity,unit_price,status,created_at,estimated_delivery_start,estimated_delivery_end,tracking_url").eq("customer_user_id", currentUser.id).order("created_at", { ascending: false }),
           client.from("customer_addresses").select("id,label,line1,line2,city,state,pin_code,landmark,is_default").eq("user_id", currentUser.id).order("is_default", { ascending: false }).order("created_at", { ascending: false }),
+          client.from("order_returns").select("id,order_id,status,reason,brand_response,refund_status,updated_at").eq("customer_user_id", currentUser.id).order("created_at", { ascending: false }),
         ]);
         if (orderResult.error) console.error("Could not load order history", orderResult.error);
         else setOrders(orderResult.data ?? []);
         if (addressResult.error) console.error("Could not load saved addresses", addressResult.error);
         else setAddresses(addressResult.data ?? []);
-      } else { setOrders([]); setAddresses([]); }
+      } else { setOrders([]); setAddresses([]); setReturnRequests([]); }
     } catch (error) { console.error("Could not load account details", error); }
     finally { setAccountLoading(false); }
   }, []);
@@ -306,6 +308,7 @@ function ProfilePage() {
 
         {activeTab==="orders" && <section><div className="flex items-end justify-between gap-3"><div><h2 className="font-display text-3xl">My Orders</h2><p className="mt-1 text-sm text-muted-foreground">Track purchases made with your account.</p></div><span className="text-sm text-muted-foreground">{orders.length} items</span></div>
           {accountLoading ? <Loading/> : !user ? <Empty title="Sign in to view your orders" body="Your account orders will appear here after you sign in."/> : orders.length===0 ? <Empty title="No orders yet" body="When you place an order on OFFFEED, its status and delivery updates will appear here." action={<Button asChild><Link to="/discover">Discover brands</Link></Button>}/> : <div className="mt-5 space-y-3">{orders.map((order)=><article key={order.id} className="rounded-xl border border-border bg-card p-5"><div className="flex flex-wrap justify-between gap-3"><div><p className="text-xs text-muted-foreground">Order {order.order_number}</p><h3 className="mt-1 font-medium">{order.product_name} × {order.quantity}</h3><p className="mt-1 text-sm text-muted-foreground">Placed {new Date(order.created_at).toLocaleDateString("en-IN",{day:"numeric",month:"short",year:"numeric"})}</p></div><div className="text-right"><p className="font-medium">₹{(Number(order.unit_price)*order.quantity).toLocaleString("en-IN")}</p><span className="mt-2 inline-block rounded-full bg-secondary px-3 py-1 text-xs capitalize">{order.status.replaceAll("_"," ")}</span></div></div>{(order.estimated_delivery_start || order.estimated_delivery_end) && <p className="mt-3 text-sm text-muted-foreground">Estimated delivery: {order.estimated_delivery_start ? new Date(order.estimated_delivery_start).toLocaleDateString("en-IN") : "—"} – {order.estimated_delivery_end ? new Date(order.estimated_delivery_end).toLocaleDateString("en-IN") : "—"}</p>}{order.tracking_url && <a className="mt-3 inline-block text-sm underline underline-offset-4" href={order.tracking_url} target="_blank" rel="noreferrer">Track shipment</a>}
+          {returnRequests.filter((request) => request.order_id === order.id).map((request) => <div key={request.id} className="mt-4 rounded-lg border border-border bg-muted/40 p-4"><div className="flex flex-wrap items-center justify-between gap-2"><p className="text-sm font-medium">Return request · {request.reason.replaceAll("_", " ")}</p><span className="rounded-full bg-secondary px-3 py-1 text-xs capitalize">{request.status.replaceAll("_", " ")}</span></div><p className="mt-2 text-sm text-muted-foreground">Refund status: {request.refund_status.replaceAll("_", " ")}. Refunds are not processed automatically by OFFFEED yet.</p>{request.brand_response && <p className="mt-2 text-sm">Brand response: {request.brand_response}</p>}<p className="mt-2 text-xs text-muted-foreground">Last updated {new Date(request.updated_at).toLocaleDateString("en-IN")}</p></div>)}
           {order.status === "delivered" && <div className="mt-4 border-t border-border pt-4">
             {returnOrderId === order.id ? <form className="space-y-3" onSubmit={async (event) => {
               event.preventDefault();
