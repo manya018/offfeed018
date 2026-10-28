@@ -462,16 +462,24 @@ function ReviewRow({ label, value, onEdit }: { label: string; value: string; onE
 }
 
 function ReviewConfirmation({ brandName, status }: { brandName: string; status: string }) {
-  const alreadySubmitted = status === "under_review";
+  const approved = status === "approved";
+  const declined = status === "declined";
+  const title = approved ? "Welcome to OFFFEED." : declined ? "An update on your application." : "Your application is with us.";
+  const description = approved
+    ? `${brandName} has been approved to join OFFFEED. Check your approval email for next steps, then open your brand dashboard.`
+    : declined
+      ? `Our team has reviewed ${brandName}'s application. Please check your email for the decision and any details shared by OFFFEED.`
+      : `Thanks for introducing ${brandName} to OFFFEED. Our team will review your application and follow up by email.`;
   return <main className="grid min-h-[calc(100svh-5rem)] place-items-center px-5 py-14">
     <section className="w-full max-w-xl text-center">
       <div className="mx-auto grid size-16 place-items-center rounded-full bg-secondary text-primary"><MailCheck className="size-8"/></div>
       <p className="mt-8 text-xs font-semibold uppercase tracking-[0.2em] text-primary">OFFFEED · FOR BRANDS</p>
-      <h1 className="mt-4 font-display text-5xl leading-tight">{alreadySubmitted ? "Your application is with us." : "You’re on our list."}</h1>
-      <p className="mx-auto mt-5 max-w-md text-sm leading-7 text-muted-foreground">{alreadySubmitted ? `Thanks for introducing ${brandName} to OFFFEED. Our team will review your application and follow up by email.` : `${brandName} has already been reviewed. We’ll be in touch by email with an update.`}</p>
+      <h1 className="mt-4 font-display text-5xl leading-tight">{title}</h1>
+      <p className="mx-auto mt-5 max-w-md text-sm leading-7 text-muted-foreground">{description}</p>
+      {approved && <a href="/brand/dashboard" className="mt-6 inline-flex items-center justify-center rounded-full bg-primary px-6 py-3 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90">Open brand dashboard</a>}
       <div className="mt-9 border-y border-border/70 py-5 text-left">
-        <div className="flex items-start gap-4 py-2"><span className="grid size-8 shrink-0 place-items-center rounded-full bg-secondary text-primary"><Check className="size-4"/></span><div><p className="text-sm font-medium">Application received</p><p className="mt-1 text-xs leading-5 text-muted-foreground">Your brand details are safely with our review team.</p></div></div>
-        <div className="flex items-start gap-4 py-2"><span className="grid size-8 shrink-0 place-items-center rounded-full bg-secondary text-primary"><CircleHelp className="size-4"/></span><div><p className="text-sm font-medium">We’ll take a closer look</p><p className="mt-1 text-xs leading-5 text-muted-foreground">Every application is reviewed by a person before any brand is featured.</p></div></div>
+        <div className="flex items-start gap-4 py-2"><span className="grid size-8 shrink-0 place-items-center rounded-full bg-secondary text-primary"><Check className="size-4"/></span><div><p className="text-sm font-medium">{approved ? "Application approved" : declined ? "Application reviewed" : "Application received"}</p><p className="mt-1 text-xs leading-5 text-muted-foreground">{approved ? "Your brand has been approved. Sign in to manage your brand." : declined ? "The decision has been sent to the email on your application." : "Your brand details are safely with our review team."}</p></div></div>
+        <div className="flex items-start gap-4 py-2"><span className="grid size-8 shrink-0 place-items-center rounded-full bg-secondary text-primary"><CircleHelp className="size-4"/></span><div><p className="text-sm font-medium">{approved ? "Ready for your next step" : declined ? "Need help?" : "We’ll take a closer look"}</p><p className="mt-1 text-xs leading-5 text-muted-foreground">{approved ? "Your approval email contains the details shared by OFFFEED." : declined ? "If you have questions, reply to the decision email." : "Every application is reviewed by a person before a brand is featured."}</p></div></div>
       </div>
     </section>
   </main>;
