@@ -73,10 +73,19 @@ function ProfilePage() {
     if (newPassword.length < 8) { setAuthNotice("Use at least 8 characters for your new password."); return; }
     setAuthBusy(true); setAuthNotice("");
     try {
-      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      const { data, error } = await supabase.auth.updateUser({ password: newPassword });
       if (error) throw error;
+      const recoveredEmail = data.user?.email ?? authEmail;
+      await supabase.auth.signOut();
       window.history.replaceState(null, "", window.location.pathname);
-      setResetPasswordScreen(false); setNewPassword(""); setAuthNotice("Password updated. You can now use your new password.");
+      setResetPasswordScreen(false);
+      setNewPassword("");
+      setAuthEmail(recoveredEmail ?? "");
+      setAuthPassword("");
+      setAuthMode("signin");
+      setForgotPassword(false);
+      setShowSignIn(true);
+      setAuthNotice("Password updated successfully. You have been signed out for security. Sign in below with your new password.");
       await loadAccount();
     } catch (error) {
       setAuthNotice(error instanceof Error ? error.message : "Could not update password. Please open the latest reset link and try again.");
