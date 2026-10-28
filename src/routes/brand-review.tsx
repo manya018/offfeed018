@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { Check, ExternalLink, FileText, LoaderCircle, X } from "lucide-react";
+import { Check, CheckCircle2, ExternalLink, FileText, LoaderCircle, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { decideBrandApplication, getBrandReview, refreshExpiredBrandReviewLink } from "@/lib/brand-review.functions";
@@ -81,7 +81,7 @@ function BrandReviewPage() {
           <p className="mt-3 text-sm leading-6 text-muted-foreground">{decided ? "You can change this decision at any time. Changing it updates the brand status and sends a new notification email." : "Review the brand details and files, then approve or decline from here."}</p>
           <div className="mt-6 border-y border-border/70 py-4 text-sm"><div className="flex justify-between gap-4 py-2"><span className="text-muted-foreground">Platform commission</span><span className="font-medium">{application.commissionRate * 100}%</span></div><div className="flex justify-between gap-4 py-2"><span className="text-muted-foreground">Brand net payout</span><span className="font-medium">{100 - application.commissionRate * 100}%</span></div><div className="flex justify-between gap-4 py-2"><span className="text-muted-foreground">Agreement accepted</span><span className="font-medium">{application.commissionAgreedAt ? "Yes" : "No"}</span></div></div>
           <a href={application.proofUrl ?? undefined} target="_blank" rel="noreferrer" className={`mt-5 inline-flex items-center gap-2 text-sm ${application.proofUrl ? "text-primary underline underline-offset-4" : "pointer-events-none text-muted-foreground"}`}><FileText className="size-4" />{application.proofUrl ? "Open business proof" : "No business proof provided"}</a>
-<div className="mt-4 grid gap-3 sm:grid-cols-2"><Button onClick={() => void decide("approve")} disabled={Boolean(decision) || application.status === "approved"}><Check />{decision === "approve" ? "Approving…" : application.status === "approved" ? "Already approved" : "Approve / change to approved"}</Button><Button variant="outline" onClick={() => void decide("decline")} disabled={Boolean(decision) || application.status === "declined"}><X />{decision === "decline" ? "Declining…" : application.status === "declined" ? "Already declined" : "Decline / change to declined"}</Button></div>
+<div className="mt-4 grid gap-3 sm:grid-cols-2"><Button onClick={() => void decide("approve")} disabled={Boolean(decision)}><Check />{decision === "approve" ? "Sending approval…" : application.status === "approved" ? "Resend approval email" : "Approve"}</Button><Button variant="outline" onClick={() => void decide("decline")} disabled={Boolean(decision) || application.status === "declined"}><X />{decision === "decline" ? "Declining…" : application.status === "declined" ? "Already declined" : "Decline / change to declined"}</Button></div>
           {notice && <p role="status" className={`mt-4 rounded-md border px-3 py-3 text-sm ${notice.startsWith("Email send request accepted") ? "border-border bg-muted text-foreground" : "border-destructive/30 bg-destructive/5 text-destructive"}`}>{notice}</p>}
         </aside>
       </div>
