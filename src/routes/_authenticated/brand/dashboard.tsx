@@ -317,6 +317,8 @@ function BrandDashboard() {
         {orders.length ? <div className="mt-5 grid gap-4">{orders.map((order) => <BrandOrderCard key={order.id} order={order} onSaved={() => void queryClient.invalidateQueries({ queryKey: ["brand-workspace"] })} />)}</div> : <div className="mt-5 rounded-lg border border-dashed border-border/80 px-5 py-8"><PackagePlus className="size-5 text-muted-foreground"/><h3 className="mt-3 font-medium">No OFFFEED orders yet</h3><p className="mt-1 max-w-2xl text-sm leading-6 text-muted-foreground">Your brand ships directly from its own location; no warehouse is needed. Orders placed by customers on OFFFEED will appear here. Orders from your own website won't automatically show up here.</p></div>}
       </section>
 
+      <BrandReturnsSection />
+
       <div className="grid gap-10 py-9 lg:grid-cols-[minmax(0,1fr)_260px]">
         <section className="min-w-0">
           {mode === "manual" && <section className="mb-9 border-b border-border/70 pb-9" aria-labelledby="manual-heading">
@@ -361,6 +363,60 @@ function BrandDashboard() {
       </div>
     </div>
   </main>;
+}
+
+function BrandReturnsSection() {
+  const [returns, setReturns] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [busyId, setBusyId] = useState("");
+  const [responses, setResponses] = useState<Record<string, string>>({});
+  const loadReturns = async () => {
+    setLoading(true);
+    try {
+      const { data, error } = await (supabase as any).from("order_returns").select("*").order("created_at", { ascending: false });
+      if (error) throw error;
+      setReturns(data ?? []);
+    } catch (error) {
+      console.error("Could not load return requests:", error);
+      setReturns([]);
+    } finally { setLoading(false); }
+  };
+  useEffect(() => { void loadReturns(); }, []);
+  const review = async (item: any, decision: "approved" | "rejected") => {
+    setBusyId(item.id);
+    try {
+      const { error } = await (supabase as any).rpc("review_offfeed_return", {
+        p_return_id: item.id,
+        p_decision: decision,
+        p_response: (responses[item.id] ?? "").trim(),
+      });
+      if (error) throw error;
+      toast.success(decision === "approved" ? "Return request approved." : "Return request rejected.");
+      await loadReturns();
+    } catch (error) {
+      console.error("Return review failed:", error);
+      toast.error(error instanceof Error ? error.message : "Could not update this return request.");
+    } finally { setBusyId(""); }
+  };
+  const reasonLabels: Record<string, string> = {
+    defective_damaged: "Defective or damaged", wrong_item_colour: "Wrong item or colour",
+    not_as_described: "Not as described", size_fit: "Size or fit", other: "Other",
+  };
+  return <section className="border-b border-border/70 py-8" aria-labelledby="brand-returns-heading">
+    <div className="flex flex-wrap items-end justify-between gap-3">
+      <div><p className="text-xs font-semibold uppercase tracking-[0.15em] text-primary">AFTER-SALES</p><h2 id="brand-returns-heading" className="mt-2 font-display text-3xl">Returns & requests</h2><p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">Review customer return requests for your orders. Refunds are not issued automatically from this screen.</p></div>
+      <Button variant="outline" size="sm" onClick={() => void loadReturns()} disabled={loading}><RefreshCw className={loading ? "animate-spin" : ""}/>Refresh</Button>
+    </div>
+    {loading ? <p className="mt-5 text-sm text-muted-foreground">Loading return requests…</p> : returns.length === 0 ? <p className="mt-5 rounded-lg border border-dashed border-border/80 px-5 py-7 text-sm text-muted-foreground">No return requests found. If a customer has submitted one, confirm the returns migration is applied to the live database.</p> : <div className="mt-5 grid gap-4">
+      {returns.map((item) => <article key={item.id} className="rounded-xl border border-border/80 p-4 sm:p-5">
+        <div className="flex flex-wrap items-start justify-between gap-3"><div><p className="text-xs text-muted-foreground">Order ID: {item.order_id}</p><h3 className="mt-1 font-medium">{reasonLabels[item.reason] ?? item.reason.replaceAll("_", " ")}</h3><p className="mt-1 text-sm text-muted-foreground">Requested {new Date(item.created_at).toLocaleDateString("en-IN")} · {item.status.replaceAll("_", " ")}</p></div><Badge variant={item.status === "requested" ? "secondary" : "outline"}>{item.status.replaceAll("_", " ")}</Badge></div>
+        {item.customer_details && <p className="mt-3 whitespace-pre-wrap text-sm">{item.customer_details}</p>}
+        {item.evidence_url && <a className="mt-2 inline-block text-sm underline underline-offset-4" href={item.evidence_url} target="_blank" rel="noreferrer">View evidence link</a>}
+        {item.brand_response && <p className="mt-3 text-sm text-muted-foreground">Your response: {item.brand_response}</p>}
+        {item.status === "requested" && <div className="mt-4 space-y-3"><label className="block text-sm font-medium" htmlFor={`return-response-${item.id}`}>Response to customer (optional)</label><Textarea id={`return-response-${item.id}`} value={responses[item.id] ?? ""} onChange={(event) => setResponses((old) => ({ ...old, [item.id]: event.target.value }))} maxLength={2000} placeholder="Add a short explanation…" /><div className="flex flex-wrap gap-2"><Button disabled={busyId === item.id} onClick={() => void review(item, "approved")}>{busyId === item.id ? <LoaderCircle className="animate-spin"/> : <Check/>}Approve return</Button><Button variant="outline" disabled={busyId === item.id} onClick={() => void review(item, "rejected")}>Reject request</Button></div></div>}
+      </article>)}
+    </div>}
+  </section>;
 }
 
 function Stat({ label, value, icon: Icon }: { label: string; value: string; icon: typeof Shirt }) {
