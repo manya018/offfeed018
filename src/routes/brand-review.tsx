@@ -3,7 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { Check, ExternalLink, FileText, LoaderCircle, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { decideBrandApplication, getBrandReview } from "@/lib/brand-review.functions";
+import { decideBrandApplication, getBrandReview, refreshExpiredBrandReviewLink } from "@/lib/brand-review.functions";
 
 export const Route = createFileRoute("/brand-review")({
   head: () => ({ meta: [
@@ -23,12 +23,18 @@ function BrandReviewPage() {
   const [busy, setBusy] = useState(true);
   const [decision, setDecision] = useState<"approve" | "decline" | null>(null);
   const [notice, setNotice] = useState("");
+  const [renewingLink, setRenewingLink] = useState(false);
+  const [expiredLink, setExpiredLink] = useState(false);
   const loadReview = useServerFn(getBrandReview);
   const makeDecision = useServerFn(decideBrandApplication);
 
   useEffect(() => {
     if (!token) { setNotice("This review link is missing its secure token."); setBusy(false); return; }
-    void loadReview({ data: { token } }).then(setApplication).catch((error: unknown) => setNotice(error instanceof Error ? error.message : "This review link could not be opened.")).finally(() => setBusy(false));
+    void loadReview({ data: { token } }).then(setApplication).catch((error: unknown) => {
+      const message = error instanceof Error ? error.message : "This review link could not be opened.";
+      setNotice(message);
+      setExpiredLink(message.toLowerCase().includes("expired"));
+    }).finally(() => setBusy(false));
   }, [loadReview, token]);
 
   const decide = async (action: "approve" | "decline") => {
@@ -48,7 +54,16 @@ function BrandReviewPage() {
   };
 
   if (busy) return <main className="grid min-h-[calc(100svh-5rem)] place-items-center"><LoaderCircle className="size-6 animate-spin text-primary" aria-label="Loading application" /></main>;
-  if (!application) return <ReviewMessage title="Review link unavailable" message={notice || "This application could not be loaded."} />;
+  if (!application) return <main className="grid min-h-[calc(100svh-5rem)] place-items-center px-5 text-center"><div className="max-w-lg"><p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">OFFFEED</p><h1 className="mt-4 font-display text-5xl">Review link unavailable</h1><p className="mt-4 text-sm text-muted-foreground">{notice || "This application could not be loaded."}</p>{expiredLink && <Button className="mt-6" disabled={renewingLink} onClick={async () => {
+    setRenewingLink(true);
+    try {
+      const result = await refreshExpiredBrandReviewLink({ data: { token } });
+      window.location.href = result.url;
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "Could not refresh this review link.");
+      setExpiredLink(false);
+    } finally { setRenewingLink(false); }
+  }}>{renewingLink ? <LoaderCircle className="animate-spin"/> : <CheckCircle2/>}{renewingLink ? "Refreshing link…" : "Refresh review link"}</Button>}<div><Button asChild variant="outline" className="mt-4"><Link to="/">Back to OFFFEED</Link></Button></div></div></main>;
   const decided = application.status !== "under_review";
   return <main className="min-h-[calc(100svh-5rem)] px-5 py-10 sm:px-8 sm:py-16">
     <div className="mx-auto max-w-5xl">
