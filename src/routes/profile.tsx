@@ -17,6 +17,11 @@ function ProfilePage() {
   const [accountLoading, setAccountLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
   const [orders, setOrders] = useState<Order[]>([]);
+  const [returnOrderId, setReturnOrderId] = useState("");
+  const [returnReason, setReturnReason] = useState("size_fit");
+  const [returnDetails, setReturnDetails] = useState("");
+  const [returnEvidence, setReturnEvidence] = useState("");
+  const [returnBusy, setReturnBusy] = useState(false);
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [addressEditorOpen, setAddressEditorOpen] = useState(false);
   const [addressSaving, setAddressSaving] = useState(false);
@@ -291,7 +296,44 @@ function ProfilePage() {
         </div>}
 
         {activeTab==="orders" && <section><div className="flex items-end justify-between gap-3"><div><h2 className="font-display text-3xl">My Orders</h2><p className="mt-1 text-sm text-muted-foreground">Track purchases made with your account.</p></div><span className="text-sm text-muted-foreground">{orders.length} items</span></div>
-          {accountLoading ? <Loading/> : !user ? <Empty title="Sign in to view your orders" body="Your account orders will appear here after you sign in."/> : orders.length===0 ? <Empty title="No orders yet" body="When you place an order on OFFFEED, its status and delivery updates will appear here." action={<Button asChild><Link to="/discover">Discover brands</Link></Button>}/> : <div className="mt-5 space-y-3">{orders.map((order)=><article key={order.id} className="rounded-xl border border-border bg-card p-5"><div className="flex flex-wrap justify-between gap-3"><div><p className="text-xs text-muted-foreground">Order {order.order_number}</p><h3 className="mt-1 font-medium">{order.product_name} × {order.quantity}</h3><p className="mt-1 text-sm text-muted-foreground">Placed {new Date(order.created_at).toLocaleDateString("en-IN",{day:"numeric",month:"short",year:"numeric"})}</p></div><div className="text-right"><p className="font-medium">₹{(Number(order.unit_price)*order.quantity).toLocaleString("en-IN")}</p><span className="mt-2 inline-block rounded-full bg-secondary px-3 py-1 text-xs capitalize">{order.status.replaceAll("_"," ")}</span></div></div>{(order.estimated_delivery_start || order.estimated_delivery_end) && <p className="mt-3 text-sm text-muted-foreground">Estimated delivery: {order.estimated_delivery_start ? new Date(order.estimated_delivery_start).toLocaleDateString("en-IN") : "—"} – {order.estimated_delivery_end ? new Date(order.estimated_delivery_end).toLocaleDateString("en-IN") : "—"}</p>}{order.tracking_url && <a className="mt-3 inline-block text-sm underline underline-offset-4" href={order.tracking_url} target="_blank" rel="noreferrer">Track shipment</a>}</article>)}</div>}
+          {accountLoading ? <Loading/> : !user ? <Empty title="Sign in to view your orders" body="Your account orders will appear here after you sign in."/> : orders.length===0 ? <Empty title="No orders yet" body="When you place an order on OFFFEED, its status and delivery updates will appear here." action={<Button asChild><Link to="/discover">Discover brands</Link></Button>}/> : <div className="mt-5 space-y-3">{orders.map((order)=><article key={order.id} className="rounded-xl border border-border bg-card p-5"><div className="flex flex-wrap justify-between gap-3"><div><p className="text-xs text-muted-foreground">Order {order.order_number}</p><h3 className="mt-1 font-medium">{order.product_name} × {order.quantity}</h3><p className="mt-1 text-sm text-muted-foreground">Placed {new Date(order.created_at).toLocaleDateString("en-IN",{day:"numeric",month:"short",year:"numeric"})}</p></div><div className="text-right"><p className="font-medium">₹{(Number(order.unit_price)*order.quantity).toLocaleString("en-IN")}</p><span className="mt-2 inline-block rounded-full bg-secondary px-3 py-1 text-xs capitalize">{order.status.replaceAll("_"," ")}</span></div></div>{(order.estimated_delivery_start || order.estimated_delivery_end) && <p className="mt-3 text-sm text-muted-foreground">Estimated delivery: {order.estimated_delivery_start ? new Date(order.estimated_delivery_start).toLocaleDateString("en-IN") : "—"} – {order.estimated_delivery_end ? new Date(order.estimated_delivery_end).toLocaleDateString("en-IN") : "—"}</p>}{order.tracking_url && <a className="mt-3 inline-block text-sm underline underline-offset-4" href={order.tracking_url} target="_blank" rel="noreferrer">Track shipment</a>}
+          {order.status === "delivered" && <div className="mt-4 border-t border-border pt-4">
+            {returnOrderId === order.id ? <form className="space-y-3" onSubmit={async (event) => {
+              event.preventDefault();
+              if (!user) return;
+              setReturnBusy(true);
+              try {
+                const { error } = await (supabase as any).rpc("request_offfeed_return", {
+                  p_order_id: order.id,
+                  p_reason: returnReason,
+                  p_details: returnDetails.trim(),
+                  p_evidence_url: returnEvidence.trim(),
+                });
+                if (error) throw error;
+                toast.success("Return request submitted. The brand will review it.");
+                setReturnOrderId(""); setReturnDetails(""); setReturnEvidence("");
+                await loadAccount();
+              } catch (cause) {
+                console.error("Return request failed:", cause);
+                toast.error(cause instanceof Error ? cause.message : "Could not submit the return request. Please try again.");
+              } finally { setReturnBusy(false); }
+            }}>
+              <label className="block text-sm font-medium" htmlFor={`return-reason-${order.id}`}>Reason for return</label>
+              <select id={`return-reason-${order.id}`} value={returnReason} onChange={(event) => setReturnReason(event.target.value)} className="w-full rounded-lg border border-border bg-background px-3 py-2.5">
+                <option value="defective_damaged">Defective or damaged</option>
+                <option value="wrong_item_colour">Wrong item or colour</option>
+                <option value="not_as_described">Not as described</option>
+                <option value="size_fit">Size or fit issue</option>
+                <option value="other">Other</option>
+              </select>
+              <label className="block text-sm font-medium" htmlFor={`return-details-${order.id}`}>Details (optional)</label>
+              <textarea id={`return-details-${order.id}`} value={returnDetails} onChange={(event) => setReturnDetails(event.target.value)} maxLength={2000} rows={3} className="w-full rounded-lg border border-border bg-background px-3 py-2.5" placeholder="Tell the brand what happened…"/>
+              <label className="block text-sm font-medium" htmlFor={`return-evidence-${order.id}`}>Photo/evidence link (optional)</label>
+              <input id={`return-evidence-${order.id}`} type="url" value={returnEvidence} onChange={(event) => setReturnEvidence(event.target.value)} maxLength={2048} className="w-full rounded-lg border border-border bg-background px-3 py-2.5" placeholder="https://…"/>
+              <p className="text-xs text-muted-foreground">Returns are reviewed by the brand. Submitting this form does not issue a refund automatically.</p>
+              <div className="flex gap-2"><Button type="submit" disabled={returnBusy}>{returnBusy ? <LoaderCircle className="mr-2 size-4 animate-spin"/> : null}{returnBusy ? "Submitting…" : "Submit return request"}</Button><Button type="button" variant="outline" onClick={() => setReturnOrderId("")}>Cancel</Button></div>
+            </form> : <Button variant="outline" onClick={() => { setReturnOrderId(order.id); setReturnReason("size_fit"); setReturnDetails(""); setReturnEvidence(""); }}>Request a return</Button>}
+          </div>}</article>)}</div>}
         </section>}
 
 
