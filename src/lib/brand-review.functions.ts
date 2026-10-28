@@ -40,6 +40,15 @@ const getApplication = async (token: string) => {
   };
 };
 
+export const refreshExpiredBrandReviewLink = createServerFn({ method: "POST" })
+  .inputValidator((input) => reviewInput.parse(input))
+  .handler(async ({ data }) => {
+    const { refreshExpiredBrandApprovalToken, getBrandReviewUrl } = await import("./brand-approval.server");
+    const renewedToken = await refreshExpiredBrandApprovalToken(data.token);
+    if (!renewedToken) throw new Error("This review link is too old or invalid. Please request a new application notification.");
+    return { url: getBrandReviewUrl(renewedToken) };
+  });
+
 export const getBrandReview = createServerFn({ method: "POST" })
   .inputValidator((input) => reviewInput.parse(input))
   .handler(async ({ data }) => getApplication(data.token));
