@@ -46,7 +46,7 @@ function ProfilePage() {
   const [resetPasswordScreen, setResetPasswordScreen] = useState(false);
 
   useEffect(() => {
-    const checkRecovery = () => setResetPasswordScreen(window.location.hash.includes("reset-password") || window.location.hash.includes("type=recovery"));
+    const checkRecovery = () => setResetPasswordScreen(new URLSearchParams(window.location.search).get("reset-password") === "1" || window.location.hash.includes("type=recovery") || window.location.hash.includes("error_description"));
     checkRecovery();
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === "PASSWORD_RECOVERY") setResetPasswordScreen(true);
@@ -59,7 +59,7 @@ function ProfilePage() {
     if (!authEmail.trim()) { setAuthNotice("Enter your email address first."); return; }
     setAuthBusy(true); setAuthNotice("");
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(authEmail.trim(), { redirectTo: window.location.origin + "/profile#reset-password" });
+      const { error } = await supabase.auth.resetPasswordForEmail(authEmail.trim(), { redirectTo: window.location.origin + "/profile?reset-password=1" });
       if (error) throw error;
       setAuthNotice("If an account exists for that email, a password-reset link has been sent. Check your inbox.");
       setForgotPassword(false);
