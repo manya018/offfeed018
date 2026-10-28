@@ -28,6 +28,22 @@ export async function createBrandApprovalToken(applicationId: string): Promise<s
   return `${encodedPayload}.${encode(new Uint8Array(signature))}`;
 }
 
+export async function refreshExpiredBrandApprovalToken(token: string): Promise<string | null> {
+  const [encodedPayload, encodedSignature] = token.split(".");
+  if (!encodedPayload || !encodedSignature) return null;
+  try {
+    const valid = await crypto.subtle.verify("HMAC", await getKey(), decode(encodedSignature), new TextEncoder().encode(encodedPayload));
+    if (!valid) return null;
+    const payload = JSON.parse(new TextDecoder().decode(decode(encodedPayload))) as ApprovalPayload;
+    // Permit recovery of previously emailed links for a short grace period only.
+    // Links older than 30 days past their original expiry must be resent through a new application workflow.
+    if (!payload.applicationId || !Number.isFinite(payload.expiresAt) || payload.expiresAt < Date.now() - 30 * 24 * 60 * 60 * 1000) return null;
+    return createBrandApprovalToken(payload.applicationId);
+  } catch {
+    return null;
+  }
+}
+
 export async function verifyBrandApprovalToken(token: string): Promise<ApprovalPayload | null> {
   const [encodedPayload, encodedSignature] = token.split(".");
   if (!encodedPayload || !encodedSignature) return null;
