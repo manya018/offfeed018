@@ -110,6 +110,7 @@ function BrandDashboard() {
   const queryClient = useQueryClient();
   const workspace = useQuery({ queryKey: ["brand-workspace"], queryFn: () => getBrandWorkspace() });
   const [mode, setMode] = useState<"manual" | "import" | null>(null);
+  const importSectionRef = useRef<HTMLElement | null>(null);
   const [draft, setDraft] = useState<DraftProduct>(blankProduct);
   const [image, setImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState("");
@@ -128,6 +129,14 @@ function BrandDashboard() {
 
   const application = workspace.data?.application;
   const shippingProfile = workspace.data?.shippingProfile;
+  useEffect(() => {
+    if (mode !== "import") return;
+    const frame = window.requestAnimationFrame(() => {
+      importSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [mode]);
+
   useEffect(() => {
     setOriginPinCode(shippingProfile?.origin_pin_code ?? "");
     setProcessingDaysMin(String(shippingProfile?.processing_days_min ?? 1));
@@ -343,7 +352,7 @@ function BrandDashboard() {
             </form>
           </section>}
 
-          {mode === "import" && <section className="mb-9 border-b border-border/70 pb-9" aria-labelledby="import-heading">
+          {mode === "import" && <section ref={importSectionRef} className="mb-9 scroll-mt-24 border-b border-border/70 pb-9" aria-labelledby="import-heading">
             <div className="flex items-start justify-between gap-4"><div><p className="text-xs font-semibold uppercase tracking-[0.15em] text-primary">SHOPIFY CATALOG</p><h2 id="import-heading" className="mt-2 font-display text-3xl">Bring in your catalog</h2><p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground">We’ll find product photos, prices, sizes and colors from the Shopify store on your application. Review the products before importing.</p></div><Button variant="ghost" size="icon" aria-label="Close catalog import" onClick={() => { setMode(null); setError(""); }}><X/></Button></div>
             <div className="mt-5 flex flex-wrap items-end gap-3"><div className="min-w-60 flex-1"><Label htmlFor="store-url">Registered store</Label><Input id="store-url" value={application.website_url} readOnly className={fieldClass}/></div><Button onClick={() => void startImport()} disabled={importBusy}>{importBusy ? <LoaderCircle className="animate-spin"/> : <RefreshCw/>}{importBusy ? "Reading catalog" : imported.length ? "Refresh catalog" : "Find products"}</Button></div>
             {error && <p role="alert" className="mt-4 text-sm text-destructive">{error}</p>}
