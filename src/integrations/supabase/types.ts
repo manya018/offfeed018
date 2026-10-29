@@ -240,6 +240,15 @@ export type Database = {
           processing_days_max: number
           processing_days_min: number
           shipping_note: string
+          pickup_contact_name: string | null
+          pickup_phone: string | null
+          pickup_address: string | null
+          return_address: string | null
+          gstin: string | null
+          parcel_weight_grams: number
+          parcel_length_cm: number
+          parcel_width_cm: number
+          parcel_height_cm: number
           updated_at: string
           user_id: string
         }
@@ -249,6 +258,15 @@ export type Database = {
           processing_days_max?: number
           processing_days_min?: number
           shipping_note?: string
+          pickup_contact_name?: string | null
+          pickup_phone?: string | null
+          pickup_address?: string | null
+          return_address?: string | null
+          gstin?: string | null
+          parcel_weight_grams?: number
+          parcel_length_cm?: number
+          parcel_width_cm?: number
+          parcel_height_cm?: number
           updated_at?: string
           user_id: string
         }
@@ -258,6 +276,15 @@ export type Database = {
           processing_days_max?: number
           processing_days_min?: number
           shipping_note?: string
+          pickup_contact_name?: string | null
+          pickup_phone?: string | null
+          pickup_address?: string | null
+          return_address?: string | null
+          gstin?: string | null
+          parcel_weight_grams?: number
+          parcel_length_cm?: number
+          parcel_width_cm?: number
+          parcel_height_cm?: number
           updated_at?: string
           user_id?: string
         }
