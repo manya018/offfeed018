@@ -158,7 +158,7 @@ export const getBrandWorkspace = createServerFn({ method: "GET" })
     if (signedError) throw new Error("Product images couldn't be loaded.");
     const imageUrls = new Map((signedFiles ?? []).map((file) => [file.path, file.signedUrl]));
     const { data: shippingProfile, error: shippingError } = application.status === "approved"
-      ? await context.supabase.from("brand_shipping_profiles").select("origin_pin_code, processing_days_min, processing_days_max, shipping_note").eq("brand_application_id", application.id).maybeSingle()
+      ? await context.supabase.from("brand_shipping_profiles").select("origin_pin_code, processing_days_min, processing_days_max, shipping_note, pickup_contact_name, pickup_phone, pickup_address, return_address, gstin, parcel_weight_grams, parcel_length_cm, parcel_width_cm, parcel_height_cm").eq("brand_application_id", application.id).maybeSingle()
       : { data: null, error: null };
     // A pending migration must not prevent the rest of the brand dashboard from loading.
     const safeShippingProfile = shippingError ? null : shippingProfile;
@@ -186,6 +186,15 @@ export const saveBrandShippingProfile = createServerFn({ method: "POST" })
     processingDaysMin: z.number().int().min(0).max(30),
     processingDaysMax: z.number().int().min(0).max(45),
     shippingNote: z.string().trim().max(500),
+    pickupContactName: z.string().trim().min(2).max(120),
+    pickupPhone: z.string().trim().min(7).max(20),
+    pickupAddress: z.string().trim().min(8).max(1000),
+    returnAddress: z.string().trim().max(1000),
+    gstin: z.union([z.literal(""), z.string().regex(/^[0-9A-Z]{15}$/)]),
+    parcelWeightGrams: z.number().int().min(1).max(50000),
+    parcelLengthCm: z.number().min(1).max(200),
+    parcelWidthCm: z.number().min(1).max(200),
+    parcelHeightCm: z.number().min(1).max(200),
   }).refine((value) => value.processingDaysMax >= value.processingDaysMin, {
     message: "Maximum processing days must be at least the minimum.",
     path: ["processingDaysMax"],
@@ -199,8 +208,17 @@ export const saveBrandShippingProfile = createServerFn({ method: "POST" })
       processing_days_min: data.processingDaysMin,
       processing_days_max: data.processingDaysMax,
       shipping_note: data.shippingNote,
+      pickup_contact_name: data.pickupContactName,
+      pickup_phone: data.pickupPhone,
+      pickup_address: data.pickupAddress,
+      return_address: data.returnAddress || null,
+      gstin: data.gstin || null,
+      parcel_weight_grams: data.parcelWeightGrams,
+      parcel_length_cm: data.parcelLengthCm,
+      parcel_width_cm: data.parcelWidthCm,
+      parcel_height_cm: data.parcelHeightCm,
     }, { onConflict: "brand_application_id" })
-      .select("origin_pin_code, processing_days_min, processing_days_max, shipping_note")
+      .select("origin_pin_code, processing_days_min, processing_days_max, shipping_note, pickup_contact_name, pickup_phone, pickup_address, return_address, gstin, parcel_weight_grams, parcel_length_cm, parcel_width_cm, parcel_height_cm")
       .single();
     if (error || !profile) throw new Error("Your shipping settings couldn't be saved. Please try again.");
     return profile;
