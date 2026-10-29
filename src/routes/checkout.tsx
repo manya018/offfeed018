@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { clearOfffeedCart, offfeedCartEventName, readOfffeedCart, writeOfffeedCart, type OfffeedCartItem } from "@/lib/cart";
 import { createOfffeedCheckoutOrders, type OfffeedCheckoutResult } from "@/lib/checkout.functions";
 import { supabase } from "@/integrations/supabase/client";
+import { getOfffeedShippingPolicy, OFFFEED_FREE_SHIPPING_THRESHOLD } from "@/lib/shipping-policy";
 
 type SavedAddress = { id: string; label: string; line1: string; line2: string; city: string; state: string; landmark: string; pinCode: string; isDefault: boolean };
 const ADDRESS_BOOK_KEY = "offfeed-address-book-v1";
@@ -45,6 +46,7 @@ function CheckoutPage() {
   }, []);
 
   const total = useMemo(() => items.reduce((sum, item) => sum + item.price * item.quantity, 0), [items]);
+  const shippingPolicy = useMemo(() => getOfffeedShippingPolicy(total), [total]);
 
   async function loadSavedAddresses() {
     const { data: { user } } = await supabase.auth.getUser();
@@ -237,7 +239,7 @@ function CheckoutPage() {
             ))}
           </div>
           <div className="mt-5 flex justify-between font-medium"><span>Product subtotal</span><span>₹{grandTotal.toLocaleString("en-IN")}</span></div>
-          <p className="mt-4 text-xs leading-5 text-muted-foreground">Save your order numbers for reference. The final amount due may include shipping confirmed by each brand before dispatch. Delivery estimates and courier tracking will appear once each brand confirms dispatch.</p>
+          <p className="mt-4 text-xs leading-5 text-muted-foreground">Save your order numbers for reference. OFFFEED’s shipping policy uses the combined checkout subtotal: orders of ₹999 or more qualify for customer-free shipping, with each brand bearing its own parcel’s actual courier cost. Orders below ₹999 are intended to use actual courier quotes. Live courier-rate calculation and automated brand settlement still need to be connected before these charges can be collected automatically.</p>
           <Button className="mt-7" asChild><Link to="/discover">Continue discovering</Link></Button>
         </div>
       </main>
@@ -310,12 +312,13 @@ function CheckoutPage() {
               {error && <p role="alert" className="border border-destructive/40 bg-destructive/5 p-3 text-sm text-destructive">{error}</p>}
               <div className="border-y border-border/70 py-4">
                 <div className="flex items-center justify-between text-sm"><span>Items subtotal</span><span>₹{total.toLocaleString("en-IN")}</span></div>
-                <div className="mt-2 flex items-center justify-between text-sm"><span>Shipping</span><span>Confirmed by each brand</span></div>
-                <p className="mt-2 text-xs leading-5 text-muted-foreground">Shipping charges are not yet calculated at checkout. Each brand must confirm any shipping charge before dispatch, so the final amount due may change.</p>
+                <div className="mt-2 flex items-center justify-between gap-3 text-sm"><span>Shipping policy</span><span className="text-right font-medium">{shippingPolicy.customerGetsFreeShipping ? "Free for customer" : "Actual courier rate"}</span></div>
+                <p className="mt-2 text-sm leading-6">{shippingPolicy.customerMessage}</p>
+                <p className="mt-2 text-xs leading-5 text-muted-foreground">The ₹{OFFFEED_FREE_SHIPPING_THRESHOLD} threshold applies to the combined product subtotal across all brands. This checkout currently displays the policy only: live courier quotes and automated brand-cost settlement are not connected yet, so no exact shipping amount is being calculated or charged here.</p>
               </div>
               <div className="flex items-center justify-between text-base font-semibold"><span>Product subtotal</span><span>₹{total.toLocaleString("en-IN")}</span></div>
               <Button type="submit" className="w-full" disabled={!items.length || loading}>{loading ? "Placing order…" : "Place COD order"}</Button>
-              <p className="text-center text-[11px] leading-5 text-muted-foreground">Cash on Delivery · Product subtotal shown; shipping, if charged, is confirmed by the brand before dispatch.</p>
+              <p className="text-center text-[11px] leading-5 text-muted-foreground">Cash on Delivery · Shipping policy is shown above. Live courier pricing and automatic brand settlement must be enabled before shipping charges can be collected automatically.</p>
             </form>
           </div>
         </aside>
