@@ -124,6 +124,15 @@ function BrandDashboard() {
   const [processingDaysMin, setProcessingDaysMin] = useState("1");
   const [processingDaysMax, setProcessingDaysMax] = useState("2");
   const [shippingNote, setShippingNote] = useState("");
+  const [pickupContactName, setPickupContactName] = useState("");
+  const [pickupPhone, setPickupPhone] = useState("");
+  const [pickupAddress, setPickupAddress] = useState("");
+  const [returnAddress, setReturnAddress] = useState("");
+  const [gstin, setGstin] = useState("");
+  const [parcelWeightGrams, setParcelWeightGrams] = useState("500");
+  const [parcelLengthCm, setParcelLengthCm] = useState("25");
+  const [parcelWidthCm, setParcelWidthCm] = useState("20");
+  const [parcelHeightCm, setParcelHeightCm] = useState("5");
   const [shippingSaving, setShippingSaving] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
 
@@ -142,6 +151,15 @@ function BrandDashboard() {
     setProcessingDaysMin(String(shippingProfile?.processing_days_min ?? 1));
     setProcessingDaysMax(String(shippingProfile?.processing_days_max ?? 2));
     setShippingNote(shippingProfile?.shipping_note ?? "");
+    setPickupContactName(shippingProfile?.pickup_contact_name ?? "");
+    setPickupPhone(shippingProfile?.pickup_phone ?? "");
+    setPickupAddress(shippingProfile?.pickup_address ?? "");
+    setReturnAddress(shippingProfile?.return_address ?? "");
+    setGstin(shippingProfile?.gstin ?? "");
+    setParcelWeightGrams(String(shippingProfile?.parcel_weight_grams ?? 500));
+    setParcelLengthCm(String(shippingProfile?.parcel_length_cm ?? 25));
+    setParcelWidthCm(String(shippingProfile?.parcel_width_cm ?? 20));
+    setParcelHeightCm(String(shippingProfile?.parcel_height_cm ?? 5));
   }, [shippingProfile]);
   const supportedAudience = useMemo(() => (application?.audience ?? ["her"]).filter((item): item is "her" | "him" => item === "her" || item === "him"), [application?.audience]);
   const products = workspace.data?.products ?? [];
@@ -170,7 +188,24 @@ function BrandDashboard() {
     }
     setShippingSaving(true);
     try {
-      await saveBrandShippingProfile({ data: { originPinCode, processingDaysMin: minDays, processingDaysMax: maxDays, shippingNote } });
+      const weight = Number(parcelWeightGrams);
+      const length = Number(parcelLengthCm);
+      const width = Number(parcelWidthCm);
+      const height = Number(parcelHeightCm);
+      if (!pickupContactName.trim() || !pickupPhone.trim() || !pickupAddress.trim()) {
+        toast.error("Add a pickup contact name, phone number, and full pickup address."); return;
+      }
+      if (![weight, length, width, height].every(Number.isFinite) || weight <= 0 || length <= 0 || width <= 0 || height <= 0) {
+        toast.error("Parcel weight and dimensions must all be greater than zero."); return;
+      }
+      if (gstin.trim() && !/^[0-9A-Z]{15}$/.test(gstin.trim().toUpperCase())) {
+        toast.error("GSTIN should contain 15 letters/numbers."); return;
+      }
+      await saveBrandShippingProfile({ data: {
+        originPinCode, processingDaysMin: minDays, processingDaysMax: maxDays, shippingNote,
+        pickupContactName, pickupPhone, pickupAddress, returnAddress, gstin: gstin.toUpperCase(),
+        parcelWeightGrams: weight, parcelLengthCm: length, parcelWidthCm: width, parcelHeightCm: height,
+      } });
       await queryClient.invalidateQueries({ queryKey: ["brand-workspace"] });
       toast.success("Shipping profile saved.");
     } catch (saveError) {
@@ -306,9 +341,39 @@ function BrandDashboard() {
             <Input id="shipping-origin-pin" inputMode="numeric" maxLength={6} pattern="[1-9][0-9]{5}" required value={originPinCode} onChange={(event) => setOriginPinCode(event.target.value.replace(/\D/g, "").slice(0, 6))} placeholder="e.g. 302001" className={fieldClass}/>
             <p className="mt-1 text-xs text-muted-foreground">PIN code where your parcel will be picked up.</p>
           </div>
+          <div>
+            <Label htmlFor="pickup-contact-name">Pickup contact person</Label>
+            <Input id="pickup-contact-name" required maxLength={120} value={pickupContactName} onChange={(event) => setPickupContactName(event.target.value)} placeholder="Name of person handing over parcels" className={fieldClass}/>
+          </div>
+          <div>
+            <Label htmlFor="pickup-phone">Pickup phone number</Label>
+            <Input id="pickup-phone" required type="tel" maxLength={20} value={pickupPhone} onChange={(event) => setPickupPhone(event.target.value)} placeholder="Courier pickup contact" className={fieldClass}/>
+          </div>
+          <div className="sm:col-span-2">
+            <Label htmlFor="pickup-address">Full pickup address</Label>
+            <Textarea id="pickup-address" required maxLength={1000} value={pickupAddress} onChange={(event) => setPickupAddress(event.target.value)} placeholder="House/shop, street, area, city, state" className="mt-2 min-h-20 rounded-lg border-border/80 bg-card"/>
+          </div>
+          <div className="sm:col-span-2">
+            <Label htmlFor="return-address">Return address (optional)</Label>
+            <Textarea id="return-address" maxLength={1000} value={returnAddress} onChange={(event) => setReturnAddress(event.target.value)} placeholder="Address where returned parcels should go, if different" className="mt-2 min-h-20 rounded-lg border-border/80 bg-card"/>
+          </div>
+          <div>
+            <Label htmlFor="brand-gstin">GSTIN (optional, if applicable)</Label>
+            <Input id="brand-gstin" maxLength={15} value={gstin} onChange={(event) => setGstin(event.target.value.toUpperCase().replace(/[^0-9A-Z]/g, "").slice(0, 15))} placeholder="15-character GSTIN" className={fieldClass}/>
+          </div>
           <div className="grid grid-cols-2 gap-3">
             <div><Label htmlFor="processing-min">Min. prep days</Label><Input id="processing-min" type="number" min={0} max={30} required value={processingDaysMin} onChange={(event) => setProcessingDaysMin(event.target.value)} className={fieldClass}/></div>
             <div><Label htmlFor="processing-max">Max. prep days</Label><Input id="processing-max" type="number" min={0} max={45} required value={processingDaysMax} onChange={(event) => setProcessingDaysMax(event.target.value)} className={fieldClass}/></div>
+          </div>
+          <div className="sm:col-span-2">
+            <p className="text-sm font-medium">Default parcel measurements</p>
+            <p className="mt-1 text-xs text-muted-foreground">Used as a starting point for courier quotes. Enter actual packed parcel measurements for each product/order when they differ.</p>
+            <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <div><Label htmlFor="parcel-weight">Weight (grams)</Label><Input id="parcel-weight" type="number" min={1} max={50000} required value={parcelWeightGrams} onChange={(event) => setParcelWeightGrams(event.target.value)} className={fieldClass}/></div>
+              <div><Label htmlFor="parcel-length">Length (cm)</Label><Input id="parcel-length" type="number" min={1} max={200} required value={parcelLengthCm} onChange={(event) => setParcelLengthCm(event.target.value)} className={fieldClass}/></div>
+              <div><Label htmlFor="parcel-width">Width (cm)</Label><Input id="parcel-width" type="number" min={1} max={200} required value={parcelWidthCm} onChange={(event) => setParcelWidthCm(event.target.value)} className={fieldClass}/></div>
+              <div><Label htmlFor="parcel-height">Height (cm)</Label><Input id="parcel-height" type="number" min={1} max={200} required value={parcelHeightCm} onChange={(event) => setParcelHeightCm(event.target.value)} className={fieldClass}/></div>
+            </div>
           </div>
           <div className="sm:col-span-2">
             <Label htmlFor="shipping-note">Dispatch note (optional)</Label>
@@ -319,6 +384,12 @@ function BrandDashboard() {
             <Button type="submit" disabled={shippingSaving}>{shippingSaving ? <LoaderCircle className="animate-spin"/> : <Truck/>}{shippingSaving ? "Saving…" : "Save shipping details"}</Button>
           </div>
         </form>
+        <div className="mt-6 rounded-xl border border-border/80 bg-muted/20 p-4 sm:p-5">
+          <p className="text-xs font-semibold uppercase tracking-[0.15em] text-primary">PAYOUT ACCOUNT</p>
+          <h3 className="mt-2 font-display text-2xl">Bank & settlement details</h3>
+          <p className="mt-2 text-sm leading-6 text-muted-foreground">OFFFEED will need a verified beneficiary account to transfer your earnings after commission and any applicable shipping deductions. Secure bank onboarding is not connected yet, so we are deliberately not collecting account numbers, IFSC details, OTPs, or banking passwords in this form. This section will be enabled through a verified payout provider before payouts go live.</p>
+          <div className="mt-3 flex flex-wrap items-center gap-2"><Badge variant="secondary">Setup pending</Badge><span className="text-xs text-muted-foreground">No bank details stored</span></div>
+        </div>
       </section>
 
       <section className="border-b border-border/70 py-7" aria-labelledby="brand-orders-heading">
