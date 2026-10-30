@@ -202,16 +202,24 @@ function DiscoverPage() {
   }
 
   return <main className="pb-24">
-    <section className="mx-auto max-w-[1440px] px-5 pb-12 pt-16 text-center lg:px-10 lg:pt-24">
-      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">{isHim ? "A considered edit for him" : "Less algorithm. More you."}</p>
-      <h1 className="mt-4 font-display text-6xl font-medium sm:text-7xl">{isHim ? <>Find your own <em className="font-normal text-primary">uniform.</em></> : <>Discover your next <em className="font-normal text-primary">obsession.</em></>}</h1>
-      <div className="relative mx-auto mt-9 max-w-2xl"><Search className="absolute left-5 top-1/2 size-5 -translate-y-1/2 text-muted-foreground"/><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={isHim ? "What are you in the mood for?" : "What are you feeling today?"} className="h-14 w-full rounded-full border border-border bg-card px-14 text-sm shadow-soft outline-none transition focus:border-primary"/></div>
-      <div className="mx-auto mt-5 flex max-w-5xl flex-wrap justify-center gap-2">{filters.map((item) => <Button key={item} size="sm" variant={filter === item ? "default" : "outline"} className="rounded-full" onClick={() => setFilter(item)}>{item}</Button>)}</div>
-      <div className="mx-auto mt-4 flex max-w-5xl flex-wrap justify-center gap-2"><Button variant="outline" className="rounded-full" onClick={() => { window.location.href = "/discover?category=jewellery"; }}>✧ Jewellery</Button><Button variant="outline" className="rounded-full" onClick={() => { window.location.href = "/discover?category=accessories"; }}>✧ Accessories</Button></div>
+    <section className="relative isolate mx-auto mt-5 max-w-[1440px] overflow-hidden rounded-[2rem] border border-[#eadbd2] bg-[linear-gradient(118deg,#f8e8e5_0%,#fbf5ed_48%,#e9eee4_100%)] px-5 pb-12 pt-12 shadow-soft sm:mt-8 sm:px-10 sm:pb-16 sm:pt-16 lg:px-16 lg:pt-20">
+      <div aria-hidden="true" className="pointer-events-none absolute -right-16 -top-24 size-72 rounded-full border border-white/70 sm:size-96"/>
+      <div aria-hidden="true" className="pointer-events-none absolute -bottom-36 -left-20 size-80 rounded-full bg-white/30 blur-3xl"/>
+      <div className="relative mx-auto max-w-4xl text-center">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-[#8c6b61] sm:text-xs">The independent style index · OFFFEED</p>
+        <h1 className="mt-5 font-display text-5xl font-medium leading-[0.98] tracking-[-0.045em] text-[#49382f] sm:text-7xl lg:text-8xl">{isHim ? <>Find your own <em className="font-normal text-[#66806b]">uniform.</em></> : <>Your style, <em className="font-normal text-[#bd8790]">off the feed.</em></>}</h1>
+        <p className="mx-auto mt-5 max-w-xl text-sm leading-7 text-[#765f55] sm:text-base">{isHim ? "A considered collection of pieces, moods and independent labels worth discovering." : "A little less of the same. A little more of what feels like you. Discover looks, moods and independent labels worth knowing."}</p>
+        <div className="relative mx-auto mt-8 max-w-2xl"><Search className="absolute left-5 top-1/2 size-5 -translate-y-1/2 text-[#967c70]"/><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={isHim ? "Search your next favourite look…" : "What are you in the mood for?"} className="h-14 w-full rounded-full border border-white/80 bg-white/80 px-14 text-sm text-[#49382f] shadow-[0_12px_35px_-22px_rgba(82,54,45,0.45)] outline-none backdrop-blur transition placeholder:text-[#a18c82] focus:border-[#c9979d]"/></div>
+        <div className="mx-auto mt-5 flex max-w-5xl flex-wrap justify-center gap-2">{filters.map((item) => <Button key={item} size="sm" variant={filter === item ? "default" : "outline"} className={filter === item ? "rounded-full shadow-sm" : "rounded-full border-white/80 bg-white/45 text-[#6e574d] hover:bg-white/80"} onClick={() => setFilter(item)}>{item}</Button>)}</div>
+        <div className="mx-auto mt-6 flex max-w-5xl flex-wrap justify-center gap-3">
+          <Button variant="outline" className="rounded-full border-[#d7b8b5] bg-[#fffaf7]/80 px-5 text-[#76534f] hover:bg-white" onClick={() => { window.location.href = "/discover?category=jewellery"; }}>Jewellery edit <span aria-hidden="true">↗</span></Button>
+          <Button variant="outline" className="rounded-full border-[#c8d2c2] bg-[#f8fbf5]/80 px-5 text-[#536a56] hover:bg-white" onClick={() => { window.location.href = "/discover?category=accessories"; }}>Accessories edit <span aria-hidden="true">↗</span></Button>
+        </div>
+      </div>
     </section>
 
-    <section className="mx-auto max-w-[1440px] px-5 pt-4 lg:px-10">
-      <div className="mb-6"><p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Shop independent brands</p><h2 className="mt-2 font-display text-3xl sm:text-4xl">Find pieces that feel like you.</h2></div>
+    <section className="mx-auto max-w-[1440px] px-5 pt-12 lg:px-10">
+      <div className="mb-7 flex flex-wrap items-end justify-between gap-4"><div><p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-primary">Curated from independent labels</p><h2 className="mt-2 font-display text-4xl tracking-tight sm:text-5xl">Find pieces that feel like you.</h2></div><p className="max-w-sm text-sm leading-6 text-muted-foreground">Discover thoughtfully selected pieces and complete looks from emerging brands.</p></div>
       {categoryLoading ? <p className="py-12 text-center text-muted-foreground">Loading clothing from independent brands…</p> : categoryError ? <p className="py-12 text-center text-muted-foreground">We couldn’t load products right now. Please try again.</p> : categoryProducts.length ? <>
         <div className="mb-6 rounded-2xl border border-border/70 bg-card p-4">
           <div className="mb-3 flex flex-wrap items-center justify-between gap-3"><p className="text-sm font-medium">Refine clothing · {filteredCategoryProducts.length} products</p><Button type="button" variant="ghost" size="sm" onClick={resetProductFilters}>Clear filters</Button></div>
