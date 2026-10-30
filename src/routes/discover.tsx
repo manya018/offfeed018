@@ -23,6 +23,10 @@ export const Route = createFileRoute("/discover")({
 
 const filters = ["All", "Trending", "For You", "New", "Aesthetic", "Occasion", "Season", "Color", "Style", "Price"];
 
+const herClothingCategories = ["Tops", "Dresses", "Skirts", "Jeans & Denim", "Trousers & Pants", "Shorts", "Co-ord Sets", "Jumpsuits", "Shirts", "Jackets & Outerwear", "Knitwear", "Activewear", "Lingerie & Loungewear"];
+const himClothingCategories = ["T-shirts & Polos", "Shirts", "Jeans & Denim", "Trousers", "Shorts", "Co-ord Sets", "Jackets & Outerwear", "Sweatshirts & Hoodies", "Activewear"];
+const accessoryCategories = ["Bags", "Sunglasses", "Watches", "Belts", "Hair Accessories"];
+
 function DiscoverPage() {
   const { category } = Route.useSearch();
   const { space } = useStyleSpace();
@@ -33,6 +37,9 @@ function DiscoverPage() {
   const [filter, setFilter] = useState("All");
   const [query, setQuery] = useState("");
   const [visible, setVisible] = useState(6);
+  const [clothingMenuOpen, setClothingMenuOpen] = useState(true);
+  const [accessoriesMenuOpen, setAccessoriesMenuOpen] = useState(false);
+  const [selectedClothingCategory, setSelectedClothingCategory] = useState("");
   const [categoryProducts, setCategoryProducts] = useState<ProductWithBrand[]>([]);
   const [productBrand, setProductBrand] = useState("All brands");
   const [productColor, setProductColor] = useState("All colours");
@@ -67,14 +74,18 @@ function DiscoverPage() {
     styles: [...new Set(categoryProducts.flatMap((product) => product.tags))].sort(),
   }), [categoryProducts]);
   const filteredCategoryProducts = useMemo(() => {
-    const filteredProducts = categoryProducts.filter((product) =>
+    const filteredProducts = categoryProducts.filter((product) => {
+      const categoryText = (product.category + " " + product.tags.join(" ")).toLowerCase();
+      const selected = selectedClothingCategory.toLowerCase();
+      const categoryMatch = !selectedClothingCategory || categoryText.includes(selected) || (selectedClothingCategory === "Tops" && /top|shirt|blouse|tee|polo/.test(categoryText)) || (selectedClothingCategory === "Jeans & Denim" && /jean|denim/.test(categoryText)) || (selectedClothingCategory === "Trousers & Pants" && /trouser|pant/.test(categoryText)) || (selectedClothingCategory === "Co-ord Sets" && /co.?ord|coord/.test(categoryText)) || (selectedClothingCategory === "Jackets & Outerwear" && /jacket|outerwear|coat/.test(categoryText)) || (selectedClothingCategory === "Lingerie & Loungewear" && /lingerie|lounge|sleepwear/.test(categoryText)) || (selectedClothingCategory === "T-shirts & Polos" && /t.?shirt|tee|polo/.test(categoryText)) || (selectedClothingCategory === "Sweatshirts & Hoodies" && /sweatshirt|hoodie/.test(categoryText));
+      return categoryMatch &&
       (productBrand === "All brands" || product.brand.name === productBrand) &&
       (productColor === "All colours" || product.colors.some((color) => color.toLowerCase() === productColor.toLowerCase())) &&
       (productSize === "All sizes" || product.sizes.some((size) => size.toLowerCase() === productSize.toLowerCase())) &&
       (productStyle === "All styles" || product.tags.some((tag) => tag.toLowerCase() === productStyle.toLowerCase())) &&
       (!productMinPrice || product.price >= Number(productMinPrice)) &&
-      (!productMaxPrice || product.price <= Number(productMaxPrice))
-    );
+      (!productMaxPrice || product.price <= Number(productMaxPrice));
+    });
     if (productSort === "newest") filteredProducts.sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
     else if (productSort === "price-low") filteredProducts.sort((a, b) => a.price - b.price);
     else if (productSort === "price-high") filteredProducts.sort((a, b) => b.price - a.price);
@@ -205,7 +216,7 @@ function DiscoverPage() {
   const trendingLooks = [...filtered].sort((a, b) => score(b.saves) - score(a.saves));
   const hiddenGems = [...filtered].sort((a, b) => score(a.saves) - score(b.saves));
   const featuredBrands = [...new Map(categoryProducts.map((product) => [product.brand.handle, product])).values()].slice(0, 4);
-  const newArrivals = [...categoryProducts].sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt)).slice(0, 8);
+  const newArrivals = [...(selectedClothingCategory ? filteredCategoryProducts : categoryProducts)].sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt)).slice(0, 8);
   const categoryTiles = [
     { title: "Clothing", image: moodArtwork[0], href: "/discover" },
     { title: "Jewellery", image: moodArtwork[1 % moodArtwork.length], href: "/discover?category=jewellery" },
@@ -213,8 +224,44 @@ function DiscoverPage() {
     { title: "Complete looks", image: moodArtwork[3 % moodArtwork.length], href: "/explore" },
   ];
 
+  const clothingCategories = isHim ? himClothingCategories : herClothingCategories;
+  const chooseClothingCategory = (item: string) => {
+    setSelectedClothingCategory(item);
+    setQuery(item);
+    setFilter("All");
+    window.setTimeout(() => document.getElementById("new-arrivals")?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
+  };
+  const clearClothingCategory = () => {
+    setSelectedClothingCategory("");
+    setQuery("");
+    setFilter("All");
+  };
+
   return <main className="bg-[#fcfaf7] pb-24 text-[#493a33]">
-    <section className="relative mx-auto mt-4 max-w-[1500px] overflow-hidden border-y border-[#eadbd2] bg-[linear-gradient(105deg,#f5e6e3_0%,#fbf7f0_52%,#edf0e8_100%)] px-5 py-10 sm:mt-6 sm:rounded-[1.75rem] sm:border sm:px-10 sm:py-14 lg:px-16 lg:py-16">
+    <div className="mx-auto flex max-w-[1680px] flex-col gap-4 px-3 pt-3 sm:px-5 lg:flex-row lg:items-start lg:gap-7 lg:px-6">
+      <aside aria-label="Discover categories" className="w-full shrink-0 overflow-hidden rounded-2xl border border-[#eadfd7] bg-[#f7f2ed] lg:sticky lg:top-24 lg:mt-6 lg:max-h-[calc(100vh-7rem)] lg:w-[218px] lg:overflow-y-auto">
+        <div className="flex items-center justify-between border-b border-[#e8ddd5] px-4 py-3">
+          <div><p className="text-[10px] font-semibold uppercase tracking-[.2em] text-[#a17e75]">The style directory</p><p className="mt-0.5 font-display text-lg text-[#493a33]">Browse OFFFEED</p></div>
+          <span className="rounded-full bg-white px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-[#a16d73]">{isHim ? "Him" : "Her"}</span>
+        </div>
+        <div className="grid grid-cols-2 gap-2 p-3 lg:block lg:space-y-1">
+          <button type="button" onClick={clearClothingCategory} className="flex w-full items-center justify-between rounded-lg bg-white px-3 py-2.5 text-left text-sm font-medium text-[#76534f] shadow-sm lg:mb-1"><span>All Discoveries</span><span>↗</span></button>
+          <div className="rounded-lg bg-white/65 lg:bg-transparent">
+            <button type="button" aria-expanded={clothingMenuOpen} onClick={() => setClothingMenuOpen((open) => !open)} className="flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-left text-sm font-semibold text-[#59463e] hover:bg-white"><span>Clothing</span><span className="text-[#b46f78]">{clothingMenuOpen ? "−" : "+"}</span></button>
+            {clothingMenuOpen && <div className="max-h-52 space-y-0.5 overflow-y-auto pb-2 pl-2 pr-1 lg:max-h-none">{clothingCategories.map((item) => <button type="button" key={item} onClick={() => chooseClothingCategory(item)} className={`block w-full rounded-md px-3 py-2 text-left text-xs transition ${selectedClothingCategory === item ? "bg-[#b46f78] font-semibold text-white" : "text-[#77645a] hover:bg-[#f1e5e1] hover:text-[#59463e]"}`}>{item}</button>)}</div>}
+          </div>
+          <div className="rounded-lg bg-white/65 lg:bg-transparent">
+            <button type="button" aria-expanded={accessoriesMenuOpen} onClick={() => setAccessoriesMenuOpen((open) => !open)} className="flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-left text-sm font-semibold text-[#59463e] hover:bg-white"><span>Accessories</span><span className="text-[#71836d]">{accessoriesMenuOpen ? "−" : "+"}</span></button>
+            {accessoriesMenuOpen && <div className="space-y-0.5 pb-2 pl-2 pr-1">{accessoryCategories.map((item) => <button type="button" key={item} onClick={() => { window.location.href = "/discover?category=accessories"; }} className="block w-full rounded-md px-3 py-2 text-left text-xs text-[#77645a] hover:bg-[#edf0e8]">{item}</button>)}</div>}
+          </div>
+          <button type="button" onClick={() => { window.location.href = "/discover?category=jewellery"; }} className="rounded-lg px-3 py-2.5 text-left text-sm text-[#59463e] hover:bg-white">Jewellery <span className="float-right text-[#b46f78]">↗</span></button>
+          <button type="button" onClick={() => { window.location.href = "/explore"; }} className="rounded-lg px-3 py-2.5 text-left text-sm text-[#59463e] hover:bg-white">Complete Looks <span className="float-right text-[#b46f78]">↗</span></button>
+          <button type="button" onClick={() => { document.getElementById("featured-brands")?.scrollIntoView({ behavior: "smooth" }); }} className="rounded-lg px-3 py-2.5 text-left text-sm text-[#59463e] hover:bg-white">Independent Brands <span className="float-right text-[#b46f78]">↗</span></button>
+        </div>
+        <div className="hidden border-t border-[#e8ddd5] px-4 py-3 lg:block"><p className="text-[10px] leading-5 text-[#927e74]">Find it before your feed does.</p></div>
+      </aside>
+      <div className="min-w-0 flex-1">
+    <section className="relative mx-auto mt-1 max-w-[1500px] overflow-hidden border-y border-[#eadbd2] bg-[linear-gradient(105deg,#f5e6e3_0%,#fbf7f0_52%,#edf0e8_100%)] px-5 py-10 sm:mt-6 sm:rounded-[1.75rem] sm:border sm:px-10 sm:py-14 lg:px-16 lg:py-16">
       <div aria-hidden="true" className="pointer-events-none absolute -right-24 -top-32 size-96 rounded-full border border-white/70"/>
       <div className="relative z-10 grid items-center gap-8 lg:grid-cols-[1.05fr_.95fr] lg:gap-12">
         <div>
@@ -244,7 +291,7 @@ function DiscoverPage() {
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-5">{categoryTiles.map((item) => <button type="button" key={item.title} onClick={() => { window.location.href = item.href; }} className="group relative overflow-hidden rounded-[1.15rem] bg-[#eee5dc] text-left"><img src={item.image} alt={item.title} loading="lazy" className="aspect-[4/5] w-full object-cover transition duration-700 group-hover:scale-105"/><span className="absolute inset-0 bg-gradient-to-t from-[#211914]/70 via-transparent to-transparent"/><span className="absolute bottom-4 left-4 font-display text-xl text-white sm:bottom-5 sm:left-5 sm:text-2xl">{item.title}</span><span className="absolute right-3 top-3 grid size-8 place-items-center rounded-full border border-white/60 bg-white/20 text-white backdrop-blur">↗</span></button>)}</div>
     </section>
 
-    <section className="mx-auto max-w-[1440px] px-5 pt-14 lg:px-10">
+    <section id="featured-brands" className="mx-auto max-w-[1440px] px-5 pt-14 lg:px-10">
       <div className="mb-6 flex flex-wrap items-end justify-between gap-3"><div><p className="text-[10px] font-semibold uppercase tracking-[.23em] text-[#a17e75]">The people behind the pieces</p><h2 className="mt-2 font-display text-3xl sm:text-4xl">Featured independent brands</h2></div><p className="max-w-sm text-sm leading-6 text-[#87756c]">Discover the independent labels bringing something different to the feed.</p></div>
       {categoryLoading ? <p className="py-8 text-center text-[#87756c]">Finding independent labels…</p> : featuredBrands.length ? <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-5">{featuredBrands.map((product) => <button type="button" key={product.brand.handle} onClick={() => { window.location.href = `/brand/${product.brand.handle}`; }} className="group overflow-hidden rounded-[1.2rem] border border-[#eadfd7] bg-white text-left shadow-[0_12px_35px_-28px_rgba(70,48,40,.35)]"><div className="overflow-hidden bg-[#f0e9e2]"><img src={product.imageUrl || moodArtwork[0]} alt={product.brand.name} loading="lazy" className="aspect-[4/3] w-full object-cover transition duration-700 group-hover:scale-105"/></div><div className="px-4 py-4"><p className="text-[10px] font-semibold uppercase tracking-[.18em] text-[#a17e75]">Independent label</p><h3 className="mt-1 font-display text-xl">{product.brand.name}</h3><p className="mt-1 text-xs text-[#927e74]">{product.brand.category} · Discover brand ↗</p></div></button>)}</div> : <p className="rounded-xl border border-dashed border-[#dfd1c7] bg-white/60 px-5 py-8 text-center text-sm text-[#87756c]">Independent brands will be featured here as their approved products are published on OFFFEED.</p>}
     </section>
@@ -266,9 +313,11 @@ function DiscoverPage() {
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-6">{moodList.slice(0, 6).map((mood, index) => <button type="button" key={mood} onClick={() => { setQuery(mood); setFilter("All"); window.scrollTo({ top: 0, behavior: "smooth" }); }} className="group relative overflow-hidden rounded-[1rem] text-left"><img src={moodArtwork[index % moodArtwork.length]} alt={mood} loading="lazy" className="aspect-[4/5] w-full object-cover transition duration-700 group-hover:scale-105"/><span className="absolute inset-0 bg-gradient-to-t from-[#211914]/70 to-transparent"/><span className="absolute bottom-3 left-3 right-3 font-display text-lg text-white">{mood}</span></button>)}</div>
     </section>
 
-    <section className="mx-auto max-w-[1440px] px-5 pt-14 lg:px-10">
+    <section id="new-arrivals" className="scroll-mt-28 "mx-auto max-w-[1440px] px-5 pt-14 lg:px-10">
       <div className="mb-6"><p className="text-[10px] font-semibold uppercase tracking-[.23em] text-[#a17e75]">Just added to OFFFEED</p><h2 className="mt-2 font-display text-3xl sm:text-4xl">New arrivals</h2><p className="mt-2 max-w-sm text-sm leading-6 text-[#87756c]">Fresh finds from independent labels. First come, first discovered.</p></div>
       {categoryLoading ? <p className="py-8 text-center text-[#87756c]">Loading new arrivals…</p> : newArrivals.length ? <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">{newArrivals.map((product) => <PublicProductCard key={product.id} product={product}/>)}</div> : <p className="rounded-xl border border-dashed border-[#dfd1c7] bg-white/60 px-5 py-8 text-center text-sm text-[#87756c]">New arrivals from independent brands will appear here as soon as their collections are published.</p>}
     </section>
+      </div>
+    </div>
   </main>;
 }
