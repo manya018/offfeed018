@@ -55,7 +55,7 @@ function DiscoverPage() {
   useEffect(() => { setLikedReferenceItems(readLikedLookIds()); }, []);
   const toggleReferenceLike = (id: string) => { const next = !likedReferenceItems.includes(id); setLikedReferenceItems((current) => next ? [...current, id] : current.filter((value) => value !== id)); void setWishlistItem("look", id, next); toast.success(next ? "Added to wishlist" : "Removed from wishlist"); };
   const shareReference = async (item: { title: string; src: string }) => { const url = new URL(`/discover?category=${category ?? "jewellery"}`, window.location.origin).toString(); try { if (navigator.share) await navigator.share({ title: `${item.title} — OFFFEED`, text: `Found this style on OFFFEED`, url }); else { await navigator.clipboard.writeText(url); toast.success("Link copied to share"); } } catch (error) { if (error instanceof Error && error.name === "AbortError") return; try { await navigator.clipboard.writeText(url); toast.success("Link copied to share"); } catch { toast.error("Could not share this item."); } } };
-  useEffect(() => { setFilter("All"); setQuery(""); setVisible(6); }, [space]);
+  useEffect(() => { setFilter("All"); setQuery(""); setVisible(6); setSelectedClothingCategory(""); }, [space]);
   useEffect(() => {
     let active = true;
     const isClothingFeed = category !== "jewellery" && category !== "accessories";
@@ -77,7 +77,7 @@ function DiscoverPage() {
     const filteredProducts = categoryProducts.filter((product) => {
       const categoryText = (product.category + " " + product.tags.join(" ")).toLowerCase();
       const selected = selectedClothingCategory.toLowerCase();
-      const categoryMatch = !selectedClothingCategory || categoryText.includes(selected) || (selectedClothingCategory === "Tops" && /top|shirt|blouse|tee|polo/.test(categoryText)) || (selectedClothingCategory === "Jeans & Denim" && /jean|denim/.test(categoryText)) || (selectedClothingCategory === "Trousers & Pants" && /trouser|pant/.test(categoryText)) || (selectedClothingCategory === "Co-ord Sets" && /co.?ord|coord/.test(categoryText)) || (selectedClothingCategory === "Jackets & Outerwear" && /jacket|outerwear|coat/.test(categoryText)) || (selectedClothingCategory === "Lingerie & Loungewear" && /lingerie|lounge|sleepwear/.test(categoryText)) || (selectedClothingCategory === "T-shirts & Polos" && /t.?shirt|tee|polo/.test(categoryText)) || (selectedClothingCategory === "Sweatshirts & Hoodies" && /sweatshirt|hoodie/.test(categoryText));
+      const categoryMatch = !selectedClothingCategory || (selectedClothingCategory === "Indian Wear" ? /indian|ethnic|desi|kurta|saree|lehenga|sherwani|dhoti|salwar|anarkali|nehru|indo.?western/.test(categoryText) : categoryText.includes(selected)) || (selectedClothingCategory === "Tops" && /top|shirt|blouse|tee|polo/.test(categoryText)) || (selectedClothingCategory === "Jeans & Denim" && /jean|denim/.test(categoryText)) || (selectedClothingCategory === "Trousers & Pants" && /trouser|pant/.test(categoryText)) || (selectedClothingCategory === "Co-ord Sets" && /co.?ord|coord/.test(categoryText)) || (selectedClothingCategory === "Jackets & Outerwear" && /jacket|outerwear|coat/.test(categoryText)) || (selectedClothingCategory === "Lingerie & Loungewear" && /lingerie|lounge|sleepwear/.test(categoryText)) || (selectedClothingCategory === "T-shirts & Polos" && /t.?shirt|tee|polo/.test(categoryText)) || (selectedClothingCategory === "Sweatshirts & Hoodies" && /sweatshirt|hoodie/.test(categoryText));
       return categoryMatch &&
       (productBrand === "All brands" || product.brand.name === productBrand) &&
       (productColor === "All colours" || product.colors.some((color) => color.toLowerCase() === productColor.toLowerCase())) &&
@@ -250,6 +250,7 @@ function DiscoverPage() {
             <button type="button" aria-expanded={clothingMenuOpen} onClick={() => setClothingMenuOpen((open) => !open)} className="flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-left text-sm font-semibold text-[#59463e] hover:bg-white"><span>Clothing</span><span className="text-[#b46f78]">{clothingMenuOpen ? "−" : "+"}</span></button>
             {clothingMenuOpen && <div className="max-h-52 space-y-0.5 overflow-y-auto pb-2 pl-2 pr-1 lg:max-h-none">{clothingCategories.map((item) => <button type="button" key={item} onClick={() => chooseClothingCategory(item)} className={`block w-full rounded-md px-3 py-2 text-left text-xs transition ${selectedClothingCategory === item ? "bg-[#b46f78] font-semibold text-white" : "text-[#77645a] hover:bg-[#f1e5e1] hover:text-[#59463e]"}`}>{item}</button>)}</div>}
           </div>
+          <button type="button" onClick={() => chooseClothingCategory("Indian Wear")} className={"flex w-full items-center justify-between rounded-lg border px-3 py-2.5 text-left text-sm font-semibold transition " + (selectedClothingCategory === "Indian Wear" ? "border-[#a75e4c] bg-[#a75e4c] text-white" : "border-[#e7cfc0] bg-[#f4e8dd] text-[#8c4e3d] hover:bg-[#efdfd2]")}><span>Indian Wear</span><span>✦</span></button>
           <div className="rounded-lg bg-white/65 lg:bg-transparent">
             <button type="button" aria-expanded={accessoriesMenuOpen} onClick={() => setAccessoriesMenuOpen((open) => !open)} className="flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-left text-sm font-semibold text-[#59463e] hover:bg-white"><span>Accessories</span><span className="text-[#71836d]">{accessoriesMenuOpen ? "−" : "+"}</span></button>
             {accessoriesMenuOpen && <div className="space-y-0.5 pb-2 pl-2 pr-1">{accessoryCategories.map((item) => <button type="button" key={item} onClick={() => { window.location.href = "/discover?category=accessories"; }} className="block w-full rounded-md px-3 py-2 text-left text-xs text-[#77645a] hover:bg-[#edf0e8]">{item}</button>)}</div>}
@@ -289,6 +290,24 @@ function DiscoverPage() {
     <section className="mx-auto max-w-[1440px] px-5 pt-14 lg:px-10">
       <div className="mb-6 flex flex-wrap items-end justify-between gap-3"><div><p className="text-[10px] font-semibold uppercase tracking-[.23em] text-[#a17e75]">Find your next favourite corner</p><h2 className="mt-2 font-display text-3xl sm:text-4xl">Shop by category</h2></div><p className="max-w-sm text-sm leading-6 text-[#87756c]">From everyday essentials to the finishing touches.</p></div>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-5">{categoryTiles.map((item) => <button type="button" key={item.title} onClick={() => { window.location.href = item.href; }} className="group relative overflow-hidden rounded-[1.15rem] bg-[#eee5dc] text-left"><img src={item.image} alt={item.title} loading="lazy" className="aspect-[4/5] w-full object-cover transition duration-700 group-hover:scale-105"/><span className="absolute inset-0 bg-gradient-to-t from-[#211914]/70 via-transparent to-transparent"/><span className="absolute bottom-4 left-4 font-display text-xl text-white sm:bottom-5 sm:left-5 sm:text-2xl">{item.title}</span><span className="absolute right-3 top-3 grid size-8 place-items-center rounded-full border border-white/60 bg-white/20 text-white backdrop-blur">↗</span></button>)}</div>
+    </section>
+
+    <section className="mx-auto max-w-[1440px] px-5 pt-12 lg:px-10">
+      <div className="relative isolate overflow-hidden rounded-[1.6rem] border border-[#dfc4ae] bg-[linear-gradient(115deg,#f4e7d8_0%,#ead4c1_48%,#f7eee3_100%)] px-6 py-8 sm:px-10 sm:py-10">
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 opacity-[.22]" style={{ backgroundImage: "radial-gradient(circle at 1px 1px, #9b604c 1px, transparent 1.5px)", backgroundSize: "18px 18px" }} />
+        <div aria-hidden="true" className="pointer-events-none absolute -right-12 -top-16 size-64 rounded-full border border-[#a75e4c]/25 sm:size-80" />
+        <div aria-hidden="true" className="pointer-events-none absolute -right-2 -top-6 size-48 rounded-full border border-[#a75e4c]/20 sm:size-64" />
+        <div className="relative z-10 max-w-2xl">
+          <p className="text-[10px] font-semibold uppercase tracking-[.28em] text-[#995b48]">A little heritage. A whole lot of style.</p>
+          <h2 className="mt-3 font-display text-4xl leading-tight text-[#613d31] sm:text-5xl">The Indian Edit</h2>
+          <p className="mt-3 max-w-xl text-sm leading-7 text-[#765548] sm:text-base">From everyday ethnic favourites to statement occasion pieces — discover independent Indian labels bringing a fresh point of view to tradition.</p>
+          <div className="mt-6 flex flex-wrap items-center gap-3">
+            <span className="rounded-full border border-[#b98269]/50 bg-[#fff8ef]/70 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[.16em] text-[#8b5140]">{isHim ? "Kurtas · Sherwanis · Indo-western" : "Sarees · Kurtas · Lehengas"}</span>
+            <Button onClick={() => chooseClothingCategory("Indian Wear")} className="rounded-full bg-[#8f5140] px-6 text-white hover:bg-[#75402f]">Explore Indian wear ↗</Button>
+          </div>
+        </div>
+        <div aria-hidden="true" className="pointer-events-none absolute bottom-4 right-8 hidden rotate-[-12deg] font-display text-7xl text-[#9b604c]/20 sm:block">✺</div>
+      </div>
     </section>
 
     <section id="featured-brands" className="mx-auto max-w-[1440px] px-5 pt-14 lg:px-10">
