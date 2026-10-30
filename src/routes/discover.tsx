@@ -58,11 +58,11 @@ function DiscoverPage() {
   useEffect(() => { setFilter("All"); setQuery(""); setVisible(6); setSelectedClothingCategory(""); }, [space]);
   useEffect(() => {
     let active = true;
-    const isClothingFeed = category !== "jewellery" && category !== "accessories";
+    const isClothingFeed = category !== "jewellery" && category !== "accessories" && category !== "indian-wear";
     setCategoryLoading(true);
     setCategoryError(false);
     getShopTheLookProducts({ data: { audience: space, aesthetic: isClothingFeed ? "clothing" : category!, categoryOnly: true } })
-      .then((products) => { if (active) setCategoryProducts(isClothingFeed ? products.filter((product) => product.category.toLowerCase().includes("clothing") || product.category.toLowerCase().includes("complete look") || product.category.toLowerCase().includes("mixed look")) : products); })
+      .then((products) => { if (active) { const clothingProducts = products.filter((product) => product.category.toLowerCase().includes("clothing") || product.category.toLowerCase().includes("complete look") || product.category.toLowerCase().includes("mixed look")); setCategoryProducts(category === "indian-wear" ? clothingProducts.filter((product) => /indian|ethnic|desi|kurta|saree|lehenga|sherwani|dhoti|salwar|anarkali|nehru|indo.?western/.test((product.category + " " + product.tags.join(" ")).toLowerCase())) : isClothingFeed ? clothingProducts : products); } })
       .catch(() => { if (active) { setCategoryProducts([]); setCategoryError(true); } })
       .finally(() => { if (active) setCategoryLoading(false); });
     return () => { active = false; };
@@ -99,7 +99,8 @@ function DiscoverPage() {
     return `${look.aesthetic} ${look.occasion} ${look.season}`.toLowerCase().includes(filter.toLowerCase());
   }), [collection, filter, query]);
 
-  if (category === "jewellery" || category === "accessories") {
+  if (category === "jewellery" || category === "accessories" || category === "indian-wear") {
+    const indianWear = category === "indian-wear";
     const jewellery = category === "jewellery";
     const calmHerJewellery = jewellery && !isHim;
     const calmHerAccessories = !jewellery && !isHim;
@@ -158,15 +159,15 @@ function DiscoverPage() {
     return <main className="mx-auto min-h-[70vh] max-w-[1440px] px-5 pb-24 pt-12 lg:px-10 lg:pt-16">
       <section className={(calmHerJewellery || calmHerAccessories) ? "mx-auto max-w-3xl pb-2 pt-2 text-center" : "mx-auto max-w-3xl text-center"}>
         {!calmHerJewellery && !calmHerAccessories && <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">Independent brands · OFFFEED</p>}
-        <h1 className={(calmHerJewellery || calmHerAccessories) ? "mt-2 font-display text-5xl font-medium tracking-[-0.045em] text-stone-800 sm:text-7xl" : "mt-4 font-display text-5xl font-medium sm:text-7xl"}>{calmHerJewellery ? <><em className="font-normal text-[#c58d98]">Her</em> Jewellery</> : calmHerAccessories ? <><em className="font-normal text-[#c58d98]">Her</em> Accessories</> : <>{jewellery ? "Jewellery" : "Accessories"} <em className="font-normal text-primary">edit.</em></>}</h1>
-        <p className={(calmHerJewellery || calmHerAccessories) ? "mx-auto mt-4 max-w-lg text-[15px] leading-7 text-stone-500" : "mx-auto mt-5 max-w-xl leading-7 text-muted-foreground"}>{calmHerJewellery ? "Delicate details, everyday pieces and little treasures from independent brands." : calmHerAccessories ? "Bags, sunglasses and watches — little details, softly collected." : jewellery ? "Discover independent jewellery labels, delicate everyday pieces and statement finds." : "Find bags, sunglasses, belts and finishing touches from independent brands."}</p>
+        <h1 className={(calmHerJewellery || calmHerAccessories) ? "mt-2 font-display text-5xl font-medium tracking-[-0.045em] text-stone-800 sm:text-7xl" : "mt-4 font-display text-5xl font-medium sm:text-7xl"}>{indianWear ? <><em className="font-normal text-[#a75e4c]">{isHim ? "Him" : "Her"}</em> Indian Wear</> : calmHerJewellery ? <><em className="font-normal text-[#c58d98]">Her</em> Jewellery</> : calmHerAccessories ? <><em className="font-normal text-[#c58d98]">Her</em> Accessories</> : <>{jewellery ? "Jewellery" : "Accessories"} <em className="font-normal text-primary">edit.</em></>}</h1>
+        <p className={(calmHerJewellery || calmHerAccessories || indianWear) ? "mx-auto mt-4 max-w-lg text-[15px] leading-7 text-stone-500" : "mx-auto mt-5 max-w-xl leading-7 text-muted-foreground"}>{indianWear ? (isHim ? "Kurtas, sherwanis and contemporary Indo-western styles from independent Indian labels." : "Sarees, kurtas, lehengas and contemporary ethnic styles from independent Indian labels.") : calmHerJewellery ? "Delicate details, everyday pieces and little treasures from independent brands." : calmHerAccessories ? "Bags, sunglasses and watches — little details, softly collected." : jewellery ? "Discover independent jewellery labels, delicate everyday pieces and statement finds." : "Find bags, sunglasses, belts and finishing touches from independent brands."}</p>
       </section>
-      <section className={(calmHerJewellery || calmHerAccessories) ? "mt-10 sm:mt-14" : "mt-12"}>
+      <section className={(calmHerJewellery || calmHerAccessories || indianWear) ? "mt-10 sm:mt-14" : "mt-12"}>
         {!calmHerJewellery && !calmHerAccessories && <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
           <div><p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">{jewellery ? "A tiny jewellery daydream" : "The accessories edit"} · {isHim ? "Him" : "Her"}</p><h2 className="mt-2 font-display text-3xl sm:text-4xl">{isHim ? "The details make the mood." : jewellery ? <>Little treasures, <em className="font-normal text-primary">softly found.</em></> : <>The finishing touches, <em className="font-normal text-primary">considered.</em></>}</h2></div>
           <p className="max-w-sm text-sm leading-6 text-muted-foreground">{isHim ? "Considered details, collected inspiration." : jewellery ? "Pearls, warm gold, shell dishes and the kind of pieces you save just because they make you feel something." : "Structured bags, timeless sunglasses and gold-tone watches in warm, understated shades."}</p>
         </div>}
-        {(calmHerJewellery || calmHerAccessories) ? <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4 lg:gap-6">
+        {indianWear ? null : (calmHerJewellery || calmHerAccessories) ? <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4 lg:gap-6">
           {referenceImages.map((item, index) => {
             const referenceId = `reference-${category}-${item.title}`;
             const inspiration = { id: referenceId, title: item.title, note: item.note, image: item.src, category: category ?? "accessories" };
@@ -192,7 +193,7 @@ function DiscoverPage() {
         </div>}
       </section>
 <section className="mt-16">
-        <div className="mb-6"><p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Shop independent labels</p><h2 className="mt-2 font-display text-3xl sm:text-4xl">Pieces to make it yours.</h2></div>
+        <div className="mb-6"><p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">{indianWear ? "Independent Indian labels" : "Shop independent labels"}</p><h2 className="mt-2 font-display text-3xl sm:text-4xl">{indianWear ? "Tradition, with a fresh point of view." : "Pieces to make it yours."}</h2></div>
         {categoryError && <p className="mb-4 text-center text-muted-foreground">We couldn’t load this edit right now. Please try again.</p>}{categoryLoading && <p className="mb-4 text-center text-muted-foreground">Finding pieces for your edit…</p>}{!categoryError && <>
           <div className="mb-6 rounded-2xl border border-border/70 bg-card p-4">
             <div className="mb-3 flex flex-wrap items-center justify-between gap-3"><p className="text-sm font-medium">Refine your results · {filteredCategoryProducts.length} products</p><Button type="button" variant="ghost" size="sm" onClick={resetProductFilters}>Clear filters</Button></div>
@@ -250,7 +251,7 @@ function DiscoverPage() {
             <button type="button" aria-expanded={clothingMenuOpen} onClick={() => setClothingMenuOpen((open) => !open)} className="flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-left text-sm font-semibold text-[#59463e] hover:bg-white"><span>Clothing</span><span className="text-[#b46f78]">{clothingMenuOpen ? "−" : "+"}</span></button>
             {clothingMenuOpen && <div className="max-h-52 space-y-0.5 overflow-y-auto pb-2 pl-2 pr-1 lg:max-h-none">{clothingCategories.map((item) => <button type="button" key={item} onClick={() => chooseClothingCategory(item)} className={`block w-full rounded-md px-3 py-2 text-left text-xs transition ${selectedClothingCategory === item ? "bg-[#b46f78] font-semibold text-white" : "text-[#77645a] hover:bg-[#f1e5e1] hover:text-[#59463e]"}`}>{item}</button>)}</div>}
           </div>
-          <button type="button" onClick={() => chooseClothingCategory("Indian Wear")} className={"flex w-full items-center justify-between rounded-lg border px-3 py-2.5 text-left text-sm font-semibold transition " + (selectedClothingCategory === "Indian Wear" ? "border-[#a75e4c] bg-[#a75e4c] text-white" : "border-[#e7cfc0] bg-[#f4e8dd] text-[#8c4e3d] hover:bg-[#efdfd2]")}><span>Indian Wear</span><span>✦</span></button>
+          <button type="button" onClick={() => { window.location.href = "/discover?category=indian-wear"; }} className="flex w-full items-center justify-between rounded-lg border border-[#e7cfc0] bg-[#f4e8dd] px-3 py-2.5 text-left text-sm font-semibold text-[#8c4e3d] transition hover:bg-[#efdfd2]"><span>Indian Wear</span><span>↗</span></button>
           <div className="rounded-lg bg-white/65 lg:bg-transparent">
             <button type="button" aria-expanded={accessoriesMenuOpen} onClick={() => setAccessoriesMenuOpen((open) => !open)} className="flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-left text-sm font-semibold text-[#59463e] hover:bg-white"><span>Accessories</span><span className="text-[#71836d]">{accessoriesMenuOpen ? "−" : "+"}</span></button>
             {accessoriesMenuOpen && <div className="space-y-0.5 pb-2 pl-2 pr-1">{accessoryCategories.map((item) => <button type="button" key={item} onClick={() => { window.location.href = "/discover?category=accessories"; }} className="block w-full rounded-md px-3 py-2 text-left text-xs text-[#77645a] hover:bg-[#edf0e8]">{item}</button>)}</div>}
@@ -290,24 +291,6 @@ function DiscoverPage() {
     <section className="mx-auto max-w-[1440px] px-5 pt-14 lg:px-10">
       <div className="mb-6 flex flex-wrap items-end justify-between gap-3"><div><p className="text-[10px] font-semibold uppercase tracking-[.23em] text-[#a17e75]">Find your next favourite corner</p><h2 className="mt-2 font-display text-3xl sm:text-4xl">Shop by category</h2></div><p className="max-w-sm text-sm leading-6 text-[#87756c]">From everyday essentials to the finishing touches.</p></div>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-5">{categoryTiles.map((item) => <button type="button" key={item.title} onClick={() => { window.location.href = item.href; }} className="group relative overflow-hidden rounded-[1.15rem] bg-[#eee5dc] text-left"><img src={item.image} alt={item.title} loading="lazy" className="aspect-[4/5] w-full object-cover transition duration-700 group-hover:scale-105"/><span className="absolute inset-0 bg-gradient-to-t from-[#211914]/70 via-transparent to-transparent"/><span className="absolute bottom-4 left-4 font-display text-xl text-white sm:bottom-5 sm:left-5 sm:text-2xl">{item.title}</span><span className="absolute right-3 top-3 grid size-8 place-items-center rounded-full border border-white/60 bg-white/20 text-white backdrop-blur">↗</span></button>)}</div>
-    </section>
-
-    <section className="mx-auto max-w-[1440px] px-5 pt-12 lg:px-10">
-      <div className="relative isolate overflow-hidden rounded-[1.6rem] border border-[#dfc4ae] bg-[linear-gradient(115deg,#f4e7d8_0%,#ead4c1_48%,#f7eee3_100%)] px-6 py-8 sm:px-10 sm:py-10">
-        <div aria-hidden="true" className="pointer-events-none absolute inset-0 opacity-[.22]" style={{ backgroundImage: "radial-gradient(circle at 1px 1px, #9b604c 1px, transparent 1.5px)", backgroundSize: "18px 18px" }} />
-        <div aria-hidden="true" className="pointer-events-none absolute -right-12 -top-16 size-64 rounded-full border border-[#a75e4c]/25 sm:size-80" />
-        <div aria-hidden="true" className="pointer-events-none absolute -right-2 -top-6 size-48 rounded-full border border-[#a75e4c]/20 sm:size-64" />
-        <div className="relative z-10 max-w-2xl">
-          <p className="text-[10px] font-semibold uppercase tracking-[.28em] text-[#995b48]">A little heritage. A whole lot of style.</p>
-          <h2 className="mt-3 font-display text-4xl leading-tight text-[#613d31] sm:text-5xl">The Indian Edit</h2>
-          <p className="mt-3 max-w-xl text-sm leading-7 text-[#765548] sm:text-base">From everyday ethnic favourites to statement occasion pieces — discover independent Indian labels bringing a fresh point of view to tradition.</p>
-          <div className="mt-6 flex flex-wrap items-center gap-3">
-            <span className="rounded-full border border-[#b98269]/50 bg-[#fff8ef]/70 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[.16em] text-[#8b5140]">{isHim ? "Kurtas · Sherwanis · Indo-western" : "Sarees · Kurtas · Lehengas"}</span>
-            <Button onClick={() => chooseClothingCategory("Indian Wear")} className="rounded-full bg-[#8f5140] px-6 text-white hover:bg-[#75402f]">Explore Indian wear ↗</Button>
-          </div>
-        </div>
-        <div aria-hidden="true" className="pointer-events-none absolute bottom-4 right-8 hidden rotate-[-12deg] font-display text-7xl text-[#9b604c]/20 sm:block">✺</div>
-      </div>
     </section>
 
     <section id="featured-brands" className="mx-auto max-w-[1440px] px-5 pt-14 lg:px-10">
