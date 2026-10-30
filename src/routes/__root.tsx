@@ -39,7 +39,7 @@ function BrandIntro() {
     <div className="offfeed-intro" role="status" aria-label="Welcome to OFFFEED">
       <div className="offfeed-intro__lockup">
         <div className="offfeed-intro__wordmark" aria-label="OFFFEED">
-          <span className="offfeed-intro__o">O<span className="offfeed-intro__spark">✦</span></span><span className="offfeed-intro__brown">FF</span><span className="offfeed-intro__pink">EE</span><span className="offfeed-intro__green">D</span>
+          <span className="offfeed-intro__o">O<span className="offfeed-intro__spark">✦</span></span><span className="offfeed-intro__brown">FFF</span><span className="offfeed-intro__pink">EE</span><span className="offfeed-intro__green">D</span>
         </div>
         <p className="offfeed-intro__tagline">find it before your feed does.</p>
         <span className="offfeed-intro__rule" aria-hidden="true" />
