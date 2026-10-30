@@ -49,10 +49,15 @@ export function SiteHeader() {
           <Button variant="ghost" size="icon" aria-label="Open navigation" className="lg:hidden" onClick={() => setOpen((value) => !value)}><Menu /></Button>
         </div>
       </div>
-      {open && <nav className="grid border-t border-border bg-background px-5 py-4 lg:hidden">{links.map((link) => <Link key={link.label} to={link.to} className="py-3 text-sm" onClick={() => setOpen(false)}>{link.label}</Link>)}
-        <Link to="/checkout" className="py-3 text-sm" onClick={() => setOpen(false)}>Shopping bag / Checkout</Link>
-        <Link to="/" hash="jewellery" className="py-3 text-sm" onClick={() => setOpen(false)}>Jewellery</Link>
-        <Link to="/" hash="accessories" className="py-3 text-sm" onClick={() => setOpen(false)}>Accessories</Link></nav>}
+      {open && <nav className="border-t border-[#eadbd2] bg-[#fbf7f2] px-5 py-5 shadow-[0_18px_35px_-25px_rgba(70,45,35,0.35)] lg:hidden">
+        <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.24em] text-[#9a7b70]">Explore OFFFEED</p>
+        <div className="grid grid-cols-2 gap-2">{links.map((link) => <Link key={link.label} to={link.to} className="rounded-xl border border-[#eadbd2] bg-white/75 px-4 py-3 text-sm text-[#5f493f] transition hover:bg-white" onClick={() => setOpen(false)}>{link.label}<span className="float-right text-[#b88a8b]">↗</span></Link>)}</div>
+        <div className="mt-3 grid grid-cols-2 gap-2">
+          <Link to="/discover" search={{ category: "jewellery" }} className="rounded-xl bg-[#f2e1df] px-4 py-3 text-sm text-[#76534f]" onClick={() => setOpen(false)}>Jewellery edit ↗</Link>
+          <Link to="/discover" search={{ category: "accessories" }} className="rounded-xl bg-[#e8eee4] px-4 py-3 text-sm text-[#536a56]" onClick={() => setOpen(false)}>Accessories edit ↗</Link>
+        </div>
+        <Link to="/checkout" className="mt-3 block rounded-xl border border-[#d9c8bd] bg-white px-4 py-3 text-sm text-[#5f493f]" onClick={() => setOpen(false)}>Shopping bag / Checkout</Link>
+      </nav>}
     </header>
   );
 }
