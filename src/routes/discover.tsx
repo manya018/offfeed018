@@ -58,7 +58,7 @@ function DiscoverPage() {
   useEffect(() => { setFilter("All"); setQuery(""); setVisible(6); setSelectedClothingCategory(""); }, [space]);
   useEffect(() => {
     let active = true;
-    const isClothingFeed = category !== "jewellery" && category !== "accessories" && category !== "indian-wear";
+    const isClothingFeed = category !== "jewellery" && category !== "accessories";
     setCategoryLoading(true);
     setCategoryError(false);
     getShopTheLookProducts({ data: { audience: space, aesthetic: isClothingFeed ? "clothing" : category!, categoryOnly: true } })
@@ -90,7 +90,7 @@ function DiscoverPage() {
     else if (productSort === "price-low") filteredProducts.sort((a, b) => a.price - b.price);
     else if (productSort === "price-high") filteredProducts.sort((a, b) => b.price - a.price);
     return filteredProducts;
-  }, [categoryProducts, productBrand, productColor, productSize, productStyle, productMinPrice, productMaxPrice, productSort]);
+  }, [categoryProducts, selectedClothingCategory, productBrand, productColor, productSize, productStyle, productMinPrice, productMaxPrice, productSort]);
   const resetProductFilters = () => { setProductBrand("All brands"); setProductColor("All colours"); setProductSize("All sizes"); setProductStyle("All styles"); setProductMinPrice(""); setProductMaxPrice(""); setProductSort("recommended"); };
   const filtered = useMemo(() => collection.filter((look) => {
     const searchMatch = `${look.title} ${look.aesthetic} ${look.occasion} ${look.season}`.toLowerCase().includes(query.toLowerCase());
@@ -104,6 +104,7 @@ function DiscoverPage() {
     const jewellery = category === "jewellery";
     const calmHerJewellery = jewellery && !isHim;
     const calmHerAccessories = !jewellery && !isHim;
+    const indianTabs = isHim ? ["All", "Kurtas", "Sherwanis", "Indo-Western", "Nehru Jackets", "Bottoms"] : ["All", "Sarees", "Lehengas", "Kurtas & Suits", "Indo-Western", "Dupattas"];
     const referenceImages = jewellery
       ? isHim
         ? [
@@ -157,11 +158,33 @@ function DiscoverPage() {
             { src: "https://images.unsplash.com/photo-1524592094714-0f0654e20314?auto=format&fit=crop&w=1000&q=85", title: "Soft gold details", note: "A delicate gold-tone women’s watch with a refined, everyday silhouette" },
           ]
     return <main className="mx-auto min-h-[70vh] max-w-[1440px] px-5 pb-24 pt-12 lg:px-10 lg:pt-16">
-      <section className={(calmHerJewellery || calmHerAccessories) ? "mx-auto max-w-3xl pb-2 pt-2 text-center" : "mx-auto max-w-3xl text-center"}>
+      {indianWear ? <section className={`relative isolate mx-auto grid min-h-[330px] max-w-[1500px] overflow-hidden rounded-[1.6rem] border px-5 py-8 shadow-[0_18px_50px_-38px_rgba(60,35,28,.45)] sm:min-h-[390px] sm:px-9 sm:py-10 lg:grid-cols-[1.02fr_.98fr] lg:px-12 ${isHim ? "border-[#c8bd91] bg-[#e8e1c9]" : "border-[#e6bfc0] bg-[#f3d9d4]"}`}>
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 opacity-40" style={{ backgroundImage: isHim ? "radial-gradient(circle at 1px 1px, #887d4f 1px, transparent 1.6px)" : "radial-gradient(circle at 1px 1px, #b66f76 1px, transparent 1.6px)", backgroundSize: "17px 17px" }} />
+        <div aria-hidden="true" className={`pointer-events-none absolute -left-16 -top-20 size-64 rounded-full border sm:size-80 ${isHim ? "border-[#85794c]/30" : "border-[#b66f76]/30"}`} />
+        <div className="relative z-20 flex flex-col justify-center py-3 sm:py-5">
+          <p className={`mb-4 text-[10px] font-bold uppercase tracking-[.24em] sm:text-xs ${isHim ? "text-[#716b43]" : "text-[#a45b67]"}`}>OFFFEED presents · the desi edit</p>
+          <div className="relative w-fit">
+            <h1 className={`[font-family:cursive] text-6xl font-black leading-[.95] tracking-[-.07em] drop-shadow-[0_3px_0_rgba(255,255,255,.7)] sm:text-7xl lg:text-8xl ${isHim ? "text-[#3f4930]" : "text-[#a83f55]"}`}>{isHim ? "NaWaB" : "GuLaBo"}</h1>
+            <span aria-hidden="true" className={`absolute -right-8 -top-4 grid size-11 rotate-12 place-items-center rounded-full border-2 border-white text-2xl shadow-md sm:-right-10 sm:-top-5 sm:size-14 sm:text-3xl ${isHim ? "bg-[#d5b45e] text-[#59472b]" : "bg-[#f2bd55] text-[#8f3f4c]"}`}>★</span>
+            <span aria-hidden="true" className="absolute -left-3 -top-5 -z-10 rotate-[-14deg] text-3xl text-[#fffaf0] drop-shadow-sm sm:-left-5 sm:-top-7 sm:text-4xl">✦</span>
+          </div>
+          <p className="mt-5 max-w-md font-display text-2xl leading-tight text-[#45372f] sm:text-3xl">{isHim ? "Tradition hits different here." : "Desi fits, main character energy."}</p>
+          <p className="mt-3 max-w-md text-sm leading-6 text-[#65544a] sm:text-base">{isHim ? "Kurtas, sherwanis and Indo-western fits with a little extra nawabi andaaz." : "Sarees, lehengas, kurtas and little details made for your main-character moments."}</p>
+          <div className="mt-5 inline-flex w-fit -rotate-2 items-center rounded-sm border border-[#9b7a59]/30 bg-[#fffaf0]/90 px-4 py-2 font-medium text-[#5c5144] shadow-[2px_4px_0_rgba(90,65,45,.12)]">{isHim ? "Kurtas · Sherwanis · Indo-western" : "Sarees · Lehengas · Kurtas · More"} <span className="ml-2 text-lg">✦</span></div>
+        </div>
+        <div className="relative z-10 mt-7 min-h-[210px] sm:min-h-[260px] lg:mt-0">
+          <div className={`absolute inset-x-2 bottom-0 top-2 overflow-hidden border-[7px] border-[#fffaf2]/90 shadow-[0_20px_40px_-24px_rgba(50,35,25,.5)] sm:left-8 sm:right-5 sm:top-0 ${isHim ? "rounded-[44%_18%_32%_16%]" : "rounded-[18%_42%_16%_34%]"}`}>
+            <img src={categoryProducts[0]?.imageUrl || moodArtwork[0]} alt={isHim ? "Nawab Indian menswear edit" : "Gulabo Indian womenswear edit"} className="h-full min-h-[230px] w-full object-cover object-center sm:min-h-[270px]" />
+          </div>
+          {categoryProducts[1]?.imageUrl && <div className="absolute -bottom-2 right-0 z-10 hidden h-28 w-24 rotate-3 overflow-hidden rounded-xl border-[5px] border-[#fffaf2] shadow-xl sm:block"><img src={categoryProducts[1].imageUrl} alt="A second look from this edit" className="h-full w-full object-cover" /></div>}
+          <span aria-hidden="true" className={`absolute right-1 top-0 z-20 grid size-12 -rotate-12 place-items-center rounded-full border-[3px] border-white text-2xl shadow-lg sm:right-0 sm:top-2 sm:size-16 sm:text-3xl ${isHim ? "bg-[#b9a76a] text-[#4b4b32]" : "bg-[#d78c91] text-white"}`}>✦</span>
+          <span aria-hidden="true" className="absolute bottom-3 left-0 z-20 -rotate-6 rounded-lg border border-white/80 bg-[#fffaf0]/95 px-3 py-2 text-xs font-semibold text-[#65544a] shadow-lg">A little desi. A lot of drama. ♡</span>
+        </div>
+      </section> : <section className={(calmHerJewellery || calmHerAccessories) ? "mx-auto max-w-3xl pb-2 pt-2 text-center" : "mx-auto max-w-3xl text-center"}>
         {!calmHerJewellery && !calmHerAccessories && <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">Independent brands · OFFFEED</p>}
-        <h1 className={(calmHerJewellery || calmHerAccessories) ? "mt-2 font-display text-5xl font-medium tracking-[-0.045em] text-stone-800 sm:text-7xl" : "mt-4 font-display text-5xl font-medium sm:text-7xl"}>{indianWear ? <em className={`font-normal ${isHim ? "text-[#76504b]" : "text-[#bd7f89]"}`}>{isHim ? "NAWAB" : "GULABO"}</em> : calmHerJewellery ? <><em className="font-normal text-[#c58d98]">Her</em> Jewellery</> : calmHerAccessories ? <><em className="font-normal text-[#c58d98]">Her</em> Accessories</> : <>{jewellery ? "Jewellery" : "Accessories"} <em className="font-normal text-primary">edit.</em></>}</h1>
-        <p className={(calmHerJewellery || calmHerAccessories || indianWear) ? "mx-auto mt-4 max-w-lg text-[15px] leading-7 text-stone-500" : "mx-auto mt-5 max-w-xl leading-7 text-muted-foreground"}>{indianWear ? (isHim ? "Kurtas, sherwanis and contemporary Indo-western styles from independent Indian labels." : "Sarees, kurtas, lehengas and contemporary ethnic styles from independent Indian labels.") : calmHerJewellery ? "Delicate details, everyday pieces and little treasures from independent brands." : calmHerAccessories ? "Bags, sunglasses and watches — little details, softly collected." : jewellery ? "Discover independent jewellery labels, delicate everyday pieces and statement finds." : "Find bags, sunglasses, belts and finishing touches from independent brands."}</p>
-      </section>
+        <h1 className={(calmHerJewellery || calmHerAccessories) ? "mt-2 font-display text-5xl font-medium tracking-[-0.045em] text-stone-800 sm:text-7xl" : "mt-4 font-display text-5xl font-medium sm:text-7xl"}>{calmHerJewellery ? <><em className="font-normal text-[#c58d98]">Her</em> Jewellery</> : calmHerAccessories ? <><em className="font-normal text-[#c58d98]">Her</em> Accessories</> : <>{jewellery ? "Jewellery" : "Accessories"} <em className="font-normal text-primary">edit.</em></>}</h1>
+        <p className={(calmHerJewellery || calmHerAccessories) ? "mx-auto mt-4 max-w-lg text-[15px] leading-7 text-stone-500" : "mx-auto mt-5 max-w-xl leading-7 text-muted-foreground"}>{calmHerJewellery ? "Delicate details, everyday pieces and little treasures from independent brands." : calmHerAccessories ? "Bags, sunglasses and watches — little details, softly collected." : jewellery ? "Discover independent jewellery labels, delicate everyday pieces and statement finds." : "Find bags, sunglasses, belts and finishing touches from independent brands."}</p>
+      </section>}
       <section className={(calmHerJewellery || calmHerAccessories || indianWear) ? "mt-10 sm:mt-14" : "mt-12"}>
         {!calmHerJewellery && !calmHerAccessories && <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
           <div><p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">{jewellery ? "A tiny jewellery daydream" : "The accessories edit"} · {isHim ? "Him" : "Her"}</p><h2 className="mt-2 font-display text-3xl sm:text-4xl">{isHim ? "The details make the mood." : jewellery ? <>Little treasures, <em className="font-normal text-primary">softly found.</em></> : <>The finishing touches, <em className="font-normal text-primary">considered.</em></>}</h2></div>
@@ -192,10 +215,11 @@ function DiscoverPage() {
           </article>)}
         </div>}
       </section>
-<section className="mt-16">
-        <div className="mb-6"><p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">{indianWear ? "Independent Indian labels" : "Shop independent labels"}</p><h2 className="mt-2 font-display text-3xl sm:text-4xl">{indianWear ? "Tradition, with a fresh point of view." : "Pieces to make it yours."}</h2></div>
+<section className={indianWear ? "mt-8 sm:mt-10" : "mt-16"}>
+        {indianWear && <nav aria-label="Indian wear categories" className="mb-5 flex gap-2 overflow-x-auto pb-2">{indianTabs.map((tab) => <button key={tab} type="button" onClick={() => setSelectedClothingCategory(tab === "All" ? "" : tab)} className={`shrink-0 rounded-full border px-4 py-2 text-sm font-medium transition ${(tab === "All" ? !selectedClothingCategory : selectedClothingCategory === tab) ? (isHim ? "border-[#626542] bg-[#626542] text-white" : "border-[#c97982] bg-[#c97982] text-white") : "border-[#e7ddd4] bg-[#fffaf5] text-[#66564d] hover:bg-white"}`}>{tab}</button>)}</nav>}
+        <div className="mb-6"><p className={`text-xs font-semibold uppercase tracking-[0.18em] ${indianWear ? (isHim ? "text-[#77764b]" : "text-[#b46d76]") : "text-primary"}`}>{indianWear ? (isHim ? "The nawabi wardrobe" : "The gulabo wardrobe") : "Shop independent labels"}</p><h2 className="mt-2 font-display text-3xl sm:text-4xl">{indianWear ? (isHim ? "Bring on the shaahi andaaz." : "A little desi, a lot of drama.") : "Pieces to make it yours."}</h2></div>
         {categoryError && <p className="mb-4 text-center text-muted-foreground">We couldn’t load this edit right now. Please try again.</p>}{categoryLoading && <p className="mb-4 text-center text-muted-foreground">Finding pieces for your edit…</p>}{!categoryError && <>
-          <div className="mb-6 rounded-2xl border border-border/70 bg-card p-4">
+          <div className={`mb-6 rounded-2xl border p-4 ${indianWear ? (isHim ? "border-[#d5cfb4] bg-[#f5f1e5]" : "border-[#efd1d0] bg-[#fff4f1]") : "border-border/70 bg-card"}`}>
             <div className="mb-3 flex flex-wrap items-center justify-between gap-3"><p className="text-sm font-medium">Refine your results · {filteredCategoryProducts.length} products</p><Button type="button" variant="ghost" size="sm" onClick={resetProductFilters}>Clear filters</Button></div>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
               <div><label htmlFor="shop-brand" className="text-xs text-muted-foreground">Brand</label><select id="shop-brand" value={productBrand} onChange={(e) => setProductBrand(e.target.value)} className="mt-1 h-10 w-full rounded-lg border border-border bg-background px-2 text-sm"><option>All brands</option>{productFilterOptions.brands.map((item) => <option key={item}>{item}</option>)}</select></div>
@@ -251,7 +275,7 @@ function DiscoverPage() {
             <button type="button" aria-expanded={clothingMenuOpen} onClick={() => setClothingMenuOpen((open) => !open)} className="flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-left text-sm font-semibold text-[#59463e] hover:bg-white"><span>Clothing</span><span className="text-[#b46f78]">{clothingMenuOpen ? "−" : "+"}</span></button>
             {clothingMenuOpen && <div className="max-h-52 space-y-0.5 overflow-y-auto pb-2 pl-2 pr-1 lg:max-h-none">{clothingCategories.map((item) => <button type="button" key={item} onClick={() => chooseClothingCategory(item)} className={`block w-full rounded-md px-3 py-2 text-left text-xs transition ${selectedClothingCategory === item ? "bg-[#b46f78] font-semibold text-white" : "text-[#77645a] hover:bg-[#f1e5e1] hover:text-[#59463e]"}`}>{item}</button>)}</div>}
           </div>
-          <button type="button" onClick={() => { window.location.href = "/discover?category=indian-wear"; }} className="flex w-full items-center justify-between rounded-lg border border-[#e7cfc0] bg-[#f4e8dd] px-3 py-2.5 text-left text-sm font-semibold text-[#8c4e3d] transition hover:bg-[#efdfd2]"><span>{isHim ? "NAWAB" : "GULABO"}</span><span>↗</span></button>
+          <button type="button" onClick={() => { window.location.href = "/discover?category=indian-wear"; }} className="flex w-full items-center justify-between rounded-lg border border-[#e7cfc0] bg-[#f4e8dd] px-3 py-2.5 text-left text-sm font-semibold text-[#8c4e3d] transition hover:bg-[#efdfd2]"><span>{isHim ? "NaWaB" : "GuLaBo"}</span><span>✦</span></button>
           <div className="rounded-lg bg-white/65 lg:bg-transparent">
             <button type="button" aria-expanded={accessoriesMenuOpen} onClick={() => setAccessoriesMenuOpen((open) => !open)} className="flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-left text-sm font-semibold text-[#59463e] hover:bg-white"><span>Accessories</span><span className="text-[#71836d]">{accessoriesMenuOpen ? "−" : "+"}</span></button>
             {accessoriesMenuOpen && <div className="space-y-0.5 pb-2 pl-2 pr-1">{accessoryCategories.map((item) => <button type="button" key={item} onClick={() => { window.location.href = "/discover?category=accessories"; }} className="block w-full rounded-md px-3 py-2 text-left text-xs text-[#77645a] hover:bg-[#edf0e8]">{item}</button>)}</div>}
