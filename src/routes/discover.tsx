@@ -170,17 +170,17 @@ function DiscoverPage() {
             { src: "https://images.unsplash.com/photo-1524592094714-0f0654e20314?auto=format&fit=crop&w=1000&q=85", title: "Soft gold details", note: "A delicate gold-tone women’s watch with a refined, everyday silhouette" },
           ]
     return <main className={`mx-auto min-h-[70vh] max-w-[1440px] px-5 pb-24 ${indianWear ? "pt-5 lg:pt-7" : "pt-12 lg:pt-16"} lg:px-10`}>
-      {indianWear ? <section className={\`relative isolate mx-auto max-w-[1500px] overflow-hidden rounded-[1.4rem] border shadow-[0_22px_60px_-32px_rgba(35,28,20,.48)] \${isHim ? "border-[#506454] bg-[#20372d] text-[#f2e7d1]" : "border-[#d2b99a] bg-[#eee0ca] text-[#57392e]"}\`}>
+      {indianWear ? <section className={`relative isolate mx-auto max-w-[1500px] overflow-hidden rounded-[1.4rem] border shadow-[0_22px_60px_-32px_rgba(35,28,20,.48)] ${isHim ? "border-[#506454] bg-[#20372d] text-[#f2e7d1]" : "border-[#d2b99a] bg-[#eee0ca] text-[#57392e]"}`}>
         <div aria-hidden="true" className="pointer-events-none absolute inset-0 opacity-[.13]" style={{ backgroundImage: isHim ? "repeating-linear-gradient(135deg, transparent 0 18px, #d2b77f 19px, transparent 20px 38px)" : "radial-gradient(circle at 1px 1px, #8c563f 1px, transparent 1.5px)", backgroundSize: isHim ? "42px 42px" : "17px 17px" }} />
         <div className="relative grid lg:min-h-[470px] lg:grid-cols-[.78fr_1.22fr]">
           <div className="relative z-10 flex flex-col justify-center px-6 py-9 sm:px-10 sm:py-12 lg:px-12 lg:py-14">
-            <p className={\`mb-5 text-[10px] font-semibold uppercase tracking-[.24em] sm:text-xs \${isHim ? "text-[#c6ad79]" : "text-[#98634c]"}\`}>OFFFEED · AN INDIAN HERITAGE JOURNAL</p>
-            <h1 className={\`font-display text-6xl font-medium leading-[.86] tracking-[-.055em] sm:text-7xl lg:text-[6.6rem] \${isHim ? "text-[#f0e4cb]" : "text-[#783c31]"}\`}>{isHim ? "NAWAB" : "GULABO"}</h1>
-            <p className={\`mt-5 text-[10px] font-semibold uppercase tracking-[.19em] sm:text-xs \${isHim ? "text-[#d1bd91]" : "text-[#895744]"}\`}>THE INDIAN WEAR EDIT · {isHim ? "HIM" : "HER"}</p>
-            <h2 className={\`mt-7 max-w-md font-display text-3xl leading-tight sm:text-4xl \${isHim ? "text-[#f4ead8]" : "text-[#56372d]"}\`}>{isHim ? "Tradition, with a little attitude." : "A little desi. A lot of drama."}</h2>
-            <p className={\`mt-4 max-w-md text-sm leading-7 sm:text-base \${isHim ? "text-[#d8d0bd]" : "text-[#725447]"}\`}>{isHim ? "For timeless Indian dressing, effortless elegance and contemporary royal silhouettes." : "For the love of beautiful Indian silhouettes, delicate details and outfits that deserve a second look."}</p>
-            <p className={\`mt-6 border-t pt-4 text-[10px] font-medium uppercase tracking-[.13em] sm:text-xs \${isHim ? "border-[#637566] text-[#d9c9a7]" : "border-[#c9ae91] text-[#70483a]"}\`}>{isHim ? "KURTAS · SHERWANIS · BANDHGALAS · JACKETS · SETS" : "KURTAS · SUITS · SAREES · LEHENGAS · CO-ORDS"}</p>
-            <p className={\`mt-5 font-display text-xl italic \${isHim ? "text-[#c7ad79]" : "text-[#9c5a45]"}\`}>{isHim ? "Old streets. New stories." : "A summer somewhere in India."}</p>
+            <p className={`mb-5 text-[10px] font-semibold uppercase tracking-[.24em] sm:text-xs ${isHim ? "text-[#c6ad79]" : "text-[#98634c]"}`}>OFFFEED · AN INDIAN HERITAGE JOURNAL</p>
+            <h1 className={`font-display text-6xl font-medium leading-[.86] tracking-[-.055em] sm:text-7xl lg:text-[6.6rem] ${isHim ? "text-[#f0e4cb]" : "text-[#783c31]"}`}>{isHim ? "NAWAB" : "GULABO"}</h1>
+            <p className={`mt-5 text-[10px] font-semibold uppercase tracking-[.19em] sm:text-xs ${isHim ? "text-[#d1bd91]" : "text-[#895744]"}`}>THE INDIAN WEAR EDIT · {isHim ? "HIM" : "HER"}</p>
+            <h2 className={`mt-7 max-w-md font-display text-3xl leading-tight sm:text-4xl ${isHim ? "text-[#f4ead8]" : "text-[#56372d]"}`}>{isHim ? "Tradition, with a little attitude." : "A little desi. A lot of drama."}</h2>
+            <p className={`mt-4 max-w-md text-sm leading-7 sm:text-base ${isHim ? "text-[#d8d0bd]" : "text-[#725447]"}`}>{isHim ? "For timeless Indian dressing, effortless elegance and contemporary royal silhouettes." : "For the love of beautiful Indian silhouettes, delicate details and outfits that deserve a second look."}</p>
+            <p className={`mt-6 border-t pt-4 text-[10px] font-medium uppercase tracking-[.13em] sm:text-xs ${isHim ? "border-[#637566] text-[#d9c9a7]" : "border-[#c9ae91] text-[#70483a]"}`}>{isHim ? "KURTAS · SHERWANIS · BANDHGALAS · JACKETS · SETS" : "KURTAS · SUITS · SAREES · LEHENGAS · CO-ORDS"}</p>
+            <p className={`mt-5 font-display text-xl italic ${isHim ? "text-[#c7ad79]" : "text-[#9c5a45]"}`}>{isHim ? "Old streets. New stories." : "A summer somewhere in India."}</p>
           </div>
           <div className="relative min-h-[390px] p-3 pt-0 sm:min-h-[500px] sm:p-5 lg:min-h-0 lg:pl-0 lg:py-5 lg:pr-5">
             <div className="grid h-full min-h-[370px] grid-cols-[1.08fr_.92fr] grid-rows-2 gap-2 sm:min-h-[460px] sm:gap-3">
@@ -193,10 +193,10 @@ function DiscoverPage() {
                 <figcaption className="absolute bottom-2 left-2 rounded-full border border-white/60 bg-[#f8f0e4]/90 px-2.5 py-1 text-[9px] font-medium tracking-wide text-[#49372c] shadow-sm backdrop-blur sm:bottom-3 sm:left-3 sm:px-3 sm:text-[10px]">{scene.note}</figcaption>
               </figure>)}
             </div>
-            <span aria-hidden="true" className={\`absolute right-6 top-6 hidden -rotate-6 font-display text-3xl italic lg:block \${isHim ? "text-[#e0c996]" : "text-[#fff2dc]"}\`}>{isHim ? "The Nawab edit" : "The Gulabo diaries"}</span>
+            <span aria-hidden="true" className={`absolute right-6 top-6 hidden -rotate-6 font-display text-3xl italic lg:block ${isHim ? "text-[#e0c996]" : "text-[#fff2dc]"}`}>{isHim ? "The Nawab edit" : "The Gulabo diaries"}</span>
           </div>
         </div>
-        <div className={\`relative flex flex-wrap items-center justify-between gap-2 border-t px-6 py-3 text-[9px] font-semibold uppercase tracking-[.16em] sm:px-10 sm:text-[10px] lg:px-12 \${isHim ? "border-[#536858] bg-[#192e25]/70 text-[#c9b88e]" : "border-[#d1b89a] bg-[#e5d3b9]/70 text-[#80533f]"}\`}>
+        <div className={`relative flex flex-wrap items-center justify-between gap-2 border-t px-6 py-3 text-[9px] font-semibold uppercase tracking-[.16em] sm:px-10 sm:text-[10px] lg:px-12 ${isHim ? "border-[#536858] bg-[#192e25]/70 text-[#c9b88e]" : "border-[#d1b89a] bg-[#e5d3b9]/70 text-[#80533f]"}`}>
           <span>{isHim ? "Heritage architecture" : "Old-city markets"}</span><span aria-hidden="true">✳</span><span>{isHim ? "Indian craftsmanship" : "Handmade textiles"}</span><span aria-hidden="true">✳</span><span>{isHim ? "The modern gentleman" : "Everyday celebrations"}</span>
         </div>
       </section> : <section className={(calmHerJewellery || calmHerAccessories) ? "mx-auto max-w-3xl pb-2 pt-2 text-center" : "mx-auto max-w-3xl text-center"}>
