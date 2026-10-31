@@ -106,6 +106,17 @@ function DiscoverPage() {
     const calmHerAccessories = !jewellery && !isHim;
     const indianTabs = isHim ? ["All", "Kurtas", "Sherwanis", "Indo-Western", "Nehru Jackets", "Bottoms"] : ["All", "Sarees", "Lehengas", "Kurtas & Suits", "Indo-Western", "Dupattas"];
     const indianMoreTabs = isHim ? ["Bandhgalas", "Dhoti Pants", "Waistcoats"] : ["Anarkalis", "Sharara Sets", "Dupattas", "Ethnic Co-ords"];
+    const indianScenes = isHim
+      ? [
+          { src: "https://images.pexels.com/photos/33565901/pexels-photo-33565901.jpeg?auto=compress&cs=tinysrgb&w=1200", alt: "A man in traditional Rajasthani attire beneath a Jaipur palace facade", note: "People & palaces" },
+          { src: "https://images.unsplash.com/photo-1758467745965-00ca240b1224?auto=format&fit=crop&w=1200&q=85", alt: "Traditional palace gatekeepers framed by an ornate Indian arch", note: "Old-world details" },
+          { src: "https://images.unsplash.com/photo-1777707461579-8fd436630ebb?auto=format&fit=crop&w=1200&q=85", alt: "Carved sandstone courtyard at Mehrangarh Fort in Jodhpur", note: "Stone & stories" },
+        ]
+      : [
+          { src: "https://images.unsplash.com/photo-1763291966927-740c48e6afe5?auto=format&fit=crop&w=1400&q=85", alt: "A lively Jaipur textile market near Hawa Mahal", note: "Bazaar mornings" },
+          { src: "https://images.unsplash.com/photo-1568371600021-36b968768c30?auto=format&fit=crop&w=1200&q=85", alt: "Handcrafted textiles displayed along a Jaisalmer street shop", note: "Textiles & craft" },
+          { src: "https://www.goldentriangletoursinindia.com/blog_images/indian-markets.webp", alt: "A colourful Indian market filled with fabrics and local shoppers", note: "Everyday India" },
+        ];
     const referenceImages = jewellery
       ? isHim
         ? [
@@ -159,28 +170,34 @@ function DiscoverPage() {
             { src: "https://images.unsplash.com/photo-1524592094714-0f0654e20314?auto=format&fit=crop&w=1000&q=85", title: "Soft gold details", note: "A delicate gold-tone women’s watch with a refined, everyday silhouette" },
           ]
     return <main className={`mx-auto min-h-[70vh] max-w-[1440px] px-5 pb-24 ${indianWear ? "pt-5 lg:pt-7" : "pt-12 lg:pt-16"} lg:px-10`}>
-      {indianWear ? <section className={`relative isolate mx-auto max-w-[1500px] overflow-hidden rounded-[1.5rem] border shadow-[0_18px_45px_-28px_rgba(70,45,35,.32)] ${isHim ? "border-[#c8bd91] bg-[#e8e1c9]" : "border-[#e6bfc0] bg-[#f3d9d4]"}`}>
-        <div aria-hidden="true" className="pointer-events-none absolute inset-0 opacity-45" style={{ backgroundImage: isHim ? "radial-gradient(circle at 1px 1px, #85794c 1.15px, transparent 1.7px)" : "radial-gradient(circle at 1px 1px, #b66f76 1.15px, transparent 1.7px)", backgroundSize: "18px 18px" }} />
-        <div aria-hidden="true" className={`pointer-events-none absolute -left-20 -top-24 size-80 rounded-full border sm:size-[26rem] ${isHim ? "border-[#82774b]/25" : "border-[#b66f76]/25"}`} />
-        <div className="relative grid min-h-[300px] items-stretch lg:min-h-[390px] lg:grid-cols-[.95fr_1.05fr]">
-          <div className="relative z-10 flex flex-col justify-center px-6 py-8 sm:px-10 sm:py-10 lg:px-12 lg:py-12">
-            <p className={`mb-4 text-[10px] font-bold uppercase tracking-[.24em] sm:text-xs ${isHim ? "text-[#716b43]" : "text-[#a45b67]"}`}>OFFFEED presents · the desi edit</p>
-            <div className="relative w-fit">
-              <h1 className={`[font-family:cursive] text-6xl font-black leading-[.95] tracking-[-.07em] drop-shadow-[0_3px_0_rgba(255,255,255,.8)] sm:text-7xl lg:text-[6.5rem] ${isHim ? "text-[#3f4930]" : "text-[#a83f55]"}`}>{isHim ? "NaWaB" : "GuLaBo"}</h1>
-              <span aria-hidden="true" className={`absolute -right-8 -top-4 grid size-11 rotate-12 place-items-center rounded-full border-2 border-white text-2xl shadow-md sm:-right-10 sm:-top-5 sm:size-14 sm:text-3xl ${isHim ? "bg-[#d5b45e] text-[#59472b]" : "bg-[#f2bd55] text-[#8f3f4c]"}`}>★</span>
-              <span aria-hidden="true" className="absolute -left-3 -top-5 -z-10 rotate-[-14deg] text-3xl text-[#fffaf0] drop-shadow-sm sm:-left-5 sm:-top-7 sm:text-4xl">✦</span>
-            </div>
-            <p className="mt-5 max-w-md font-display text-2xl leading-tight text-[#45372f] sm:text-3xl">{isHim ? "Tradition hits different here." : "Desi fits, main character energy."}</p>
-            <p className="mt-3 max-w-md text-sm leading-6 text-[#65544a] sm:text-base">{isHim ? "Kurtas, sherwanis, Indo-western and a little extra nawabi andaaz." : "Sarees, lehengas, kurtas and little details made for your main-character moments."}</p>
-            <div className="mt-5 inline-flex w-fit -rotate-2 items-center rounded-lg border border-[#9b7a59]/30 bg-[#fffaf0]/95 px-4 py-2.5 font-medium text-[#5c5144] shadow-[2px_4px_0_rgba(90,65,45,.12)]">{isHim ? "Kurtas · Sherwanis · Indo-western" : "Sarees · Lehengas · Kurtas · More"} <span className="ml-2 text-lg">✦</span></div>
+      {indianWear ? <section className={\`relative isolate mx-auto max-w-[1500px] overflow-hidden rounded-[1.4rem] border shadow-[0_22px_60px_-32px_rgba(35,28,20,.48)] \${isHim ? "border-[#506454] bg-[#20372d] text-[#f2e7d1]" : "border-[#d2b99a] bg-[#eee0ca] text-[#57392e]"}\`}>
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 opacity-[.13]" style={{ backgroundImage: isHim ? "repeating-linear-gradient(135deg, transparent 0 18px, #d2b77f 19px, transparent 20px 38px)" : "radial-gradient(circle at 1px 1px, #8c563f 1px, transparent 1.5px)", backgroundSize: isHim ? "42px 42px" : "17px 17px" }} />
+        <div className="relative grid lg:min-h-[470px] lg:grid-cols-[.78fr_1.22fr]">
+          <div className="relative z-10 flex flex-col justify-center px-6 py-9 sm:px-10 sm:py-12 lg:px-12 lg:py-14">
+            <p className={\`mb-5 text-[10px] font-semibold uppercase tracking-[.24em] sm:text-xs \${isHim ? "text-[#c6ad79]" : "text-[#98634c]"}\`}>OFFFEED · AN INDIAN HERITAGE JOURNAL</p>
+            <h1 className={\`font-display text-6xl font-medium leading-[.86] tracking-[-.055em] sm:text-7xl lg:text-[6.6rem] \${isHim ? "text-[#f0e4cb]" : "text-[#783c31]"}\`}>{isHim ? "NAWAB" : "GULABO"}</h1>
+            <p className={\`mt-5 text-[10px] font-semibold uppercase tracking-[.19em] sm:text-xs \${isHim ? "text-[#d1bd91]" : "text-[#895744]"}\`}>THE INDIAN WEAR EDIT · {isHim ? "HIM" : "HER"}</p>
+            <h2 className={\`mt-7 max-w-md font-display text-3xl leading-tight sm:text-4xl \${isHim ? "text-[#f4ead8]" : "text-[#56372d]"}\`}>{isHim ? "Tradition, with a little attitude." : "A little desi. A lot of drama."}</h2>
+            <p className={\`mt-4 max-w-md text-sm leading-7 sm:text-base \${isHim ? "text-[#d8d0bd]" : "text-[#725447]"}\`}>{isHim ? "For timeless Indian dressing, effortless elegance and contemporary royal silhouettes." : "For the love of beautiful Indian silhouettes, delicate details and outfits that deserve a second look."}</p>
+            <p className={\`mt-6 border-t pt-4 text-[10px] font-medium uppercase tracking-[.13em] sm:text-xs \${isHim ? "border-[#637566] text-[#d9c9a7]" : "border-[#c9ae91] text-[#70483a]"}\`}>{isHim ? "KURTAS · SHERWANIS · BANDHGALAS · JACKETS · SETS" : "KURTAS · SUITS · SAREES · LEHENGAS · CO-ORDS"}</p>
+            <p className={\`mt-5 font-display text-xl italic \${isHim ? "text-[#c7ad79]" : "text-[#9c5a45]"}\`}>{isHim ? "Old streets. New stories." : "A summer somewhere in India."}</p>
           </div>
-          <div className="relative min-h-[230px] px-5 pb-6 sm:min-h-[300px] sm:px-8 lg:min-h-0 lg:px-0 lg:py-6 lg:pr-7">
-            <div className={`relative h-full min-h-[230px] overflow-hidden border-[7px] border-[#fffaf2]/95 shadow-[0_20px_40px_-24px_rgba(50,35,25,.45)] sm:min-h-[300px] ${isHim ? "rounded-[42%_18%_30%_15%]" : "rounded-[18%_42%_15%_30%]"}`}>
-              {categoryProducts[0]?.imageUrl ? <img src={categoryProducts[0].imageUrl} alt={isHim ? "Nawab Indian menswear collection" : "Gulabo Indian womenswear collection"} className="absolute inset-0 h-full w-full object-cover object-center" /> : <div className={`absolute inset-0 grid place-items-center ${isHim ? "bg-[#d8d0ad]" : "bg-[#e8c2bf]"}`}><span className={`font-display text-4xl ${isHim ? "text-[#66633e]" : "text-[#a45b67]"}`}>{isHim ? "Nawaabi andaaz" : "Desi, but make it Gulabo"}</span></div>}
+          <div className="relative min-h-[390px] p-3 pt-0 sm:min-h-[500px] sm:p-5 lg:min-h-0 lg:pl-0 lg:py-5 lg:pr-5">
+            <div className="grid h-full min-h-[370px] grid-cols-[1.08fr_.92fr] grid-rows-2 gap-2 sm:min-h-[460px] sm:gap-3">
+              <figure className="relative row-span-2 overflow-hidden rounded-[1rem]">
+                <img src={indianScenes[0].src} alt={indianScenes[0].alt} className="h-full w-full object-cover" />
+                <figcaption className="absolute bottom-3 left-3 rounded-full border border-white/60 bg-[#f8f0e4]/90 px-3 py-1.5 text-[10px] font-medium tracking-wide text-[#49372c] shadow-sm backdrop-blur">{indianScenes[0].note}</figcaption>
+              </figure>
+              {indianScenes.slice(1).map((scene) => <figure key={scene.src} className="relative min-h-0 overflow-hidden rounded-[1rem]">
+                <img src={scene.src} alt={scene.alt} loading="lazy" className="h-full w-full object-cover" />
+                <figcaption className="absolute bottom-2 left-2 rounded-full border border-white/60 bg-[#f8f0e4]/90 px-2.5 py-1 text-[9px] font-medium tracking-wide text-[#49372c] shadow-sm backdrop-blur sm:bottom-3 sm:left-3 sm:px-3 sm:text-[10px]">{scene.note}</figcaption>
+              </figure>)}
             </div>
-            <span aria-hidden="true" className={`absolute right-7 top-3 z-20 grid size-12 -rotate-12 place-items-center rounded-full border-[3px] border-white text-2xl shadow-lg sm:right-10 sm:top-5 sm:size-16 sm:text-3xl ${isHim ? "bg-[#b9a76a] text-[#4b4b32]" : "bg-[#d78c91] text-white"}`}>✦</span>
-            <span aria-hidden="true" className="absolute bottom-5 left-8 z-20 -rotate-6 rounded-lg border border-white/80 bg-[#fffaf0]/95 px-3 py-2 text-xs font-semibold text-[#65544a] shadow-lg sm:bottom-7 sm:left-12">A little desi. A lot of drama. ♡</span>
+            <span aria-hidden="true" className={\`absolute right-6 top-6 hidden -rotate-6 font-display text-3xl italic lg:block \${isHim ? "text-[#e0c996]" : "text-[#fff2dc]"}\`}>{isHim ? "The Nawab edit" : "The Gulabo diaries"}</span>
           </div>
+        </div>
+        <div className={\`relative flex flex-wrap items-center justify-between gap-2 border-t px-6 py-3 text-[9px] font-semibold uppercase tracking-[.16em] sm:px-10 sm:text-[10px] lg:px-12 \${isHim ? "border-[#536858] bg-[#192e25]/70 text-[#c9b88e]" : "border-[#d1b89a] bg-[#e5d3b9]/70 text-[#80533f]"}\`}>
+          <span>{isHim ? "Heritage architecture" : "Old-city markets"}</span><span aria-hidden="true">✳</span><span>{isHim ? "Indian craftsmanship" : "Handmade textiles"}</span><span aria-hidden="true">✳</span><span>{isHim ? "The modern gentleman" : "Everyday celebrations"}</span>
         </div>
       </section> : <section className={(calmHerJewellery || calmHerAccessories) ? "mx-auto max-w-3xl pb-2 pt-2 text-center" : "mx-auto max-w-3xl text-center"}>
         {!calmHerJewellery && !calmHerAccessories && <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">Independent brands · OFFFEED</p>}
@@ -218,10 +235,10 @@ function DiscoverPage() {
         </div>}
       </section>
 <section className={indianWear ? "mt-8 sm:mt-10" : "mt-16"}>
-        {indianWear && <nav aria-label="Indian wear categories" className={`mb-5 flex gap-2 overflow-x-auto rounded-xl border px-3 py-3 shadow-sm sm:px-4 ${isHim ? "border-[#d7cfac] bg-[#f3efdf]" : "border-[#efd3d0] bg-[#fff3f0]"}`}>{indianTabs.map((tab) => <button key={tab} type="button" onClick={() => setSelectedClothingCategory(tab === "All" ? "" : tab)} className={`shrink-0 rounded-full border px-4 py-2 text-sm font-medium transition ${(tab === "All" ? !selectedClothingCategory : selectedClothingCategory === tab) ? (isHim ? "border-[#626542] bg-[#626542] text-white" : "border-[#c97982] bg-[#c97982] text-white") : "border-[#e7ddd4] bg-[#fffaf5] text-[#66564d] hover:bg-white"}`}>{tab}</button>)}<details className="relative shrink-0"><summary className="cursor-pointer list-none rounded-full border border-[#e7ddd4] bg-[#fffaf5] px-4 py-2 text-sm font-medium text-[#66564d]">More⌄</summary><div className="absolute right-0 top-full z-30 mt-2 min-w-40 rounded-xl border border-[#e7ddd4] bg-white p-2 shadow-xl">{indianMoreTabs.map((tab) => <button key={tab} type="button" onClick={() => setSelectedClothingCategory(tab)} className="block w-full rounded-lg px-3 py-2 text-left text-sm text-[#66564d] hover:bg-[#f8f0eb]">{tab}</button>)}</div></details></nav>}
+        {indianWear && <nav aria-label="Indian wear categories" className={`mb-5 flex gap-2 overflow-x-auto rounded-xl border px-3 py-3 shadow-sm sm:px-4 ${isHim ? "border-[#536858] bg-[#263d32]" : "border-[#d1b89a] bg-[#e9dbc6]"}`}>{indianTabs.map((tab) => <button key={tab} type="button" onClick={() => setSelectedClothingCategory(tab === "All" ? "" : tab)} className={`shrink-0 rounded-full border px-4 py-2 text-sm font-medium transition ${(tab === "All" ? !selectedClothingCategory : selectedClothingCategory === tab) ? (isHim ? "border-[#c4a76e] bg-[#c4a76e] text-[#24372d]" : "border-[#98513d] bg-[#98513d] text-white") : (isHim ? "border-[#65796a] bg-[#31493b] text-[#f0e5cf] hover:bg-[#3c5647]" : "border-[#cbb99e] bg-[#f7eddf] text-[#624235] hover:bg-[#fff8ed]")}`}>{tab}</button>)}<details className="relative shrink-0"><summary className="cursor-pointer list-none rounded-full border border-[#e7ddd4] bg-[#fffaf5] px-4 py-2 text-sm font-medium text-[#66564d]">More⌄</summary><div className="absolute right-0 top-full z-30 mt-2 min-w-40 rounded-xl border border-[#e7ddd4] bg-white p-2 shadow-xl">{indianMoreTabs.map((tab) => <button key={tab} type="button" onClick={() => setSelectedClothingCategory(tab)} className="block w-full rounded-lg px-3 py-2 text-left text-sm text-[#66564d] hover:bg-[#f8f0eb]">{tab}</button>)}</div></details></nav>}
         {!indianWear && <div className="mb-6"><p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Shop independent labels</p><h2 className="mt-2 font-display text-3xl sm:text-4xl">Pieces to make it yours.</h2></div>}
         {categoryError && <p className="mb-4 text-center text-muted-foreground">We couldn’t load this edit right now. Please try again.</p>}{categoryLoading && <p className="mb-4 text-center text-muted-foreground">Finding pieces for your edit…</p>}{!categoryError && <>
-          <div className={`mb-6 rounded-2xl border p-4 ${indianWear ? (isHim ? "border-[#d5cfb4] bg-[#f5f1e5]" : "border-[#efd1d0] bg-[#fff4f1]") : "border-border/70 bg-card"}`}>
+          <div className={`mb-6 rounded-2xl border p-4 ${indianWear ? (isHim ? "border-[#536858] bg-[#263d32] text-[#f0e5cf]" : "border-[#d1b89a] bg-[#e9dbc6] text-[#624235]") : "border-border/70 bg-card"}`}>
             <div className="mb-3 flex flex-wrap items-center justify-between gap-3"><p className="text-sm font-medium">Refine your results · {filteredCategoryProducts.length} products</p><Button type="button" variant="ghost" size="sm" onClick={resetProductFilters}>Clear filters</Button></div>
             <div className={indianWear ? "flex flex-wrap items-end gap-3" : "grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4"}>
               <div><label htmlFor="shop-brand" className="text-xs text-muted-foreground">Brand</label><select id="shop-brand" value={productBrand} onChange={(e) => setProductBrand(e.target.value)} className="mt-1 h-10 w-full rounded-lg border border-border bg-background px-2 text-sm"><option>All brands</option>{productFilterOptions.brands.map((item) => <option key={item}>{item}</option>)}</select></div>
