@@ -54,11 +54,11 @@ const worlds = {
       { src: gBazaar.url, alt: "Shoppers in a busy, lantern-lit clothing bazaar at night", caption: "Bazaar after dark", pos: "50% 45%" },
     ] as Shot[],
     tiles: [
-      { title: "Everyday Desi", note: "Kurtas & suits for chai runs and long lunches", tab: "Kurtas & Suits", src: gPrintedSuit.url, alt: "A woman in an orange printed salwar suit with a floral dupatta", caption: "", pos: "50% 25%" },
-      { title: "Festive Finds", note: "Shararas, sparkle and a reason to dress up", tab: "Sharara Sets", src: gJuttis.url, alt: "Hand-embroidered black velvet juttis resting on ivory tulle", caption: "", pos: "50% 50%" },
-      { title: "Wedding Guest", note: "Lehengas that deserve the dance floor", tab: "Lehengas", src: gLehenga.url, alt: "A woman in a pink and sage embroidered lehenga with a marigold dupatta", caption: "", pos: "50% 20%" },
-      { title: "The Saree Story", note: "Six yards of handloom, block print and memory", tab: "Sarees", src: gFabric.url, alt: "Folded hand block-printed cotton in indigo, black and red geometric motifs", caption: "", pos: "50% 50%" },
-      { title: "Co-ord Club", note: "Matching sets for old-city wandering", tab: "Ethnic Co-ords", src: gLane.url, alt: "A narrow old-city lane in Jaipur lined with balconies and scooters", caption: "", pos: "50% 60%" },
+      { title: "Everyday Desi", note: "Kurtas & suits for chai runs and long lunches", tab: "Kurtas & Suits", src: "https://shopcanvas.in/cdn/shop/files/26_e698aec3-f858-47da-b799-ef81d583c13b.jpg?v=1710216582", alt: "Minimal ivory cotton kurta set styled in soft natural light", caption: "", pos: "50% 25%" },
+      { title: "Festive Finds", note: "Shararas, sparkle and a reason to dress up", tab: "Sharara Sets", src: "https://www.elahe.in/cdn/shop/files/IMG_3188_1_2048x.jpg?v=1705409812", alt: "Rich pink and red embroidered sharara set with intricate gold detailing", caption: "", pos: "50% 50%" },
+      { title: "Wedding Guest", note: "Lehengas that deserve the dance floor", tab: "Lehengas", src: "https://shopkynah.com/cdn/shop/files/MM260.jpg?v=1748930838&width=2400", alt: "Olive and gold embroidered lehenga styled for a wedding celebration", caption: "", pos: "50% 20%" },
+      { title: "The Saree Story", note: "Six yards of handloom, block print and memory", tab: "Sarees", src: "https://imgmedia.lbb.in/media/2019/05/5ce526d67c6b977cc01de7ef_1558521558386.jpg", alt: "Deep green traditional handloom saree with a red and gold border", caption: "", pos: "50% 50%" },
+      { title: "Co-ord Club", note: "Matching sets for old-city wandering", tab: "Ethnic Co-ords", src: "https://www.elahe.in/cdn/shop/files/48_feaa3dcf-bd8f-4bdf-bcfa-44fa35d4d264_2048x.jpg?v=1754114075", alt: "Contemporary indigo Indian co-ord set with delicate embroidery", caption: "", pos: "50% 60%" },
     ] as Tile[],
   },
   him: {
