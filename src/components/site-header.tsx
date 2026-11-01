@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { Menu, Search, UserRound, ShoppingBag, Heart, Crown, Flower2 } from "lucide-react";
+import { Menu, Search, UserRound, ShoppingBag, Heart } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useStyleSpace } from "@/lib/style-space";
@@ -32,15 +32,8 @@ export function SiteHeader() {
     <header className="sticky top-0 z-50 border-b border-border/70 bg-background/90 backdrop-blur-xl">
       <div className="mx-auto flex h-20 max-w-[1440px] items-center justify-between px-5 lg:px-10">
         <Link to="/" className="font-display text-2xl font-semibold tracking-[0.14em]">OFFFEED</Link>
-        <div className="flex shrink-0 items-center gap-1.5" aria-label="Choose your style edit">
-          <button type="button" aria-pressed={space === "him"} onClick={() => setSpace("him")} className={`group inline-flex h-10 items-center gap-1.5 rounded-full border px-3 shadow-[0_2px_8px_rgba(28,24,13,0.12)] transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c7a45b] focus-visible:ring-offset-2 ${space === "him" ? "border-[#b9954d] bg-[#292b18] text-[#e8c77c]" : "border-[#76683d] bg-[#353622] text-[#d9c28a]/85 hover:bg-[#292b18]"}`}>
-            <Crown className="h-3.5 w-3.5 text-[#c9a65d]" strokeWidth={1.6} />
-            <span className="font-display text-[15px] font-semibold uppercase tracking-[0.12em]">Nawab</span>
-          </button>
-          <button type="button" aria-pressed={space === "her"} onClick={() => setSpace("her")} className={`group inline-flex h-10 items-center gap-1.5 rounded-full border px-3 shadow-[0_2px_8px_rgba(28,24,13,0.12)] transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d9a36f] focus-visible:ring-offset-2 ${space === "her" ? "border-[#d5a66b] bg-[#541d2b] text-[#f1d39a]" : "border-[#8c4b50] bg-[#642432] text-[#e7c5a0]/90 hover:bg-[#541d2b]"}`}>
-            <Flower2 className="h-3.5 w-3.5 text-[#e3b47a]" strokeWidth={1.6} />
-            <span className="font-display text-[15px] font-semibold uppercase tracking-[0.12em]">Gulabo</span>
-          </button>
+        <div className="flex shrink-0 items-center rounded-full border border-border bg-card p-1" aria-label="Choose your style space">
+          {(["her", "him"] as const).map((option) => <Button key={option} size="sm" variant={space === option ? "default" : "ghost"} aria-pressed={space === option} onClick={() => setSpace(option)} className="h-8 min-w-10 rounded-full px-2.5">{option === "her" ? "Her" : "Him"}</Button>)}
         </div>
         <nav className="hidden items-center gap-8 lg:flex">
           {links.map((link) => <Link key={link.label} to={link.to} className="text-sm text-muted-foreground transition-colors hover:text-foreground" activeProps={{ className: "text-foreground" }}>{link.label}</Link>)}
