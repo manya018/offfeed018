@@ -12,7 +12,7 @@ import { toast } from "sonner";
 import { IndianWearEdit } from "@/components/indian-wear-edit";
 
 export const Route = createFileRoute("/discover")({
-  validateSearch: (search: Record<string, unknown>): { category?: string } => ({ category: typeof search.category === "string" ? search.category : undefined }),
+  validateSearch: (search: Record<string, unknown>) => typeof search.category === "string" ? { category: search.category } : {},
   head: () => ({ meta: [
     { title: "Discover your next obsession — OFFFEED" },
     { name: "description", content: "Search fashion styles, moods, occasions and unique outfits curated beyond the algorithm." },
