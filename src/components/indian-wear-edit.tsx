@@ -1,6 +1,5 @@
 import { ArrowDown, ArrowUpRight } from "lucide-react";
 import gulaboBanner from "@/assets/indian-wear/Gulabo_ An Indian Heritage Journal.png";
-import nawabBanner from "@/assets/indian-wear/The Nawab Edit_ Tradition With Attitude (1).png";
 import gGreenDupatta from "@/assets/indian-wear/gulabo_green_dupatta.jpg.asset.json";
 import gLehenga from "@/assets/indian-wear/gulabo_lehenga.jpg.asset.json";
 import gPrintedSuit from "@/assets/indian-wear/gulabo_printed_suit.jpg.asset.json";
@@ -103,17 +102,7 @@ export function IndianWearEdit({ isHim, onPickCategory }: { isHim: boolean; onPi
   const scrollTo = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
   return <div className="space-y-10 sm:space-y-14">
     {/* HERO */}
-    {isHim ? (
-      <section aria-label="Nawab — The Indian Wear Edit for Him" className="relative isolate aspect-[2.26/1] w-full min-h-0 overflow-hidden rounded-[1.5rem] border border-[#8f6848]/25 bg-[#252914] shadow-soft">
-        <img
-          src={nawabBanner}
-          alt="Nawab — Tradition with a little attitude, OffFeed's Indian wear edit for him"
-          className="absolute inset-0 h-full w-full object-cover"
-          fetchPriority="high"
-          decoding="async"
-        />
-      </section>
-    ) : (
+    {!isHim ? (
       <section aria-label="Gulabo — The Indian Wear Edit for Her" className="relative isolate aspect-[2.26/1] w-full min-h-0 overflow-hidden rounded-[1.5rem] border border-[#8f6848]/25 bg-[#4a2b1d] shadow-soft">
         <img
           src={gulaboBanner}
@@ -123,7 +112,7 @@ export function IndianWearEdit({ isHim, onPickCategory }: { isHim: boolean; onPi
           decoding="async"
         />
       </section>
-    )}
+    ) : null}
 
     {/* STORY STRIP — retained for NAWAB only */}
     {isHim && (
