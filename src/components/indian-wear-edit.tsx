@@ -84,11 +84,11 @@ const worlds = {
       { src: nSafa.url, alt: "A bright tied Jodhpuri safa turban displayed in a white alcove", caption: "The Jodhpuri safa", pos: "50% 50%" },
     ] as Shot[],
     tiles: [
-      { title: "Everyday Nawabi", note: "Easy cotton kurtas with a little swagger", tab: "Kurtas", src: nKurta.url, alt: "A man in a white kurta and red turban standing in a doorway", caption: "", pos: "50% 30%" },
-      { title: "Wedding Season", note: "Sherwanis for the baraat and beyond", tab: "Sherwanis", src: nGroom.url, alt: "A groom wearing a red turban and flower sehra at his wedding", caption: "", pos: "50% 40%" },
-      { title: "The Royal Edit", note: "Bandhgalas cut for quiet power", tab: "Bandhgalas", src: nBandhgala.url, alt: "A man in a tobacco-brown bandhgala and saffron turban", caption: "", pos: "50% 30%" },
-      { title: "Kurtas & Layers", note: "Jackets, waistcoats and easy layering", tab: "Nehru Jackets", src: nArch.url, alt: "Two men in white walking through a palace archway framing a courtyard", caption: "", pos: "50% 60%" },
-      { title: "Village Classics", note: "Dhoti pants and relaxed heritage sets", tab: "Dhoti Pants", src: nElder.url, alt: "An older man in a saffron turban and white kurta-dhoti sitting outdoors in the countryside", caption: "", pos: "50% 35%" },
+      { title: "Everyday Nawabi", note: "Easy cotton kurtas with a little swagger", tab: "Kurtas", src: "https://www.chilinen.com/cdn/shop/files/DAJ_7412.jpg?v=1755481686&width=800", alt: "Model in a softly tailored ivory linen kurta and pajama set in a sunlit heritage veranda", caption: "", pos: "50% 50%" },
+      { title: "Wedding Season", note: "Sherwanis for the baraat and beyond", tab: "Sherwanis", src: "https://kundansbridalcouture.com/cdn/shop/files/RawSilkSherwaniforMen.jpg?v=1776281888&width=1200", alt: "Groom in an ivory embroidered raw silk sherwani beneath ornate palace arches and chandeliers", caption: "", pos: "50% 50%" },
+      { title: "The Royal Edit", note: "Bandhgalas cut for quiet power", tab: "Bandhgalas", src: "https://jaipuricrown.com/cdn/shop/files/14_fa44ae8e-8cd8-4a1d-ab8d-16cde4186528.jpg?v=1782991597", alt: "Model in a deep forest-green velvet Jodhpuri bandhgala on a carved lakeside balcony", caption: "", pos: "50% 50%" },
+      { title: "Kurtas & Layers", note: "Jackets, waistcoats and easy layering", tab: "Nehru Jackets", src: "https://www.smritiapparels.com/cdn/shop/files/SMW279-a_800x.jpg?v=1739381760", alt: "Model wearing an ivory embroidered Nehru jacket layered over a kurta in a deep teal archway", caption: "", pos: "50% 50%" },
+      { title: "Village Classics", note: "Dhoti pants and relaxed heritage sets", tab: "Dhoti Pants", src: "https://i.pinimg.com/originals/ce/f3/54/cef354bb47b4932390ff6b18107e026b.jpg", alt: "Young man in a crisp white kurta and dhoti beside a quiet lake with soft greenery", caption: "", pos: "50% 50%" },
     ] as Tile[],
   },
 };
@@ -142,7 +142,6 @@ export function IndianWearEdit({ isHim, onPickCategory }: { isHim: boolean; onPi
           </span>
         </button>)}
       </div>
-      <p className="mt-4 text-[11px] text-iw-muted">Photographs: Wikimedia Commons contributors (CC BY-SA), Unsplash and Pexels photographers.</p>
     </section>
   </div>;
 }
