@@ -19,8 +19,22 @@
  */
 
 @theme inline {
+  --color-iw-paper: var(--iw-paper);
+  --color-iw-panel: var(--iw-panel);
+  --color-iw-ink: var(--iw-ink);
+  --color-iw-muted: var(--iw-muted);
+  --color-iw-line: var(--iw-line);
+  --color-iw-accent: var(--iw-accent);
+  --color-iw-accent-ink: var(--iw-accent-ink);
+  --color-iw-hero: var(--iw-hero);
+  --color-iw-hero-ink: var(--iw-hero-ink);
+  --color-iw-hero-muted: var(--iw-hero-muted);
+  --color-iw-gold: var(--iw-gold);
+  --color-iw-indigo: var(--iw-indigo);
+  --color-iw-leaf: var(--iw-leaf);
   --font-sans: "DM Sans", sans-serif;
   --font-display: "Cormorant Garamond", serif;
+  --font-hand: "Caveat", cursive;
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -119,6 +133,51 @@ html[data-style-space="him"] {
   --input: oklch(0.83 0.035 78);
   --ring: oklch(0.42 0.085 150);
   --shadow-soft: 0 18px 55px -28px oklch(0.3 0.035 65 / 0.3);
+}
+
+/* Indian Wear edit: heritage paper worlds, replacing the global blush wash on that page only */
+html[data-edit="indian-wear"] {
+  --background: oklch(0.945 0.022 80);
+  --card: oklch(0.975 0.014 82);
+  --border: oklch(0.84 0.035 70);
+  --input: oklch(0.84 0.035 70);
+  --primary: oklch(0.5 0.115 35);
+  --ring: oklch(0.5 0.115 35);
+  --secondary: oklch(0.92 0.03 75);
+  --muted: oklch(0.9 0.03 75);
+  --accent: oklch(0.88 0.05 70);
+  --iw-paper: oklch(0.935 0.03 78);
+  --iw-panel: oklch(0.895 0.042 68);
+  --iw-ink: oklch(0.27 0.045 40);
+  --iw-muted: oklch(0.45 0.045 45);
+  --iw-line: oklch(0.79 0.045 62);
+  --iw-accent: oklch(0.5 0.115 35);
+  --iw-accent-ink: oklch(0.98 0.012 80);
+  --iw-hero: oklch(0.915 0.04 72);
+  --iw-hero-ink: oklch(0.3 0.06 32);
+  --iw-hero-muted: oklch(0.43 0.05 40);
+  --iw-gold: oklch(0.72 0.14 70);
+  --iw-indigo: oklch(0.38 0.085 265);
+  --iw-leaf: oklch(0.47 0.08 140);
+}
+html[data-edit="indian-wear"][data-style-space="him"] {
+  --background: oklch(0.935 0.022 85);
+  --card: oklch(0.97 0.014 88);
+  --primary: oklch(0.36 0.06 155);
+  --ring: oklch(0.36 0.06 155);
+  --iw-paper: oklch(0.925 0.026 84);
+  --iw-panel: oklch(0.87 0.04 80);
+  --iw-ink: oklch(0.25 0.035 120);
+  --iw-muted: oklch(0.43 0.035 100);
+  --iw-line: oklch(0.76 0.04 85);
+  --iw-accent: oklch(0.34 0.06 155);
+  --iw-accent-ink: oklch(0.95 0.025 85);
+  --iw-hero: oklch(0.29 0.045 158);
+  --iw-hero-ink: oklch(0.94 0.03 85);
+  --iw-hero-muted: oklch(0.82 0.035 85);
+  --iw-gold: oklch(0.74 0.1 80);
+  --iw-indigo: oklch(0.42 0.06 260);
+  --iw-leaf: oklch(0.52 0.06 120);
 }
 
 .dark {
@@ -265,4 +324,12 @@ html[data-style-space="him"] {
     animation-duration: 1ms;
     animation-delay: 0ms;
   }
+}
+
+/* Subtle heritage-paper grain + faint block-print dots for the Indian Wear edit */
+@utility iw-texture {
+  background-image:
+    radial-gradient(circle at 1px 1px, color-mix(in oklab, var(--iw-ink) 9%, transparent) 1px, transparent 1.6px),
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.35  0 0 0 0 0.25  0 0 0 0 0.15  0 0 0 .07 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  background-size: 22px 22px, 160px 160px;
 }
