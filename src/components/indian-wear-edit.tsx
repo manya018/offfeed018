@@ -113,36 +113,46 @@ export function IndianWearEdit({ isHim, onPickCategory }: { isHim: boolean; onPi
         />
       </section>
     ) : (
-      <section aria-labelledby="iw-title" className="iw-texture relative isolate overflow-hidden rounded-[1.4rem] border border-iw-line bg-iw-hero text-iw-hero-ink shadow-soft">
-        <div className="grid items-center gap-5 p-4 sm:p-6 lg:min-h-[480px] lg:grid-cols-[minmax(0,0.88fr)_minmax(0,1.12fr)] lg:gap-7 lg:p-6 xl:min-h-[500px]">
-          <div className="flex flex-col justify-center px-1 py-2 sm:px-3 lg:py-3">
-            <p className="text-[11px] font-semibold tracking-[.24em] text-iw-hero-muted">{w.eyebrow}</p>
-            <h1 id="iw-title" className="mt-3 font-display text-[3.7rem] font-medium leading-[.86] tracking-[-.045em] sm:text-7xl lg:text-[5.7rem] xl:text-[6.2rem]">{w.name}</h1>
-            <h2 className="mt-4 font-display text-2xl italic leading-tight sm:text-3xl">{w.tagline}</h2>
-            <p className="mt-3 max-w-md text-sm leading-6 text-iw-hero-muted sm:text-[14px]">{w.intro}</p>
-            <p className="mt-4 border-t border-current/20 pt-3 text-[10px] font-semibold tracking-[.13em] sm:text-[11px]">{w.categories}</p>
-            <div className="mt-5 flex flex-wrap gap-2.5">
-              <button type="button" onClick={() => scrollTo("indian-wear-shop")} className="inline-flex items-center gap-2 rounded-full bg-iw-accent px-5 py-3 text-sm font-medium text-iw-accent-ink shadow-sm transition hover:-translate-y-0.5">Shop the edit <ArrowDown className="size-4" /></button>
-              <button type="button" onClick={() => scrollTo("indian-wear-collections")} className="inline-flex items-center gap-2 rounded-full border border-current/30 px-5 py-3 text-sm font-medium transition hover:bg-current/5">Browse collections</button>
+      <section aria-labelledby="iw-title" className="relative isolate overflow-hidden rounded-[1.4rem] border border-[#c9b78f]/50 bg-[#252914] text-[#f8edcf] shadow-soft">
+        <div className="grid min-h-[560px] grid-cols-1 lg:min-h-[520px] lg:grid-cols-[.92fr_1.08fr]">
+          <div className="relative z-10 flex flex-col justify-center overflow-hidden px-6 py-10 sm:px-10 lg:px-9 xl:px-12">
+            <span aria-hidden="true" className="pointer-events-none absolute -left-10 -top-12 h-52 w-52 rounded-full border border-[#d8bd7b]/15" />
+            <span aria-hidden="true" className="pointer-events-none absolute bottom-5 left-4 font-display text-8xl text-[#d8bd7b]/10">✳</span>
+            <p className="relative text-[10px] font-semibold tracking-[.25em] text-[#e5d4a9] sm:text-[11px]">{w.eyebrow}</p>
+            <div className="relative mt-3 flex items-center gap-3">
+              <h1 id="iw-title" className="font-display text-[4.4rem] font-medium leading-[.85] tracking-[-.055em] sm:text-8xl xl:text-[7.2rem]">{w.name}</h1>
+              <span aria-hidden="true" className="mb-1 rotate-12 font-hand text-4xl text-[#e5d4a9]">♛</span>
             </div>
-            <p className="mt-5 font-hand text-xl text-iw-hero-muted">{w.signoff}</p>
+            <span aria-hidden="true" className="mt-3 block h-px w-44 bg-gradient-to-r from-[#d9bd79] to-transparent" />
+            <h2 className="mt-4 font-display text-[1.75rem] italic leading-tight text-[#f5e6c5] sm:text-3xl">{w.tagline}</h2>
+            <p className="mt-4 max-w-md text-sm leading-6 text-[#e4d9bd] sm:text-[15px]">{w.intro}</p>
+            <div className="mt-6 flex flex-wrap items-center gap-x-3 gap-y-2 border-y border-[#d9bd79]/35 py-3 text-[10px] font-semibold uppercase tracking-[.12em] text-[#f2e5c9] sm:text-[11px]">
+              {["Kurtas","Sherwanis","Bandhgalas","Jackets","Sets"].map((item,i)=><span key={item} className="inline-flex items-center gap-3">{i>0&&<i className="h-3 w-px bg-[#d9bd79]/45" />}{item}</span>)}
+            </div>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <button type="button" onClick={() => scrollTo("indian-wear-shop")} className="inline-flex items-center gap-2 rounded-full bg-[#f3dfae] px-5 py-3 text-sm font-semibold text-[#34331e] shadow-sm transition hover:-translate-y-0.5 hover:bg-[#fff0c9]">Shop the Edit <ArrowDown className="size-4" /></button>
+              <button type="button" onClick={() => scrollTo("indian-wear-collections")} className="inline-flex items-center gap-2 rounded-full border border-[#e5d4a9]/55 px-5 py-3 text-sm font-medium text-[#f8edcf] transition hover:bg-[#f8edcf]/10">Browse Collections <ArrowUpRight className="size-4" /></button>
+            </div>
+            <p className="mt-6 font-hand text-xl text-[#e5d4a9]">{w.signoff}</p>
           </div>
-          <div className="relative grid grid-cols-6 gap-2 sm:gap-3 lg:min-h-[440px] xl:min-h-[460px]">
-            <figure className="relative col-span-6 aspect-[4/5] overflow-hidden rounded-[1.1rem] sm:col-span-4 sm:aspect-auto sm:min-h-[360px] lg:min-h-[440px] xl:min-h-[460px]">
-              <Photo shot={w.hero} eager sizes="(min-width: 1024px) 40vw, 100vw" />
-              <figcaption className="absolute bottom-3 left-3 rounded-full bg-iw-paper/90 px-3 py-1.5 text-[11px] font-medium text-iw-ink backdrop-blur">{w.hero.caption}</figcaption>
+          <div className="relative grid min-h-[430px] grid-cols-[1fr_.43fr] gap-2 overflow-hidden bg-[#c9a47a] p-2 sm:min-h-[500px] sm:gap-3 sm:p-3">
+            <figure className="relative min-h-[420px] overflow-hidden rounded-[1rem] sm:min-h-[480px]">
+              <Photo shot={{...w.hero,src:nGroom.url,alt:"A groom in a traditional ivory sherwani and red safa, photographed in a warm heritage setting",pos:"50% 35%"}} eager sizes="(min-width: 1024px) 42vw, 68vw" />
+              <span className="absolute inset-0 bg-gradient-to-t from-[#211d12]/50 via-transparent to-[#211d12]/5" />
+              <figcaption className="absolute bottom-4 left-4 rounded-full border border-white/40 bg-[#f6ebd5]/90 px-3 py-1.5 font-hand text-lg text-[#373321] backdrop-blur">the royal edit, reimagined</figcaption>
+              <span aria-hidden="true" className="absolute left-4 top-4 rounded-full bg-[#f6ebd5]/90 px-3 py-1 font-hand text-base text-[#373321]">Jaipur diaries ✳</span>
             </figure>
-            <div className="col-span-6 grid grid-cols-2 gap-2 sm:col-span-2 sm:grid-cols-1 sm:grid-rows-[1.2fr_1fr] sm:gap-3">
-              {w.side.map((shot) => <figure key={shot.src} className="relative aspect-[3/4] overflow-hidden rounded-[1.1rem] sm:aspect-auto">
-                <Photo shot={shot} sizes="(min-width: 640px) 20vw, 50vw" />
-                <figcaption className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-iw-ink/70 to-transparent px-3 pb-2 pt-8 font-hand text-xl leading-none text-iw-paper">{shot.caption}</figcaption>
-              </figure>)}
+            <div className="grid grid-rows-2 gap-2 sm:gap-3">
+              <figure className="relative min-h-0 overflow-hidden rounded-[1rem] border-[5px] border-[#f1e5cc] shadow-lg">
+                <Photo shot={{...w.side[0],src:nBandhgala.url,alt:"A contemporary Indian bandhgala look in rich earthy tones"}} sizes="(min-width: 1024px) 18vw, 32vw" />
+                <figcaption className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#201d13]/75 to-transparent px-2 pb-2 pt-8 font-hand text-lg leading-none text-[#fff0d2] sm:text-xl">The Nawab Edit ♛</figcaption>
+              </figure>
+              <figure className="relative min-h-0 overflow-hidden rounded-[1rem] border-[5px] border-[#f1e5cc] shadow-lg">
+                <Photo shot={{...w.side[1],src:nNehru.url,alt:"A relaxed Nehru jacket look for modern Indian dressing"}} sizes="(min-width: 1024px) 18vw, 32vw" />
+                <figcaption className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#201d13]/75 to-transparent px-2 pb-2 pt-8 font-hand text-lg leading-none text-[#fff0d2] sm:text-xl">Nehru, done easy</figcaption>
+              </figure>
             </div>
-            <figure className="absolute bottom-2 left-3 hidden w-32 -rotate-[5deg] bg-iw-paper p-1.5 pb-1 text-iw-ink shadow-soft lg:block xl:w-36">
-              <div className="aspect-[4/3] overflow-hidden"><img src={w.postcard.src} alt={w.postcard.alt} loading="lazy" className="h-full w-full object-cover" /></div>
-              <figcaption className="py-1 text-center font-hand text-lg">{w.postcard.caption}</figcaption>
-            </figure>
-            <p aria-hidden="true" className="absolute right-4 top-3 hidden rotate-[4deg] rounded bg-iw-paper/90 px-3 py-1 font-hand text-xl text-iw-ink shadow-sm lg:block">{w.note}</p>
+            <span aria-hidden="true" className="pointer-events-none absolute -bottom-2 left-1/3 rotate-[-5deg] border border-[#f1e5cc]/80 bg-[#f1e5cc] px-4 py-2 font-hand text-sm text-[#4b422d] shadow-lg">Made for the baraat ✦</span>
           </div>
         </div>
       </section>
