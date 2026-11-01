@@ -156,7 +156,8 @@ export function IndianWearEdit({ isHim, onPickCategory }: { isHim: boolean; onPi
       </section>
     )}
 
-    {/* STORY STRIP */}
+    {/* STORY STRIP — retained for NAWAB only */}
+    {isHim && (
     <section aria-labelledby="iw-story" className="iw-texture rounded-[1.4rem] border border-iw-line bg-iw-paper px-4 py-7 text-iw-ink sm:px-7 sm:py-8" style={!isHim ? { backgroundImage: "linear-gradient(135deg, #f5ecdc 0%, #eadbc3 100%)" } : undefined}>
       <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
         <div><p className="text-[11px] font-semibold tracking-[.22em] text-iw-muted">THE WORLD OF {w.name}</p><h2 id="iw-story" className="mt-2 font-display text-4xl sm:text-5xl">{w.storyTitle}</h2></div>
@@ -169,6 +170,7 @@ export function IndianWearEdit({ isHim, onPickCategory }: { isHim: boolean; onPi
         </figure>)}
       </div>
     </section>
+    )}
 
     {/* COLLECTIONS */}
     <section id="indian-wear-collections" aria-labelledby="iw-collections" className="scroll-mt-24 text-iw-ink">
