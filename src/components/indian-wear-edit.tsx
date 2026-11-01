@@ -99,24 +99,24 @@ function Photo({ shot, className = "", eager = false, sizes }: { shot: Shot; cla
 export function IndianWearEdit({ isHim, onPickCategory }: { isHim: boolean; onPickCategory: (tab: string) => void }) {
   const w = isHim ? worlds.him : worlds.her;
   const scrollTo = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
-  return <div className="space-y-14 sm:space-y-20">
+  return <div className="space-y-10 sm:space-y-14">
     {/* HERO */}
-    <section aria-labelledby="iw-title" className="iw-texture relative isolate overflow-hidden rounded-[1.6rem] border border-iw-line bg-iw-hero text-iw-hero-ink shadow-soft" style={!isHim ? { backgroundImage: "linear-gradient(90deg, rgba(244,231,208,.91) 0%, rgba(244,231,208,.78) 43%, rgba(63,35,25,.18) 100%), url('/images/gulabo-dreamy-atmosphere.webp')", backgroundSize: "cover", backgroundPosition: "center" } : undefined}>
-      <div className="grid gap-8 p-4 sm:p-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-10 lg:p-8">
-        <div className="flex flex-col justify-center px-2 pt-4 sm:px-4 lg:py-6">
+    <section aria-labelledby="iw-title" className="iw-texture relative isolate overflow-hidden rounded-[1.4rem] border border-iw-line bg-iw-hero text-iw-hero-ink shadow-soft" style={!isHim ? { backgroundImage: "radial-gradient(ellipse at 88% 18%, rgba(177,130,76,.18), transparent 38%), linear-gradient(115deg, #f2e6d2 0%, #ead8bc 58%, #ddc5a2 100%)" } : undefined}>
+      <div className="grid items-center gap-5 p-4 sm:p-6 lg:min-h-[480px] lg:grid-cols-[minmax(0,0.88fr)_minmax(0,1.12fr)] lg:gap-7 lg:p-6 xl:min-h-[500px]">
+        <div className="flex flex-col justify-center px-1 py-2 sm:px-3 lg:py-3">
           <p className="text-[11px] font-semibold tracking-[.24em] text-iw-hero-muted">{w.eyebrow}</p>
-          <h1 id="iw-title" className="mt-4 font-display text-[4.2rem] font-medium leading-[.85] tracking-[-.04em] sm:text-8xl lg:text-[7.4rem]">{w.name}</h1>
-          <h2 className="mt-6 font-display text-3xl italic leading-tight sm:text-4xl">{w.tagline}</h2>
-          <p className="mt-4 max-w-md text-[15px] leading-7 text-iw-hero-muted">{w.intro}</p>
-          <p className="mt-6 border-t border-current/20 pt-4 text-[11px] font-semibold tracking-[.16em]">{w.categories}</p>
-          <div className="mt-7 flex flex-wrap gap-3">
+          <h1 id="iw-title" className="mt-3 font-display text-[3.7rem] font-medium leading-[.86] tracking-[-.045em] sm:text-7xl lg:text-[5.7rem] xl:text-[6.2rem]">{w.name}</h1>
+          <h2 className="mt-4 font-display text-2xl italic leading-tight sm:text-3xl">{w.tagline}</h2>
+          <p className="mt-3 max-w-md text-sm leading-6 text-iw-hero-muted sm:text-[14px]">{w.intro}</p>
+          <p className="mt-4 border-t border-current/20 pt-3 text-[10px] font-semibold tracking-[.13em] sm:text-[11px]">{w.categories}</p>
+          <div className="mt-5 flex flex-wrap gap-2.5">
             <button type="button" onClick={() => scrollTo("indian-wear-shop")} className="inline-flex items-center gap-2 rounded-full bg-iw-accent px-5 py-3 text-sm font-medium text-iw-accent-ink shadow-sm transition hover:-translate-y-0.5">Shop the edit <ArrowDown className="size-4" /></button>
             <button type="button" onClick={() => scrollTo("indian-wear-collections")} className="inline-flex items-center gap-2 rounded-full border border-current/30 px-5 py-3 text-sm font-medium transition hover:bg-current/5">Browse collections</button>
           </div>
-          <p className="mt-8 font-hand text-2xl text-iw-hero-muted">{w.signoff}</p>
+          <p className="mt-5 font-hand text-xl text-iw-hero-muted">{w.signoff}</p>
         </div>
-        <div className="relative grid grid-cols-6 gap-2 sm:gap-3 lg:min-h-[620px]">
-          <figure className="relative col-span-6 aspect-[4/5] overflow-hidden rounded-[1.1rem] sm:col-span-4 sm:aspect-auto sm:min-h-[520px]">
+        <div className="relative grid grid-cols-6 gap-2 sm:gap-3 lg:min-h-[440px] xl:min-h-[460px]">
+          <figure className="relative col-span-6 aspect-[4/5] overflow-hidden rounded-[1.1rem] sm:col-span-4 sm:aspect-auto sm:min-h-[360px] lg:min-h-[440px] xl:min-h-[460px]">
             <Photo shot={w.hero} eager sizes="(min-width: 1024px) 40vw, 100vw" />
             <figcaption className="absolute bottom-3 left-3 rounded-full bg-iw-paper/90 px-3 py-1.5 text-[11px] font-medium text-iw-ink backdrop-blur">{w.hero.caption}</figcaption>
           </figure>
@@ -126,7 +126,7 @@ export function IndianWearEdit({ isHim, onPickCategory }: { isHim: boolean; onPi
               <figcaption className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-iw-ink/70 to-transparent px-3 pb-2 pt-8 font-hand text-xl leading-none text-iw-paper">{shot.caption}</figcaption>
             </figure>)}
           </div>
-          <figure className="absolute -bottom-3 left-4 hidden w-44 -rotate-[5deg] bg-iw-paper p-2 pb-1 text-iw-ink shadow-soft lg:block xl:w-52">
+          <figure className="absolute bottom-2 left-3 hidden w-32 -rotate-[5deg] bg-iw-paper p-1.5 pb-1 text-iw-ink shadow-soft lg:block xl:w-36">
             <div className="aspect-[4/3] overflow-hidden"><img src={w.postcard.src} alt={w.postcard.alt} loading="lazy" className="h-full w-full object-cover" /></div>
             <figcaption className="py-1 text-center font-hand text-lg">{w.postcard.caption}</figcaption>
           </figure>
@@ -136,7 +136,7 @@ export function IndianWearEdit({ isHim, onPickCategory }: { isHim: boolean; onPi
     </section>
 
     {/* STORY STRIP */}
-    <section aria-labelledby="iw-story" className="iw-texture rounded-[1.6rem] border border-iw-line bg-iw-paper px-4 py-8 text-iw-ink sm:px-8 sm:py-10" style={!isHim ? { backgroundImage: "linear-gradient(rgba(244,235,218,.88), rgba(244,235,218,.88)), url('/images/gulabo-dreamy-atmosphere.webp')", backgroundSize: "cover", backgroundPosition: "center 42%" } : undefined}>
+    <section aria-labelledby="iw-story" className="iw-texture rounded-[1.4rem] border border-iw-line bg-iw-paper px-4 py-7 text-iw-ink sm:px-7 sm:py-8" style={!isHim ? { backgroundImage: "linear-gradient(135deg, #f5ecdc 0%, #eadbc3 100%)" } : undefined}>
       <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
         <div><p className="text-[11px] font-semibold tracking-[.22em] text-iw-muted">THE WORLD OF {w.name}</p><h2 id="iw-story" className="mt-2 font-display text-4xl sm:text-5xl">{w.storyTitle}</h2></div>
         <p className="max-w-sm text-sm leading-6 text-iw-muted">{w.storyIntro}</p>
