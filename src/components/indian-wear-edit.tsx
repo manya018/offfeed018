@@ -101,39 +101,60 @@ export function IndianWearEdit({ isHim, onPickCategory }: { isHim: boolean; onPi
   const scrollTo = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
   return <div className="space-y-10 sm:space-y-14">
     {/* HERO */}
-    <section aria-labelledby="iw-title" className="iw-texture relative isolate overflow-hidden rounded-[1.4rem] border border-iw-line bg-iw-hero text-iw-hero-ink shadow-soft" style={!isHim ? { backgroundImage: "radial-gradient(ellipse at 88% 18%, rgba(177,130,76,.18), transparent 38%), linear-gradient(115deg, #f2e6d2 0%, #ead8bc 58%, #ddc5a2 100%)" } : undefined}>
-      <div className="grid items-center gap-5 p-4 sm:p-6 lg:min-h-[480px] lg:grid-cols-[minmax(0,0.88fr)_minmax(0,1.12fr)] lg:gap-7 lg:p-6 xl:min-h-[500px]">
-        <div className="flex flex-col justify-center px-1 py-2 sm:px-3 lg:py-3">
-          <p className="text-[11px] font-semibold tracking-[.24em] text-iw-hero-muted">{w.eyebrow}</p>
-          <h1 id="iw-title" className="mt-3 font-display text-[3.7rem] font-medium leading-[.86] tracking-[-.045em] sm:text-7xl lg:text-[5.7rem] xl:text-[6.2rem]">{w.name}</h1>
-          <h2 className="mt-4 font-display text-2xl italic leading-tight sm:text-3xl">{w.tagline}</h2>
-          <p className="mt-3 max-w-md text-sm leading-6 text-iw-hero-muted sm:text-[14px]">{w.intro}</p>
-          <p className="mt-4 border-t border-current/20 pt-3 text-[10px] font-semibold tracking-[.13em] sm:text-[11px]">{w.categories}</p>
-          <div className="mt-5 flex flex-wrap gap-2.5">
-            <button type="button" onClick={() => scrollTo("indian-wear-shop")} className="inline-flex items-center gap-2 rounded-full bg-iw-accent px-5 py-3 text-sm font-medium text-iw-accent-ink shadow-sm transition hover:-translate-y-0.5">Shop the edit <ArrowDown className="size-4" /></button>
-            <button type="button" onClick={() => scrollTo("indian-wear-collections")} className="inline-flex items-center gap-2 rounded-full border border-current/30 px-5 py-3 text-sm font-medium transition hover:bg-current/5">Browse collections</button>
-          </div>
-          <p className="mt-5 font-hand text-xl text-iw-hero-muted">{w.signoff}</p>
+    {!isHim ? (
+      <section aria-labelledby="iw-title" className="relative isolate flex min-h-[500px] h-[min(68vh,620px)] max-h-[620px] items-center justify-center overflow-hidden rounded-[1.5rem] border border-[#8f6848]/35 bg-[#4a2b1d] text-[#fff0d8] shadow-soft sm:min-h-[530px] lg:h-[min(70vh,600px)]">
+        <div aria-hidden="true" className="absolute inset-0">
+          <img src={gHawaMahal.url} alt="" className="h-full w-full object-cover object-center" fetchPriority="high" />
+          <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(38,20,12,.30)_0%,rgba(55,29,17,.60)_34%,rgba(55,29,17,.64)_66%,rgba(38,20,12,.25)_100%)]" />
+          <div className="absolute inset-0 bg-[linear-gradient(0deg,rgba(35,18,10,.32),transparent_34%,rgba(35,18,10,.12))]" />
+          <div className="absolute inset-0 opacity-[.16] [background-image:radial-gradient(rgba(255,231,195,.8)_0.7px,transparent_0.7px)] [background-size:20px_20px]" />
         </div>
-        <div className="relative grid grid-cols-6 gap-2 sm:gap-3 lg:min-h-[440px] xl:min-h-[460px]">
-          <figure className="relative col-span-6 aspect-[4/5] overflow-hidden rounded-[1.1rem] sm:col-span-4 sm:aspect-auto sm:min-h-[360px] lg:min-h-[440px] xl:min-h-[460px]">
-            <Photo shot={w.hero} eager sizes="(min-width: 1024px) 40vw, 100vw" />
-            <figcaption className="absolute bottom-3 left-3 rounded-full bg-iw-paper/90 px-3 py-1.5 text-[11px] font-medium text-iw-ink backdrop-blur">{w.hero.caption}</figcaption>
-          </figure>
-          <div className="col-span-6 grid grid-cols-2 gap-2 sm:col-span-2 sm:grid-cols-1 sm:grid-rows-[1.2fr_1fr] sm:gap-3">
-            {w.side.map((shot) => <figure key={shot.src} className="relative aspect-[3/4] overflow-hidden rounded-[1.1rem] sm:aspect-auto">
-              <Photo shot={shot} sizes="(min-width: 640px) 20vw, 50vw" />
-              <figcaption className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-iw-ink/70 to-transparent px-3 pb-2 pt-8 font-hand text-xl leading-none text-iw-paper">{shot.caption}</figcaption>
-            </figure>)}
-          </div>
-          <figure className="absolute bottom-2 left-3 hidden w-32 -rotate-[5deg] bg-iw-paper p-1.5 pb-1 text-iw-ink shadow-soft lg:block xl:w-36">
-            <div className="aspect-[4/3] overflow-hidden"><img src={w.postcard.src} alt={w.postcard.alt} loading="lazy" className="h-full w-full object-cover" /></div>
-            <figcaption className="py-1 text-center font-hand text-lg">{w.postcard.caption}</figcaption>
-          </figure>
-          <p aria-hidden="true" className="absolute right-4 top-3 hidden rotate-[4deg] rounded bg-iw-paper/90 px-3 py-1 font-hand text-xl text-iw-ink shadow-sm lg:block">{w.note}</p>
+        <div className="relative z-10 mx-auto flex w-full max-w-4xl flex-col items-center px-5 py-12 text-center sm:px-10">
+          <p className="text-[10px] font-medium uppercase tracking-[.25em] text-[#f4dcb8] sm:text-xs">OFFFEED · AN INDIAN HERITAGE JOURNAL</p>
+          <div aria-hidden="true" className="mt-5 flex items-center gap-3 text-[#f4dcb8]/90"><span className="h-px w-12 bg-current/70 sm:w-20" /><span className="text-lg">✿</span><span className="h-px w-12 bg-current/70 sm:w-20" /></div>
+          <h1 id="iw-title" className="mt-3 font-display text-[4.3rem] font-medium italic leading-[.88] tracking-[-.045em] text-[#fff0d8] drop-shadow-[0_3px_18px_rgba(35,16,8,.25)] sm:text-8xl lg:text-[7.6rem]">GULABO</h1>
+          <p className="mt-4 text-[11px] font-medium uppercase tracking-[.17em] text-[#f8e5c9] sm:text-sm">THE INDIAN WEAR EDIT · HER</p>
+          <h2 className="mt-6 font-display text-2xl italic leading-tight text-[#fff0d8] sm:text-3xl">A little desi. A lot of drama.</h2>
+          <p className="mt-3 max-w-lg text-sm leading-6 text-[#f7e5cc] sm:text-base">For the love of beautiful Indian silhouettes, delicate details and outfits that deserve a second look.</p>
+          <div aria-hidden="true" className="mt-6 h-px w-3/4 max-w-md bg-gradient-to-r from-transparent via-[#f4dcb8]/70 to-transparent" />
+          <p className="mt-4 text-[10px] font-medium tracking-[.13em] text-[#f8e5c9] sm:text-xs sm:tracking-[.18em]">KURTAS&nbsp; · &nbsp;SUITS&nbsp; · &nbsp;SAREES&nbsp; · &nbsp;LEHENGAS&nbsp; · &nbsp;CO-ORDS</p>
         </div>
-      </div>
-    </section>
+      </section>
+    ) : (
+      <section aria-labelledby="iw-title" className="iw-texture relative isolate overflow-hidden rounded-[1.4rem] border border-iw-line bg-iw-hero text-iw-hero-ink shadow-soft">
+        <div className="grid items-center gap-5 p-4 sm:p-6 lg:min-h-[480px] lg:grid-cols-[minmax(0,0.88fr)_minmax(0,1.12fr)] lg:gap-7 lg:p-6 xl:min-h-[500px]">
+          <div className="flex flex-col justify-center px-1 py-2 sm:px-3 lg:py-3">
+            <p className="text-[11px] font-semibold tracking-[.24em] text-iw-hero-muted">{w.eyebrow}</p>
+            <h1 id="iw-title" className="mt-3 font-display text-[3.7rem] font-medium leading-[.86] tracking-[-.045em] sm:text-7xl lg:text-[5.7rem] xl:text-[6.2rem]">{w.name}</h1>
+            <h2 className="mt-4 font-display text-2xl italic leading-tight sm:text-3xl">{w.tagline}</h2>
+            <p className="mt-3 max-w-md text-sm leading-6 text-iw-hero-muted sm:text-[14px]">{w.intro}</p>
+            <p className="mt-4 border-t border-current/20 pt-3 text-[10px] font-semibold tracking-[.13em] sm:text-[11px]">{w.categories}</p>
+            <div className="mt-5 flex flex-wrap gap-2.5">
+              <button type="button" onClick={() => scrollTo("indian-wear-shop")} className="inline-flex items-center gap-2 rounded-full bg-iw-accent px-5 py-3 text-sm font-medium text-iw-accent-ink shadow-sm transition hover:-translate-y-0.5">Shop the edit <ArrowDown className="size-4" /></button>
+              <button type="button" onClick={() => scrollTo("indian-wear-collections")} className="inline-flex items-center gap-2 rounded-full border border-current/30 px-5 py-3 text-sm font-medium transition hover:bg-current/5">Browse collections</button>
+            </div>
+            <p className="mt-5 font-hand text-xl text-iw-hero-muted">{w.signoff}</p>
+          </div>
+          <div className="relative grid grid-cols-6 gap-2 sm:gap-3 lg:min-h-[440px] xl:min-h-[460px]">
+            <figure className="relative col-span-6 aspect-[4/5] overflow-hidden rounded-[1.1rem] sm:col-span-4 sm:aspect-auto sm:min-h-[360px] lg:min-h-[440px] xl:min-h-[460px]">
+              <Photo shot={w.hero} eager sizes="(min-width: 1024px) 40vw, 100vw" />
+              <figcaption className="absolute bottom-3 left-3 rounded-full bg-iw-paper/90 px-3 py-1.5 text-[11px] font-medium text-iw-ink backdrop-blur">{w.hero.caption}</figcaption>
+            </figure>
+            <div className="col-span-6 grid grid-cols-2 gap-2 sm:col-span-2 sm:grid-cols-1 sm:grid-rows-[1.2fr_1fr] sm:gap-3">
+              {w.side.map((shot) => <figure key={shot.src} className="relative aspect-[3/4] overflow-hidden rounded-[1.1rem] sm:aspect-auto">
+                <Photo shot={shot} sizes="(min-width: 640px) 20vw, 50vw" />
+                <figcaption className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-iw-ink/70 to-transparent px-3 pb-2 pt-8 font-hand text-xl leading-none text-iw-paper">{shot.caption}</figcaption>
+              </figure>)}
+            </div>
+            <figure className="absolute bottom-2 left-3 hidden w-32 -rotate-[5deg] bg-iw-paper p-1.5 pb-1 text-iw-ink shadow-soft lg:block xl:w-36">
+              <div className="aspect-[4/3] overflow-hidden"><img src={w.postcard.src} alt={w.postcard.alt} loading="lazy" className="h-full w-full object-cover" /></div>
+              <figcaption className="py-1 text-center font-hand text-lg">{w.postcard.caption}</figcaption>
+            </figure>
+            <p aria-hidden="true" className="absolute right-4 top-3 hidden rotate-[4deg] rounded bg-iw-paper/90 px-3 py-1 font-hand text-xl text-iw-ink shadow-sm lg:block">{w.note}</p>
+          </div>
+        </div>
+      </section>
+    )}
 
     {/* STORY STRIP */}
     <section aria-labelledby="iw-story" className="iw-texture rounded-[1.4rem] border border-iw-line bg-iw-paper px-4 py-7 text-iw-ink sm:px-7 sm:py-8" style={!isHim ? { backgroundImage: "linear-gradient(135deg, #f5ecdc 0%, #eadbc3 100%)" } : undefined}>
