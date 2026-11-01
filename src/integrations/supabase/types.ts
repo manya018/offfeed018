@@ -83,51 +83,6 @@ export type Database = {
         }
         Relationships: []
       }
-      customer_addresses: {
-        Row: {
-          city: string
-          created_at: string
-          id: string
-          is_default: boolean
-          label: string
-          landmark: string | null
-          line1: string
-          line2: string | null
-          pin_code: string
-          state: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          city: string
-          created_at?: string
-          id?: string
-          is_default?: boolean
-          label?: string
-          landmark?: string | null
-          line1: string
-          line2?: string | null
-          pin_code: string
-          state: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          city?: string
-          created_at?: string
-          id?: string
-          is_default?: boolean
-          label?: string
-          landmark?: string | null
-          line1?: string
-          line2?: string | null
-          pin_code?: string
-          state?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       brand_orders: {
         Row: {
           brand_application_id: string
@@ -141,22 +96,22 @@ export type Database = {
           delivered_at: string | null
           delivery_address: Json
           destination_pin_code: string
+          dispatched_at: string | null
           estimated_delivery_end: string | null
           estimated_delivery_start: string | null
           id: string
           order_number: string
           product_id: string | null
           product_name: string
+          quantity: number
           selected_color: string
           selected_size: string
-          quantity: number
           status: string
           tracking_number: string
           tracking_provider: string
           tracking_url: string
           unit_price: number
           updated_at: string
-          dispatched_at: string | null
         }
         Insert: {
           brand_application_id: string
@@ -170,22 +125,22 @@ export type Database = {
           delivered_at?: string | null
           delivery_address?: Json
           destination_pin_code: string
+          dispatched_at?: string | null
           estimated_delivery_end?: string | null
           estimated_delivery_start?: string | null
           id?: string
           order_number: string
           product_id?: string | null
           product_name: string
+          quantity?: number
           selected_color?: string
           selected_size?: string
-          quantity?: number
           status?: string
           tracking_number?: string
           tracking_provider?: string
           tracking_url?: string
           unit_price: number
           updated_at?: string
-          dispatched_at?: string | null
         }
         Update: {
           brand_application_id?: string
@@ -199,22 +154,22 @@ export type Database = {
           delivered_at?: string | null
           delivery_address?: Json
           destination_pin_code?: string
+          dispatched_at?: string | null
           estimated_delivery_end?: string | null
           estimated_delivery_start?: string | null
           id?: string
           order_number?: string
           product_id?: string | null
           product_name?: string
+          quantity?: number
           selected_color?: string
           selected_size?: string
-          quantity?: number
           status?: string
           tracking_number?: string
           tracking_provider?: string
           tracking_url?: string
           unit_price?: number
           updated_at?: string
-          dispatched_at?: string | null
         }
         Relationships: [
           {
@@ -230,72 +185,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "brand_products"
             referencedColumns: ["id"]
-          }
-        ]
-      }
-      brand_shipping_profiles: {
-        Row: {
-          brand_application_id: string
-          origin_pin_code: string
-          processing_days_max: number
-          processing_days_min: number
-          shipping_note: string
-          pickup_contact_name: string | null
-          pickup_phone: string | null
-          pickup_address: string | null
-          return_address: string | null
-          gstin: string | null
-          parcel_weight_grams: number
-          parcel_length_cm: number
-          parcel_width_cm: number
-          parcel_height_cm: number
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          brand_application_id: string
-          origin_pin_code: string
-          processing_days_max?: number
-          processing_days_min?: number
-          shipping_note?: string
-          pickup_contact_name?: string | null
-          pickup_phone?: string | null
-          pickup_address?: string | null
-          return_address?: string | null
-          gstin?: string | null
-          parcel_weight_grams?: number
-          parcel_length_cm?: number
-          parcel_width_cm?: number
-          parcel_height_cm?: number
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          brand_application_id?: string
-          origin_pin_code?: string
-          processing_days_max?: number
-          processing_days_min?: number
-          shipping_note?: string
-          pickup_contact_name?: string | null
-          pickup_phone?: string | null
-          pickup_address?: string | null
-          return_address?: string | null
-          gstin?: string | null
-          parcel_weight_grams?: number
-          parcel_length_cm?: number
-          parcel_width_cm?: number
-          parcel_height_cm?: number
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "brand_shipping_profiles_brand_application_id_fkey"
-            columns: ["brand_application_id"]
-            isOneToOne: true
-            referencedRelation: "brand_applications"
-            referencedColumns: ["id"]
-          }
+          },
         ]
       }
       brand_products: {
@@ -372,12 +262,223 @@ export type Database = {
           },
         ]
       }
+      brand_shipping_profiles: {
+        Row: {
+          brand_application_id: string
+          origin_pin_code: string
+          processing_days_max: number
+          processing_days_min: number
+          shipping_note: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          brand_application_id: string
+          origin_pin_code: string
+          processing_days_max?: number
+          processing_days_min?: number
+          shipping_note?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          brand_application_id?: string
+          origin_pin_code?: string
+          processing_days_max?: number
+          processing_days_min?: number
+          shipping_note?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brand_shipping_profiles_brand_application_id_fkey"
+            columns: ["brand_application_id"]
+            isOneToOne: true
+            referencedRelation: "brand_applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      customer_addresses: {
+        Row: {
+          city: string
+          created_at: string
+          id: string
+          is_default: boolean
+          label: string
+          landmark: string | null
+          line1: string
+          line2: string | null
+          pin_code: string
+          state: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          city: string
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          label?: string
+          landmark?: string | null
+          line1: string
+          line2?: string | null
+          pin_code: string
+          state: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          city?: string
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          label?: string
+          landmark?: string | null
+          line1?: string
+          line2?: string | null
+          pin_code?: string
+          state?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      customer_wishlist_items: {
+        Row: {
+          created_at: string
+          id: string
+          item_id: string
+          item_type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          item_id: string
+          item_type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          item_id?: string
+          item_type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      order_returns: {
+        Row: {
+          brand_response: string
+          brand_user_id: string
+          commission_amount: number
+          commission_decision: string | null
+          created_at: string
+          customer_details: string
+          customer_user_id: string | null
+          evidence_url: string
+          id: string
+          order_id: string
+          reason: string
+          refund_amount: number
+          refund_reference: string
+          refund_status: string
+          return_tracking_number: string
+          return_tracking_provider: string
+          return_tracking_url: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          brand_response?: string
+          brand_user_id: string
+          commission_amount?: number
+          commission_decision?: string | null
+          created_at?: string
+          customer_details?: string
+          customer_user_id?: string | null
+          evidence_url?: string
+          id?: string
+          order_id: string
+          reason: string
+          refund_amount?: number
+          refund_reference?: string
+          refund_status?: string
+          return_tracking_number?: string
+          return_tracking_provider?: string
+          return_tracking_url?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          brand_response?: string
+          brand_user_id?: string
+          commission_amount?: number
+          commission_decision?: string | null
+          created_at?: string
+          customer_details?: string
+          customer_user_id?: string | null
+          evidence_url?: string
+          id?: string
+          order_id?: string
+          reason?: string
+          refund_amount?: number
+          refund_reference?: string
+          refund_status?: string
+          return_tracking_number?: string
+          return_tracking_provider?: string
+          return_tracking_url?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_returns_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
+            referencedRelation: "brand_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      create_offfeed_cod_orders: {
+        Args: {
+          p_customer_email: string
+          p_customer_name: string
+          p_customer_phone: string
+          p_delivery_address: Json
+          p_destination_pin_code: string
+          p_items: Json
+        }
+        Returns: {
+          brand_name: string
+          line_total: number
+          order_id: string
+          order_number: string
+          product_name: string
+          quantity: number
+        }[]
+      }
+      request_offfeed_return: {
+        Args: {
+          p_details?: string
+          p_evidence_url?: string
+          p_order_id: string
+          p_reason: string
+        }
+        Returns: string
+      }
+      review_offfeed_return: {
+        Args: { p_decision: string; p_response?: string; p_return_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
