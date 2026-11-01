@@ -1,6 +1,5 @@
 import { ArrowDown, ArrowUpRight } from "lucide-react";
 import gGreenDupatta from "@/assets/indian-wear/gulabo_green_dupatta.jpg.asset.json";
-import gulaboBanner from "@/assets/indian-wear/gulabo-banner";
 import gLehenga from "@/assets/indian-wear/gulabo_lehenga.jpg.asset.json";
 import gPrintedSuit from "@/assets/indian-wear/gulabo_printed_suit.jpg.asset.json";
 import gHawaMahal from "@/assets/indian-wear/gulabo_hawa_mahal.jpg.asset.json";
@@ -102,17 +101,7 @@ export function IndianWearEdit({ isHim, onPickCategory }: { isHim: boolean; onPi
   const scrollTo = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
   return <div className="space-y-10 sm:space-y-14">
     {/* HERO */}
-    {!isHim ? (
-      <section aria-labelledby="iw-title" className="relative isolate aspect-[2.68/1] w-full min-h-0 overflow-hidden rounded-[1.5rem] border border-[#8f6848]/25 bg-[#4a2b1d] shadow-soft">
-        <img
-          src={gulaboBanner}
-          alt="Gulabo — OffFeed's Indian wear edit for her, styled as a warm, floral heritage journal banner"
-          className="absolute inset-0 h-full w-full object-cover"
-          fetchPriority="high"
-          decoding="async"
-        />
-      </section>
-    ) : (
+    {isHim && (
       <section aria-labelledby="iw-title" className="iw-texture relative isolate overflow-hidden rounded-[1.4rem] border border-iw-line bg-iw-hero text-iw-hero-ink shadow-soft">
         <div className="grid items-center gap-5 p-4 sm:p-6 lg:min-h-[480px] lg:grid-cols-[minmax(0,0.88fr)_minmax(0,1.12fr)] lg:gap-7 lg:p-6 xl:min-h-[500px]">
           <div className="flex flex-col justify-center px-1 py-2 sm:px-3 lg:py-3">
