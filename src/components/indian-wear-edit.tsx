@@ -1,5 +1,6 @@
 import { ArrowDown, ArrowUpRight } from "lucide-react";
 import gulaboBanner from "@/assets/indian-wear/Gulabo_ An Indian Heritage Journal.png";
+import nawabBanner from "@/assets/indian-wear/The Nawab Edit_ Tradition With Attitude (1).png";
 import gGreenDupatta from "@/assets/indian-wear/gulabo_green_dupatta.jpg.asset.json";
 import gLehenga from "@/assets/indian-wear/gulabo_lehenga.jpg.asset.json";
 import gPrintedSuit from "@/assets/indian-wear/gulabo_printed_suit.jpg.asset.json";
@@ -102,8 +103,18 @@ export function IndianWearEdit({ isHim, onPickCategory }: { isHim: boolean; onPi
   const scrollTo = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
   return <div className="space-y-10 sm:space-y-14">
     {/* HERO */}
-    {!isHim ? (
-      <section aria-labelledby="iw-title" className="relative isolate aspect-[2.26/1] w-full min-h-0 overflow-hidden rounded-[1.5rem] border border-[#8f6848]/25 bg-[#4a2b1d] shadow-soft">
+    {isHim ? (
+      <section aria-label="Nawab — The Indian Wear Edit for Him" className="relative isolate aspect-[2.26/1] w-full min-h-0 overflow-hidden rounded-[1.5rem] border border-[#8f6848]/25 bg-[#252914] shadow-soft">
+        <img
+          src={nawabBanner}
+          alt="Nawab — Tradition with a little attitude, OffFeed's Indian wear edit for him"
+          className="absolute inset-0 h-full w-full object-cover"
+          fetchPriority="high"
+          decoding="async"
+        />
+      </section>
+    ) : (
+      <section aria-label="Gulabo — The Indian Wear Edit for Her" className="relative isolate aspect-[2.26/1] w-full min-h-0 overflow-hidden rounded-[1.5rem] border border-[#8f6848]/25 bg-[#4a2b1d] shadow-soft">
         <img
           src={gulaboBanner}
           alt="Gulabo — An Indian Heritage Journal, OffFeed's Indian wear edit for her"
@@ -111,50 +122,6 @@ export function IndianWearEdit({ isHim, onPickCategory }: { isHim: boolean; onPi
           fetchPriority="high"
           decoding="async"
         />
-      </section>
-    ) : (
-      <section aria-labelledby="iw-title" className="relative isolate overflow-hidden rounded-[1.4rem] border border-[#c9b78f]/50 bg-[#252914] text-[#f8edcf] shadow-soft">
-        <div className="grid min-h-[560px] grid-cols-1 lg:min-h-[520px] lg:grid-cols-[.92fr_1.08fr]">
-          <div className="relative z-10 flex flex-col justify-center overflow-hidden px-6 py-10 sm:px-10 lg:px-9 xl:px-12">
-            <span aria-hidden="true" className="pointer-events-none absolute -left-10 -top-12 h-52 w-52 rounded-full border border-[#d8bd7b]/15" />
-            <span aria-hidden="true" className="pointer-events-none absolute bottom-5 left-4 font-display text-8xl text-[#d8bd7b]/10">✳</span>
-            <p className="relative text-[10px] font-semibold tracking-[.25em] text-[#e5d4a9] sm:text-[11px]">{w.eyebrow}</p>
-            <div className="relative mt-3 flex items-center gap-3">
-              <h1 id="iw-title" className="font-display text-[4.4rem] font-medium leading-[.85] tracking-[-.055em] sm:text-8xl xl:text-[7.2rem]">{w.name}</h1>
-              <span aria-hidden="true" className="mb-1 rotate-12 font-hand text-4xl text-[#e5d4a9]">♛</span>
-            </div>
-            <span aria-hidden="true" className="mt-3 block h-px w-44 bg-gradient-to-r from-[#d9bd79] to-transparent" />
-            <h2 className="mt-4 font-display text-[1.75rem] italic leading-tight text-[#f5e6c5] sm:text-3xl">{w.tagline}</h2>
-            <p className="mt-4 max-w-md text-sm leading-6 text-[#e4d9bd] sm:text-[15px]">{w.intro}</p>
-            <div className="mt-6 flex flex-wrap items-center gap-x-3 gap-y-2 border-y border-[#d9bd79]/35 py-3 text-[10px] font-semibold uppercase tracking-[.12em] text-[#f2e5c9] sm:text-[11px]">
-              {["Kurtas","Sherwanis","Bandhgalas","Jackets","Sets"].map((item,i)=><span key={item} className="inline-flex items-center gap-3">{i>0&&<i className="h-3 w-px bg-[#d9bd79]/45" />}{item}</span>)}
-            </div>
-            <div className="mt-6 flex flex-wrap gap-3">
-              <button type="button" onClick={() => scrollTo("indian-wear-shop")} className="inline-flex items-center gap-2 rounded-full bg-[#f3dfae] px-5 py-3 text-sm font-semibold text-[#34331e] shadow-sm transition hover:-translate-y-0.5 hover:bg-[#fff0c9]">Shop the Edit <ArrowDown className="size-4" /></button>
-              <button type="button" onClick={() => scrollTo("indian-wear-collections")} className="inline-flex items-center gap-2 rounded-full border border-[#e5d4a9]/55 px-5 py-3 text-sm font-medium text-[#f8edcf] transition hover:bg-[#f8edcf]/10">Browse Collections <ArrowUpRight className="size-4" /></button>
-            </div>
-            <p className="mt-6 font-hand text-xl text-[#e5d4a9]">{w.signoff}</p>
-          </div>
-          <div className="relative grid min-h-[430px] grid-cols-[1fr_.43fr] gap-2 overflow-hidden bg-[#c9a47a] p-2 sm:min-h-[500px] sm:gap-3 sm:p-3">
-            <figure className="relative min-h-[420px] overflow-hidden rounded-[1rem] sm:min-h-[480px]">
-              <Photo shot={{...w.hero,src:nArches.url,alt:"A man in a white kurta and red safa standing beneath carved terracotta arches in Jaipur",pos:"50% 60%"}} eager sizes="(min-width: 1024px) 42vw, 68vw" />
-              <span className="absolute inset-0 bg-gradient-to-t from-[#211d12]/50 via-transparent to-[#211d12]/5" />
-              <figcaption className="absolute bottom-4 left-4 rounded-full border border-white/40 bg-[#f6ebd5]/90 px-3 py-1.5 font-hand text-lg text-[#373321] backdrop-blur">the royal edit, reimagined</figcaption>
-              <span aria-hidden="true" className="absolute left-4 top-4 rounded-full bg-[#f6ebd5]/90 px-3 py-1 font-hand text-base text-[#373321]">Jaipur diaries ✳</span>
-            </figure>
-            <div className="grid grid-rows-2 gap-2 sm:gap-3">
-              <figure className="relative min-h-0 overflow-hidden rounded-[1rem] border-[5px] border-[#f1e5cc] shadow-lg">
-                <Photo shot={{...w.side[0],src:nBandhgala.url,alt:"A man in a tailored brown bandhgala styled for a contemporary Indian occasion"}} sizes="(min-width: 1024px) 18vw, 32vw" />
-                <figcaption className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#201d13]/75 to-transparent px-2 pb-2 pt-8 font-hand text-lg leading-none text-[#fff0d2] sm:text-xl">The Nawab Edit ♛</figcaption>
-              </figure>
-              <figure className="relative min-h-0 overflow-hidden rounded-[1rem] border-[5px] border-[#f1e5cc] shadow-lg">
-                <Photo shot={{...w.side[1],src:nNehru.url,alt:"A man in a refined grey Nehru jacket styled for modern Indian dressing"}} sizes="(min-width: 1024px) 18vw, 32vw" />
-                <figcaption className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#201d13]/75 to-transparent px-2 pb-2 pt-8 font-hand text-lg leading-none text-[#fff0d2] sm:text-xl">Nehru, done easy</figcaption>
-              </figure>
-            </div>
-            <span aria-hidden="true" className="pointer-events-none absolute -bottom-2 left-1/3 rotate-[-5deg] border border-[#f1e5cc]/80 bg-[#f1e5cc] px-4 py-2 font-hand text-sm text-[#4b422d] shadow-lg">Made for the baraat ✦</span>
-          </div>
-        </div>
       </section>
     )}
 
