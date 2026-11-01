@@ -144,11 +144,11 @@ export function IndianWearEdit({ isHim, onPickCategory }: { isHim: boolean; onPi
             </figure>
             <div className="grid grid-rows-2 gap-2 sm:gap-3">
               <figure className="relative min-h-0 overflow-hidden rounded-[1rem] border-[5px] border-[#f1e5cc] shadow-lg">
-                <Photo shot={{...w.side[0],src:nBandhgala.url,alt:"A contemporary Indian bandhgala look in rich earthy tones"}} sizes="(min-width: 1024px) 18vw, 32vw" />
+                <Photo shot={{...w.side[0],src:nSherwani.url,alt:"A man wearing an elegant traditional sherwani in a heritage wedding editorial"}} sizes="(min-width: 1024px) 18vw, 32vw" />
                 <figcaption className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#201d13]/75 to-transparent px-2 pb-2 pt-8 font-hand text-lg leading-none text-[#fff0d2] sm:text-xl">The Nawab Edit ♛</figcaption>
               </figure>
               <figure className="relative min-h-0 overflow-hidden rounded-[1rem] border-[5px] border-[#f1e5cc] shadow-lg">
-                <Photo shot={{...w.side[1],src:nNehru.url,alt:"A relaxed Nehru jacket look for modern Indian dressing"}} sizes="(min-width: 1024px) 18vw, 32vw" />
+                <Photo shot={{...w.side[1],src:nWhiteKurta.url,alt:"A man in a crisp white kurta styled against a warm Indian heritage setting"}} sizes="(min-width: 1024px) 18vw, 32vw" />
                 <figcaption className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#201d13]/75 to-transparent px-2 pb-2 pt-8 font-hand text-lg leading-none text-[#fff0d2] sm:text-xl">Nehru, done easy</figcaption>
               </figure>
             </div>
