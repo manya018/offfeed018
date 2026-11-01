@@ -137,7 +137,7 @@ export function IndianWearEdit({ isHim, onPickCategory }: { isHim: boolean; onPi
           </div>
           <div className="relative grid min-h-[430px] grid-cols-[1fr_.43fr] gap-2 overflow-hidden bg-[#c9a47a] p-2 sm:min-h-[500px] sm:gap-3 sm:p-3">
             <figure className="relative min-h-[420px] overflow-hidden rounded-[1rem] sm:min-h-[480px]">
-              <Photo shot={{...w.hero,src:nGroom.url,alt:"A groom in a traditional ivory sherwani and red safa, photographed in a warm heritage setting",pos:"50% 35%"}} eager sizes="(min-width: 1024px) 42vw, 68vw" />
+              <Photo shot={{...w.hero,src:nArches.url,alt:"A man in a white kurta and red safa standing beneath carved terracotta arches in Jaipur",pos:"50% 60%"}} eager sizes="(min-width: 1024px) 42vw, 68vw" />
               <span className="absolute inset-0 bg-gradient-to-t from-[#211d12]/50 via-transparent to-[#211d12]/5" />
               <figcaption className="absolute bottom-4 left-4 rounded-full border border-white/40 bg-[#f6ebd5]/90 px-3 py-1.5 font-hand text-lg text-[#373321] backdrop-blur">the royal edit, reimagined</figcaption>
               <span aria-hidden="true" className="absolute left-4 top-4 rounded-full bg-[#f6ebd5]/90 px-3 py-1 font-hand text-base text-[#373321]">Jaipur diaries ✳</span>
