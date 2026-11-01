@@ -39,8 +39,8 @@ const worlds = {
     signoff: "summer, somewhere in old Jaipur —",
     hero: { src: gGreenDupatta.url, alt: "A young woman in an emerald dupatta draped over her head, photographed in soft daylight inside an old village house", caption: "Emerald dupatta, afternoon light", pos: "50% 30%" },
     side: [
-      { src: gRoses.url, alt: "Pink roses blooming in a sunlit Indian rose garden", caption: "rose garden detour", pos: "50% 40%" },
-      { src: gHawaMahal.url, alt: "The pink sandstone courtyard of Hawa Mahal in Jaipur with visitors walking below", caption: "pink sandstone, Jaipur", pos: "50% 55%" },
+      { src: gGarland.url, alt: "Fresh jasmine and marigold garlands being prepared at an Indian flower market", caption: "jasmine in the morning", pos: "50% 40%" },
+      { src: gLane.url, alt: "A lived-in old Jaipur lane with carved balconies and warm afternoon light", caption: "old-city afternoons", pos: "50% 55%" },
     ] as Shot[],
     postcard: { src: gJuttiStall.url, alt: "Gold and red embroidered juttis hanging at a market stall", caption: "juttis, Dilli Haat" },
     note: "wear the jhumkas. always.",
@@ -101,7 +101,7 @@ export function IndianWearEdit({ isHim, onPickCategory }: { isHim: boolean; onPi
   const scrollTo = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
   return <div className="space-y-14 sm:space-y-20">
     {/* HERO */}
-    <section aria-labelledby="iw-title" className="iw-texture relative isolate overflow-hidden rounded-[1.6rem] border border-iw-line bg-iw-hero text-iw-hero-ink shadow-soft">
+    <section aria-labelledby="iw-title" className="iw-texture relative isolate overflow-hidden rounded-[1.6rem] border border-iw-line bg-iw-hero text-iw-hero-ink shadow-soft" style={!isHim ? { backgroundImage: "linear-gradient(90deg, rgba(244,231,208,.91) 0%, rgba(244,231,208,.78) 43%, rgba(63,35,25,.18) 100%), url('/images/gulabo-dreamy-atmosphere.webp')", backgroundSize: "cover", backgroundPosition: "center" } : undefined}>
       <div className="grid gap-8 p-4 sm:p-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-10 lg:p-8">
         <div className="flex flex-col justify-center px-2 pt-4 sm:px-4 lg:py-6">
           <p className="text-[11px] font-semibold tracking-[.24em] text-iw-hero-muted">{w.eyebrow}</p>
@@ -136,7 +136,7 @@ export function IndianWearEdit({ isHim, onPickCategory }: { isHim: boolean; onPi
     </section>
 
     {/* STORY STRIP */}
-    <section aria-labelledby="iw-story" className="iw-texture rounded-[1.6rem] border border-iw-line bg-iw-paper px-4 py-8 text-iw-ink sm:px-8 sm:py-10">
+    <section aria-labelledby="iw-story" className="iw-texture rounded-[1.6rem] border border-iw-line bg-iw-paper px-4 py-8 text-iw-ink sm:px-8 sm:py-10" style={!isHim ? { backgroundImage: "linear-gradient(rgba(244,235,218,.88), rgba(244,235,218,.88)), url('/images/gulabo-dreamy-atmosphere.webp')", backgroundSize: "cover", backgroundPosition: "center 42%" } : undefined}>
       <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
         <div><p className="text-[11px] font-semibold tracking-[.22em] text-iw-muted">THE WORLD OF {w.name}</p><h2 id="iw-story" className="mt-2 font-display text-4xl sm:text-5xl">{w.storyTitle}</h2></div>
         <p className="max-w-sm text-sm leading-6 text-iw-muted">{w.storyIntro}</p>
