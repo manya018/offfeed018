@@ -13,10 +13,10 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as BrandReviewRouteImport } from './routes/brand-review'
-import { Route as CreateRouteImport } from './routes/create'
 import { Route as CheckoutRouteImport } from './routes/checkout'
-import { Route as DiscoverRouteImport } from './routes/discover'
+import { Route as CreateRouteImport } from './routes/create'
 import { Route as DemoBrandRouteImport } from './routes/demo-brand'
+import { Route as DiscoverRouteImport } from './routes/discover'
 import { Route as ExploreRouteImport } from './routes/explore'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as WishlistRouteImport } from './routes/wishlist'
@@ -44,14 +44,14 @@ const BrandReviewRoute = BrandReviewRouteImport.update({
   path: '/brand-review',
   getParentRoute: () => rootRouteImport,
 } as any)
-const CreateRoute = CreateRouteImport.update({
-  id: '/create',
-  path: '/create',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const CheckoutRoute = CheckoutRouteImport.update({
   id: '/checkout',
   path: '/checkout',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CreateRoute = CreateRouteImport.update({
+  id: '/create',
+  path: '/create',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DemoBrandRoute = DemoBrandRouteImport.update({
@@ -105,11 +105,10 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/brand-review': typeof BrandReviewRoute
-  '/create': typeof CreateRoute
   '/checkout': typeof CheckoutRoute
+  '/create': typeof CreateRoute
+  '/demo-brand': typeof DemoBrandRoute
   '/discover': typeof DiscoverRoute
-  '/demo-brand': typeof DemoBrandRoute
-  '/demo-brand': typeof DemoBrandRoute
   '/explore': typeof ExploreRoute
   '/profile': typeof ProfileRoute
   '/wishlist': typeof WishlistRoute
@@ -122,8 +121,9 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/brand-review': typeof BrandReviewRoute
-  '/create': typeof CreateRoute
   '/checkout': typeof CheckoutRoute
+  '/create': typeof CreateRoute
+  '/demo-brand': typeof DemoBrandRoute
   '/discover': typeof DiscoverRoute
   '/explore': typeof ExploreRoute
   '/profile': typeof ProfileRoute
@@ -139,11 +139,13 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/about': typeof AboutRoute
   '/brand-review': typeof BrandReviewRoute
-  '/create': typeof CreateRoute
   '/checkout': typeof CheckoutRoute
+  '/create': typeof CreateRoute
+  '/demo-brand': typeof DemoBrandRoute
   '/discover': typeof DiscoverRoute
   '/explore': typeof ExploreRoute
   '/profile': typeof ProfileRoute
+  '/wishlist': typeof WishlistRoute
   '/brand/$brandHandle': typeof BrandBrandHandleRoute
   '/for-brands/apply': typeof ForBrandsApplyRoute
   '/look/$lookId': typeof LookLookIdRoute
@@ -155,10 +157,10 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/brand-review'
-    | '/create'
     | '/checkout'
-    | '/discover'
+    | '/create'
     | '/demo-brand'
+    | '/discover'
     | '/explore'
     | '/profile'
     | '/wishlist'
@@ -171,11 +173,13 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/brand-review'
-    | '/create'
     | '/checkout'
+    | '/create'
+    | '/demo-brand'
     | '/discover'
     | '/explore'
     | '/profile'
+    | '/wishlist'
     | '/brand/$brandHandle'
     | '/for-brands/apply'
     | '/look/$lookId'
@@ -186,16 +190,17 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/about'
     | '/brand-review'
-    | '/create'
     | '/checkout'
+    | '/create'
+    | '/demo-brand'
     | '/discover'
     | '/explore'
     | '/profile'
+    | '/wishlist'
     | '/brand/$brandHandle'
     | '/for-brands/apply'
     | '/look/$lookId'
     | '/_authenticated/brand/dashboard'
-    | '/demo-brand'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -203,10 +208,10 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AboutRoute: typeof AboutRoute
   BrandReviewRoute: typeof BrandReviewRoute
-  CreateRoute: typeof CreateRoute
   CheckoutRoute: typeof CheckoutRoute
-  DiscoverRoute: typeof DiscoverRoute
+  CreateRoute: typeof CreateRoute
   DemoBrandRoute: typeof DemoBrandRoute
+  DiscoverRoute: typeof DiscoverRoute
   ExploreRoute: typeof ExploreRoute
   ProfileRoute: typeof ProfileRoute
   WishlistRoute: typeof WishlistRoute
@@ -245,25 +250,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BrandReviewRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/checkout': {
+      id: '/checkout'
+      path: '/checkout'
+      fullPath: '/checkout'
+      preLoaderRoute: typeof CheckoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/create': {
       id: '/create'
       path: '/create'
       fullPath: '/create'
       preLoaderRoute: typeof CreateRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/checkout': {
-      id: '/checkout'
-      path: '/checkout'
-      fullPath: '/checkout'
-      preLoaderRoute: typeof CheckoutRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/checkout': {
-      id: '/checkout'
-      path: '/checkout'
-      fullPath: '/checkout'
-      preLoaderRoute: typeof CheckoutRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/demo-brand': {
@@ -287,18 +285,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ExploreRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/wishlist': {
-      id: '/wishlist'
-      path: '/wishlist'
-      fullPath: '/wishlist'
-      preLoaderRoute: typeof WishlistRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/profile': {
       id: '/profile'
       path: '/profile'
       fullPath: '/profile'
       preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/wishlist': {
+      id: '/wishlist'
+      path: '/wishlist'
+      fullPath: '/wishlist'
+      preLoaderRoute: typeof WishlistRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/brand/$brandHandle': {
@@ -348,12 +346,13 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AboutRoute: AboutRoute,
   BrandReviewRoute: BrandReviewRoute,
-  CreateRoute: CreateRoute,
   CheckoutRoute: CheckoutRoute,
-  DiscoverRoute: DiscoverRoute,
+  CreateRoute: CreateRoute,
   DemoBrandRoute: DemoBrandRoute,
+  DiscoverRoute: DiscoverRoute,
   ExploreRoute: ExploreRoute,
   ProfileRoute: ProfileRoute,
+  WishlistRoute: WishlistRoute,
   BrandBrandHandleRoute: BrandBrandHandleRoute,
   ForBrandsApplyRoute: ForBrandsApplyRoute,
   LookLookIdRoute: LookLookIdRoute,
