@@ -1,5 +1,6 @@
 import { ArrowDown, ArrowUpRight } from "lucide-react";
 import gGreenDupatta from "@/assets/indian-wear/gulabo_green_dupatta.jpg.asset.json";
+import gulaboBanner from "@/assets/indian-wear/gulabo-banner";
 import gLehenga from "@/assets/indian-wear/gulabo_lehenga.jpg.asset.json";
 import gPrintedSuit from "@/assets/indian-wear/gulabo_printed_suit.jpg.asset.json";
 import gHawaMahal from "@/assets/indian-wear/gulabo_hawa_mahal.jpg.asset.json";
@@ -102,23 +103,14 @@ export function IndianWearEdit({ isHim, onPickCategory }: { isHim: boolean; onPi
   return <div className="space-y-10 sm:space-y-14">
     {/* HERO */}
     {!isHim ? (
-      <section aria-labelledby="iw-title" className="relative isolate flex min-h-[500px] h-[min(68vh,620px)] max-h-[620px] items-center justify-center overflow-hidden rounded-[1.5rem] border border-[#8f6848]/35 bg-[#4a2b1d] text-[#fff0d8] shadow-soft sm:min-h-[530px] lg:h-[min(70vh,600px)]">
-        <div aria-hidden="true" className="absolute inset-0">
-          <img src={gHawaMahal.url} alt="" className="h-full w-full object-cover object-center" fetchPriority="high" />
-          <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(38,20,12,.30)_0%,rgba(55,29,17,.60)_34%,rgba(55,29,17,.64)_66%,rgba(38,20,12,.25)_100%)]" />
-          <div className="absolute inset-0 bg-[linear-gradient(0deg,rgba(35,18,10,.32),transparent_34%,rgba(35,18,10,.12))]" />
-          <div className="absolute inset-0 opacity-[.16] [background-image:radial-gradient(rgba(255,231,195,.8)_0.7px,transparent_0.7px)] [background-size:20px_20px]" />
-        </div>
-        <div className="relative z-10 mx-auto flex w-full max-w-4xl flex-col items-center px-5 py-12 text-center sm:px-10">
-          <p className="text-[10px] font-medium uppercase tracking-[.25em] text-[#f4dcb8] sm:text-xs">OFFFEED · AN INDIAN HERITAGE JOURNAL</p>
-          <div aria-hidden="true" className="mt-5 flex items-center gap-3 text-[#f4dcb8]/90"><span className="h-px w-12 bg-current/70 sm:w-20" /><span className="text-lg">✿</span><span className="h-px w-12 bg-current/70 sm:w-20" /></div>
-          <h1 id="iw-title" className="mt-3 font-display text-[4.3rem] font-medium italic leading-[.88] tracking-[-.045em] text-[#fff0d8] drop-shadow-[0_3px_18px_rgba(35,16,8,.25)] sm:text-8xl lg:text-[7.6rem]">GULABO</h1>
-          <p className="mt-4 text-[11px] font-medium uppercase tracking-[.17em] text-[#f8e5c9] sm:text-sm">THE INDIAN WEAR EDIT · HER</p>
-          <h2 className="mt-6 font-display text-2xl italic leading-tight text-[#fff0d8] sm:text-3xl">A little desi. A lot of drama.</h2>
-          <p className="mt-3 max-w-lg text-sm leading-6 text-[#f7e5cc] sm:text-base">For the love of beautiful Indian silhouettes, delicate details and outfits that deserve a second look.</p>
-          <div aria-hidden="true" className="mt-6 h-px w-3/4 max-w-md bg-gradient-to-r from-transparent via-[#f4dcb8]/70 to-transparent" />
-          <p className="mt-4 text-[10px] font-medium tracking-[.13em] text-[#f8e5c9] sm:text-xs sm:tracking-[.18em]">KURTAS&nbsp; · &nbsp;SUITS&nbsp; · &nbsp;SAREES&nbsp; · &nbsp;LEHENGAS&nbsp; · &nbsp;CO-ORDS</p>
-        </div>
+      <section aria-labelledby="iw-title" className="relative isolate aspect-[2.68/1] w-full min-h-0 overflow-hidden rounded-[1.5rem] border border-[#8f6848]/25 bg-[#4a2b1d] shadow-soft">
+        <img
+          src={gulaboBanner}
+          alt="Gulabo — OffFeed's Indian wear edit for her, styled as a warm, floral heritage journal banner"
+          className="absolute inset-0 h-full w-full object-cover"
+          fetchPriority="high"
+          decoding="async"
+        />
       </section>
     ) : (
       <section aria-labelledby="iw-title" className="iw-texture relative isolate overflow-hidden rounded-[1.4rem] border border-iw-line bg-iw-hero text-iw-hero-ink shadow-soft">
