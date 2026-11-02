@@ -102,7 +102,7 @@ export function IndianWearEdit({ isHim, onPickCategory }: { isHim: boolean; onPi
   const scrollTo = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
   return <div className="space-y-10 sm:space-y-14">
     {/* HERO */}
-    <section aria-label={isHim ? "Nawab — The Indian Wear Edit for Him" : "Gulabo — The Indian Wear Edit for Her"} className={isHim ? "relative isolate aspect-[2.33/1] w-full min-h-0 overflow-hidden rounded-[1.5rem] border border-[#8f6848]/25 bg-[#4a2b1d] shadow-soft" : "relative isolate aspect-[970/490] w-full min-h-0 overflow-hidden rounded-[1.5rem]"}>
+    <section aria-label={isHim ? "Nawab — The Indian Wear Edit for Him" : "Gulabo — The Indian Wear Edit for Her"} className={isHim ? "relative isolate aspect-[2.33/1] w-full min-h-0 overflow-hidden rounded-[1.5rem] border border-[#8f6848]/25 bg-[#4a2b1d] shadow-soft" : "relative isolate aspect-[970/490] w-full min-h-0 overflow-hidden rounded-[1.75rem]"}>
       <img
         src={isHim ? "https://raw.githubusercontent.com/manya018/offfeed018/main/src/assets/indian-wear/The%20Nawab%20Edit_%20Tradition%20With%20Attitude%20(1).png" : gulaboBanner}
         alt={isHim ? "Nawab — Tradition, with a little attitude, OffFeed's Indian wear edit for him" : "Gulabo — An Indian Heritage Journal, OffFeed's Indian wear edit for her"}
