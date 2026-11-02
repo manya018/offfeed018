@@ -267,7 +267,21 @@ function DiscoverPage() {
             <button type="button" aria-expanded={clothingMenuOpen} onClick={() => setClothingMenuOpen((open) => !open)} className="flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-left text-sm font-semibold text-[#59463e] hover:bg-white"><span>Clothing</span><span className="text-[#b46f78]">{clothingMenuOpen ? "−" : "+"}</span></button>
             {clothingMenuOpen && <div className="max-h-52 space-y-0.5 overflow-y-auto pb-2 pl-2 pr-1 lg:max-h-none">{clothingCategories.map((item) => <button type="button" key={item} onClick={() => chooseClothingCategory(item)} className={`block w-full rounded-md px-3 py-2 text-left text-xs transition ${selectedClothingCategory === item ? "bg-[#b46f78] font-semibold text-white" : "text-[#77645a] hover:bg-[#f1e5e1] hover:text-[#59463e]"}`}>{item}</button>)}</div>}
           </div>
-          <button type="button" onClick={() => { window.location.href = "/discover?category=indian-wear"; }} className="flex w-full items-center justify-between rounded-lg border border-[#e7cfc0] bg-[#f4e8dd] px-3 py-2.5 text-left text-sm font-semibold text-[#8c4e3d] transition hover:bg-[#efdfd2]"><span>{isHim ? "NaWaB" : "GuLaBo"}</span><span>✦</span></button>
+          <button
+            type="button"
+            aria-label={isHim ? "Explore Nawab, the Indian wear edit for him" : "Explore Gulabo, the Indian wear edit for her"}
+            onClick={() => { window.location.href = "/discover?category=indian-wear"; }}
+            className={`group relative isolate flex min-h-[74px] w-full items-center gap-3 overflow-hidden rounded-[1.1rem] border px-3 py-2.5 text-left shadow-[0_8px_22px_-16px_rgba(35,18,10,.65)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_12px_26px_-15px_rgba(35,18,10,.7)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ${isHim ? "border-[#b18b58] bg-[linear-gradient(112deg,#e6d0aa_0%,#f6e9d0_48%,#d7b98c_100%)] text-[#4b2d18] focus-visible:ring-[#9b7546]" : "border-[#a56d43] bg-[linear-gradient(112deg,#30070e_0%,#701522_54%,#3b0911_100%)] text-[#f4dfb6] focus-visible:ring-[#b78a52]"}`}
+          >
+            <span aria-hidden="true" className={`relative grid size-11 shrink-0 place-items-center overflow-hidden rounded-[50%_50%_12px_12px] border shadow-inner ${isHim ? "border-[#9b7546]/70 bg-[repeating-linear-gradient(45deg,#d9c096_0px,#d9c096_1px,#ead9b9_1px,#ead9b9_5px)] text-[#79552d]" : "border-[#d6ad75]/70 bg-[radial-gradient(circle_at_50%_38%,#a53b43_0%,#6c1421_58%,#3a0710_100%)] text-[#f4d9a8]"}`}>
+              <span className="font-display text-2xl leading-none">{isHim ? "۞" : "✿"}</span>
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className={`block font-display text-[1.25rem] italic leading-tight tracking-wide ${isHim ? "text-[#4b2d18]" : "text-[#f7e5c4]"}`}>{isHim ? "Nawab" : "Gulabo"}</span>
+              <span className={`mt-1 block text-[9px] font-semibold uppercase tracking-[.16em] ${isHim ? "text-[#765634]" : "text-[#e5c18d]"}`}>{isHim ? "The desi gentleman edit" : "The desi girl edit"}</span>
+            </span>
+            <span aria-hidden="true" className={`pr-1 font-serif text-xl transition-transform duration-300 group-hover:rotate-12 ${isHim ? "text-[#8a6336]" : "text-[#e8c58f]"}`}>✦</span>
+          </button>
           <div className="rounded-lg bg-white/65 lg:bg-transparent">
             <button type="button" aria-expanded={accessoriesMenuOpen} onClick={() => setAccessoriesMenuOpen((open) => !open)} className="flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-left text-sm font-semibold text-[#59463e] hover:bg-white"><span>Accessories</span><span className="text-[#71836d]">{accessoriesMenuOpen ? "−" : "+"}</span></button>
             {accessoriesMenuOpen && <div className="space-y-0.5 pb-2 pl-2 pr-1">{accessoryCategories.map((item) => <button type="button" key={item} onClick={() => { window.location.href = "/discover?category=accessories"; }} className="block w-full rounded-md px-3 py-2 text-left text-xs text-[#77645a] hover:bg-[#edf0e8]">{item}</button>)}</div>}
