@@ -265,27 +265,54 @@ export type Database = {
       brand_shipping_profiles: {
         Row: {
           brand_application_id: string
+          gstin: string | null
           origin_pin_code: string
+          parcel_height_cm: number
+          parcel_length_cm: number
+          parcel_weight_grams: number
+          parcel_width_cm: number
+          pickup_address: string
+          pickup_contact_name: string
+          pickup_phone: string
           processing_days_max: number
           processing_days_min: number
+          return_address: string | null
           shipping_note: string
           updated_at: string
           user_id: string
         }
         Insert: {
           brand_application_id: string
+          gstin?: string | null
           origin_pin_code: string
+          parcel_height_cm?: number
+          parcel_length_cm?: number
+          parcel_weight_grams?: number
+          parcel_width_cm?: number
+          pickup_address?: string
+          pickup_contact_name?: string
+          pickup_phone?: string
           processing_days_max?: number
           processing_days_min?: number
+          return_address?: string | null
           shipping_note?: string
           updated_at?: string
           user_id: string
         }
         Update: {
           brand_application_id?: string
+          gstin?: string | null
           origin_pin_code?: string
+          parcel_height_cm?: number
+          parcel_length_cm?: number
+          parcel_weight_grams?: number
+          parcel_width_cm?: number
+          pickup_address?: string
+          pickup_contact_name?: string
+          pickup_phone?: string
           processing_days_max?: number
           processing_days_min?: number
+          return_address?: string | null
           shipping_note?: string
           updated_at?: string
           user_id?: string
@@ -369,6 +396,53 @@ export type Database = {
         }
         Relationships: []
       }
+      dispatch_evidence: {
+        Row: {
+          ai_report: Json | null
+          brand_user_id: string
+          created_at: string
+          id: string
+          order_id: string
+          packing_note: string
+          photos: Json
+          status: string
+          updated_at: string
+          video_path: string
+        }
+        Insert: {
+          ai_report?: Json | null
+          brand_user_id: string
+          created_at?: string
+          id?: string
+          order_id: string
+          packing_note?: string
+          photos?: Json
+          status?: string
+          updated_at?: string
+          video_path?: string
+        }
+        Update: {
+          ai_report?: Json | null
+          brand_user_id?: string
+          created_at?: string
+          id?: string
+          order_id?: string
+          packing_note?: string
+          photos?: Json
+          status?: string
+          updated_at?: string
+          video_path?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dispatch_evidence_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "brand_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       order_returns: {
         Row: {
           brand_response: string
@@ -439,6 +513,63 @@ export type Database = {
             columns: ["order_id"]
             isOneToOne: true
             referencedRelation: "brand_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      return_evidence: {
+        Row: {
+          ai_report: Json | null
+          created_at: string
+          customer_user_id: string
+          id: string
+          notes: string
+          order_id: string
+          photos: Json
+          return_id: string
+          status: string
+          trust_score: number
+          updated_at: string
+        }
+        Insert: {
+          ai_report?: Json | null
+          created_at?: string
+          customer_user_id: string
+          id?: string
+          notes?: string
+          order_id: string
+          photos?: Json
+          return_id: string
+          status?: string
+          trust_score?: number
+          updated_at?: string
+        }
+        Update: {
+          ai_report?: Json | null
+          created_at?: string
+          customer_user_id?: string
+          id?: string
+          notes?: string
+          order_id?: string
+          photos?: Json
+          return_id?: string
+          status?: string
+          trust_score?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "return_evidence_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "brand_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "return_evidence_return_id_fkey"
+            columns: ["return_id"]
+            isOneToOne: false
+            referencedRelation: "order_returns"
             referencedColumns: ["id"]
           },
         ]
