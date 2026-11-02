@@ -108,10 +108,10 @@ export const getPublicBrandProfile = createServerFn({ method: "GET" })
     if (productsError) throw new Error("This brand’s products could not be loaded.");
 
     const productPaths = [...new Set((rows ?? []).map((row) => row.image_path).filter((path): path is string => Boolean(path && !path.startsWith("https://"))))];
-    const brandPaths = [...new Set([brand.logo_path, brand.cover_path])];
+    const brandPaths = [...new Set([brand.logo_path, brand.cover_path].filter((path): path is string => Boolean(path)))];
     const [productFiles, brandFiles] = await Promise.all([
       productPaths.length ? supabase.storage.from("brand-product-images").createSignedUrls(productPaths, 3600) : Promise.resolve({ data: [], error: null }),
-      supabase.storage.from("brand-applications").createSignedUrls(brandPaths, 604800),
+      brandPaths.length ? supabase.storage.from("brand-applications").createSignedUrls(brandPaths, 604800) : Promise.resolve({ data: [], error: null }),
     ]);
     if (productFiles.error || brandFiles.error) throw new Error("Some brand photos could not be loaded.");
     const productSigned = new Map((productFiles.data ?? []).flatMap((file) => file.path && file.signedUrl ? [[file.path, file.signedUrl] as const] : []));
