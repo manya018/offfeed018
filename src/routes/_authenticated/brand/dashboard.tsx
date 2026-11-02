@@ -218,7 +218,11 @@ function BrandDashboard() {
   };
 
   const updateDraft = (key: keyof DraftProduct, value: string) => setDraft((current) => ({ ...current, [key]: value }));
-  const toggleDraftAudience = (value: "her" | "him") => setDraft((current) => ({ ...current, audience: current.audience.includes(value) ? current.audience.filter((item) => item !== value) : [...current.audience, value] }));
+  const toggleDraftAudience = (value: "her" | "him") => setDraft((current) => {
+    const audience = current.audience.includes(value) ? current.audience.filter((item) => item !== value) : [...current.audience, value];
+    const allowedCategories = categoryOptions[current.department].filter((category) => audience.length === 2 || (audience[0] === "her" ? !himOnlyCategories.has(category) : !herOnlyCategories.has(category)));
+    return { ...current, audience, category: allowedCategories.includes(current.category) ? current.category : allowedCategories[0] ?? current.category };
+  });
 
   const handleImage = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
