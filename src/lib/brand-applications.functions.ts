@@ -8,7 +8,7 @@ const applicationSchema = z.object({
   brandName: z.string().trim().min(2).max(120),
   category: z.enum(["Fashion", "Jewelry", "Beauty", "Accessories", "Independent designer", "Other"]),
   audience: z.array(z.enum(["her", "him"])).min(1),
-  audienceCategories: z.object({ her: z.array(z.enum(["Clothes", "Jewellery", "Bags", "Accessories", "Shoes", "Beauty"])).max(6), him: z.array(z.enum(["Clothes", "Accessories", "Shoes", "Grooming"])).max(4) }),
+  audienceCategories: z.object({ her: z.array(z.enum(["Western Wear", "Indian Wear – GULABO", "Jewellery", "Accessories", "Bags"])).max(5), him: z.array(z.enum(["Western Wear", "Indian Wear – NAWAB", "Accessories", "Footwear"])).max(4) }),
   description: z.string().trim().min(20).max(1000),
   website: z.string().trim().max(2048).refine((value) => value === "" || z.string().url().safeParse(value).success, "Enter a valid website address starting with https://"),
   socialHandle: z.string().trim().max(120).optional().nullable(),
