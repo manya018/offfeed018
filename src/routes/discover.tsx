@@ -10,8 +10,8 @@ import { useStyleSpace } from "@/lib/style-space";
 import { readLikedLookIds, setWishlistItem, rememberReferenceInspiration, toggleSavedReferenceInspiration, readSavedReferenceInspirationIds } from "@/lib/look-collections";
 import { toast } from "sonner";
 import { IndianWearEdit } from "@/components/indian-wear-edit";
-import gulaboBanner from "@/assets/indian-wear/Gulabo_ An Indian Heritage Journal.png";
-import nawabBanner from "@/assets/indian-wear/The Nawab Edit_ Tradition With Attitude (1).png";
+import gulaboBanner from "@/assets/indian-wear/Gulabo_The_Desi_Girl_Edit.webp";
+import nawabBanner from "@/assets/indian-wear/Nawab_The_Desi_Gentleman_Edit.png";
 
 export const Route = createFileRoute("/discover")({
   validateSearch: (search: Record<string, unknown>) => typeof search.category === "string" ? { category: search.category } : {},
@@ -273,21 +273,14 @@ function DiscoverPage() {
             type="button"
             aria-label={isHim ? "Explore Nawab, the Indian wear edit for him" : "Explore Gulabo, the Indian wear edit for her"}
             onClick={() => { window.location.href = "/discover?category=indian-wear"; }}
-            className="group relative col-span-2 block w-full overflow-hidden rounded-[1.15rem] border border-[#9b7958]/45 bg-[#241710] text-left shadow-[0_12px_28px_-18px_rgba(34,19,10,.8)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_16px_32px_-16px_rgba(34,19,10,.75)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b58a53] focus-visible:ring-offset-2 lg:col-span-1"
+            className={`group relative col-span-2 block w-full overflow-hidden text-left transition duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b58a53] focus-visible:ring-offset-2 lg:col-span-1 ${isHim ? "rounded-[1.15rem] border border-[#9b7958]/45 bg-[#f5ead8] shadow-[0_7px_18px_-13px_rgba(75,35,35,.35)] hover:-translate-y-0.5" : "rounded-[1.15rem] border border-[#ead8c5]/70 bg-[#f6efe7] shadow-[0_7px_18px_-13px_rgba(75,35,35,.35)] hover:-translate-y-0.5"}`}
           >
             <img
               src={isHim ? nawabBanner : gulaboBanner}
-              alt={isHim ? "Nawab — a contemporary royal Indian menswear campaign" : "Gulabo — a refreshing Indian heritage fashion campaign"}
+              alt={isHim ? "Nawab — The Desi Gentleman Edit" : "Gulabo — The Desi Girl Edit"}
               loading="lazy"
-              className={`h-[126px] w-full transition duration-700 group-hover:scale-[1.025] ${isHim ? "object-cover object-center" : "bg-[#f4eadb] object-cover object-center"}`}
+              className="block h-auto w-full transition-transform duration-700 group-hover:scale-[1.015]"
             />
-            <span className="absolute inset-x-0 bottom-0 flex items-center justify-between bg-gradient-to-t from-[#21130e]/95 via-[#21130e]/75 to-transparent px-3 pb-2.5 pt-8 text-[#f5e7ce]">
-              <span>
-                <span className="block font-display text-xl italic leading-none tracking-wide">{isHim ? "Nawab" : "Gulabo"}</span>
-                <span className="mt-1 block text-[8px] font-semibold uppercase tracking-[.18em] text-[#e4c99e]">{isHim ? "The desi gentleman edit" : "The desi girl edit"}</span>
-              </span>
-              <span aria-hidden="true" className="pr-1 font-serif text-xl text-[#e4c18b] transition-transform duration-300 group-hover:translate-x-1">↗</span>
-            </span>
           </button>
           <div className="rounded-lg bg-white/65 lg:bg-transparent">
             <button type="button" aria-expanded={accessoriesMenuOpen} onClick={() => setAccessoriesMenuOpen((open) => !open)} className="flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-left text-sm font-semibold text-[#59463e] hover:bg-white"><span>Accessories</span><span className="text-[#71836d]">{accessoriesMenuOpen ? "−" : "+"}</span></button>
