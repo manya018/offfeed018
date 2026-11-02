@@ -10,6 +10,8 @@ import { useStyleSpace } from "@/lib/style-space";
 import { readLikedLookIds, setWishlistItem, rememberReferenceInspiration, toggleSavedReferenceInspiration, readSavedReferenceInspirationIds } from "@/lib/look-collections";
 import { toast } from "sonner";
 import { IndianWearEdit } from "@/components/indian-wear-edit";
+import gulaboBanner from "@/assets/indian-wear/Gulabo_ An Indian Heritage Journal.png";
+import nawabBanner from "@/assets/indian-wear/The Nawab Edit_ Tradition With Attitude (1).png";
 
 export const Route = createFileRoute("/discover")({
   validateSearch: (search: Record<string, unknown>) => typeof search.category === "string" ? { category: search.category } : {},
@@ -271,16 +273,21 @@ function DiscoverPage() {
             type="button"
             aria-label={isHim ? "Explore Nawab, the Indian wear edit for him" : "Explore Gulabo, the Indian wear edit for her"}
             onClick={() => { window.location.href = "/discover?category=indian-wear"; }}
-            className={`group relative isolate flex min-h-[74px] w-full items-center gap-3 overflow-hidden rounded-[1.1rem] border px-3 py-2.5 text-left shadow-[0_8px_22px_-16px_rgba(35,18,10,.65)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_12px_26px_-15px_rgba(35,18,10,.7)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ${isHim ? "border-[#b18b58] bg-[linear-gradient(112deg,#e6d0aa_0%,#f6e9d0_48%,#d7b98c_100%)] text-[#4b2d18] focus-visible:ring-[#9b7546]" : "border-[#a56d43] bg-[linear-gradient(112deg,#30070e_0%,#701522_54%,#3b0911_100%)] text-[#f4dfb6] focus-visible:ring-[#b78a52]"}`}
+            className="group relative col-span-2 block w-full overflow-hidden rounded-[1.15rem] border border-[#9b7958]/45 bg-[#241710] text-left shadow-[0_12px_28px_-18px_rgba(34,19,10,.8)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_16px_32px_-16px_rgba(34,19,10,.75)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b58a53] focus-visible:ring-offset-2 lg:col-span-1"
           >
-            <span aria-hidden="true" className={`relative grid size-11 shrink-0 place-items-center overflow-hidden rounded-[50%_50%_12px_12px] border shadow-inner ${isHim ? "border-[#9b7546]/70 bg-[repeating-linear-gradient(45deg,#d9c096_0px,#d9c096_1px,#ead9b9_1px,#ead9b9_5px)] text-[#79552d]" : "border-[#d6ad75]/70 bg-[radial-gradient(circle_at_50%_38%,#a53b43_0%,#6c1421_58%,#3a0710_100%)] text-[#f4d9a8]"}`}>
-              <span className="font-display text-2xl leading-none">{isHim ? "۞" : "✿"}</span>
+            <img
+              src={isHim ? nawabBanner : gulaboBanner}
+              alt={isHim ? "Nawab — a contemporary royal Indian menswear campaign" : "Gulabo — a refreshing Indian heritage fashion campaign"}
+              loading="lazy"
+              className={`h-[126px] w-full transition duration-700 group-hover:scale-[1.025] ${isHim ? "object-cover object-center" : "bg-[#f4eadb] object-cover object-center"}`}
+            />
+            <span className="absolute inset-x-0 bottom-0 flex items-center justify-between bg-gradient-to-t from-[#21130e]/95 via-[#21130e]/75 to-transparent px-3 pb-2.5 pt-8 text-[#f5e7ce]">
+              <span>
+                <span className="block font-display text-xl italic leading-none tracking-wide">{isHim ? "Nawab" : "Gulabo"}</span>
+                <span className="mt-1 block text-[8px] font-semibold uppercase tracking-[.18em] text-[#e4c99e]">{isHim ? "The desi gentleman edit" : "The desi girl edit"}</span>
+              </span>
+              <span aria-hidden="true" className="pr-1 font-serif text-xl text-[#e4c18b] transition-transform duration-300 group-hover:translate-x-1">↗</span>
             </span>
-            <span className="min-w-0 flex-1">
-              <span className={`block font-display text-[1.25rem] italic leading-tight tracking-wide ${isHim ? "text-[#4b2d18]" : "text-[#f7e5c4]"}`}>{isHim ? "Nawab" : "Gulabo"}</span>
-              <span className={`mt-1 block text-[9px] font-semibold uppercase tracking-[.16em] ${isHim ? "text-[#765634]" : "text-[#e5c18d]"}`}>{isHim ? "The desi gentleman edit" : "The desi girl edit"}</span>
-            </span>
-            <span aria-hidden="true" className={`pr-1 font-serif text-xl transition-transform duration-300 group-hover:rotate-12 ${isHim ? "text-[#8a6336]" : "text-[#e8c58f]"}`}>✦</span>
           </button>
           <div className="rounded-lg bg-white/65 lg:bg-transparent">
             <button type="button" aria-expanded={accessoriesMenuOpen} onClick={() => setAccessoriesMenuOpen((open) => !open)} className="flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-left text-sm font-semibold text-[#59463e] hover:bg-white"><span>Accessories</span><span className="text-[#71836d]">{accessoriesMenuOpen ? "−" : "+"}</span></button>
