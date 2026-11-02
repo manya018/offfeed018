@@ -11,7 +11,7 @@ import { readLikedLookIds, setWishlistItem, rememberReferenceInspiration, toggle
 import { toast } from "sonner";
 import { IndianWearEdit } from "@/components/indian-wear-edit";
 import gulaboBanner from "@/assets/indian-wear/Gulabo_The_Desi_Girl_Edit.webp";
-import nawabBanner from "@/assets/indian-wear/Nawab_The_Desi_Gentleman_Edit.png";
+import nawabBanner from "@/assets/indian-wear/Nawab_The_Desi_Gentleman_Edit.webp";
 
 export const Route = createFileRoute("/discover")({
   validateSearch: (search: Record<string, unknown>) => typeof search.category === "string" ? { category: search.category } : {},
