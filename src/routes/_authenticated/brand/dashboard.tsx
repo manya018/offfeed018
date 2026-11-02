@@ -113,6 +113,7 @@ function BrandDashboard() {
   const queryClient = useQueryClient();
   const workspace = useQuery({ queryKey: ["brand-workspace"], queryFn: () => getBrandWorkspace() });
   const [mode, setMode] = useState<"manual" | "import" | null>(null);
+  const manualSectionRef = useRef<HTMLElement | null>(null);
   const importSectionRef = useRef<HTMLElement | null>(null);
   const [draft, setDraft] = useState<DraftProduct>(blankProduct);
   const [image, setImage] = useState<File | null>(null);
@@ -142,9 +143,10 @@ function BrandDashboard() {
   const application = workspace.data?.application;
   const shippingProfile = workspace.data?.shippingProfile;
   useEffect(() => {
-    if (mode !== "import") return;
+    if (mode !== "manual" && mode !== "import") return;
     const frame = window.requestAnimationFrame(() => {
-      importSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      const target = mode === "manual" ? manualSectionRef.current : importSectionRef.current;
+      target?.scrollIntoView({ behavior: "smooth", block: "start" });
     });
     return () => window.cancelAnimationFrame(frame);
   }, [mode]);
@@ -328,7 +330,7 @@ function BrandDashboard() {
     <div className="mx-auto max-w-6xl">
       <div className="flex flex-wrap items-end justify-between gap-5 border-b border-border/70 pb-7">
         <div><p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">OFFFEED · BRAND STUDIO</p><h1 className="mt-3 font-display text-5xl">{application.brand_name}</h1><p className="mt-2 text-sm text-muted-foreground">A considered space for your products to find their people.</p><div className="mt-4 flex flex-wrap gap-2">{supportedAudience.map((item) => <Badge key={item} variant="secondary">{item === "her" ? "Her space" : "Him space"}</Badge>)}</div></div>
-        <div className="flex flex-wrap gap-2">{application.public_handle && <Button variant="ghost" asChild><Link to="/brand/$brandHandle" params={{ brandHandle: application.public_handle }}><ExternalLink/>Preview storefront</Link></Button>}<Button variant="outline" onClick={() => { setDraft({ ...blankProduct, audience: supportedAudience.length ? supportedAudience : ["her"] }); setMode("manual"); }}><Plus/>Add product</Button><Button onClick={() => { setMode("import"); setImported([]); setError(""); }}><ArrowDownToLine/>Import from Shopify</Button></div>
+        <div className="flex flex-wrap gap-2">{application.public_handle && <Button variant="ghost" asChild><a href={`/brand/${encodeURIComponent(application.public_handle)}`} target="_blank" rel="noreferrer"><ExternalLink/>Preview storefront</a></Button>}<Button variant="outline" onClick={() => { setDraft({ ...blankProduct, audience: supportedAudience.length ? supportedAudience : ["her"] }); setMode("manual"); }}><Plus/>Add product</Button><Button onClick={() => { setMode("import"); setImported([]); setError(""); }}><ArrowDownToLine/>Import from Shopify</Button></div>
       </div>
 
       <div className="grid gap-5 border-b border-border/70 py-6 sm:grid-cols-3">
@@ -409,7 +411,7 @@ function BrandDashboard() {
 
       <div className="grid gap-10 py-9 lg:grid-cols-[minmax(0,1fr)_260px]">
         <section className="min-w-0">
-          {mode === "manual" && <section className="mb-9 border-b border-border/70 pb-9" aria-labelledby="manual-heading">
+          {mode === "manual" && <section ref={manualSectionRef} className="mb-9 scroll-mt-24 border-b border-border/70 pb-9" aria-labelledby="manual-heading">
             <div className="flex items-start justify-between gap-4"><div><p className="text-xs font-semibold uppercase tracking-[0.15em] text-primary">MANUAL LISTING</p><h2 id="manual-heading" className="mt-2 font-display text-3xl">{draft.listingType === "bundle" ? "Add a complete look" : "Add a product"}</h2></div><Button variant="ghost" size="icon" aria-label="Close product form" onClick={() => { setMode(null); setError(""); }}><X/></Button></div>
             <form onSubmit={(event) => void submitManual(event)} className="mt-6 grid gap-5 sm:grid-cols-2">
               <div className="sm:col-span-2"><p className="text-sm font-medium">What are you listing?</p><div className="mt-2 flex flex-wrap gap-2"><Button type="button" variant={draft.listingType === "product" ? "default" : "outline"} onClick={() => { setDraft((current) => ({ ...current, listingType: "product" })); setError(""); }}>Individual product</Button><Button type="button" variant={draft.listingType === "bundle" ? "default" : "outline"} onClick={() => { setDraft((current) => ({ ...current, listingType: "bundle" })); setError(""); }}>Complete look / outfit bundle</Button></div><p className="mt-2 text-xs text-muted-foreground">Both listing types are saved as drafts first and require approval before appearing in your storefront.</p></div>
