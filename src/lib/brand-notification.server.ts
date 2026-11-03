@@ -137,8 +137,12 @@ export async function sendBrandApplicationEmail(application: BrandApplicationEma
 
   if (!response.ok) {
     const body = await response.text();
-    console.error(`[brand-application-email] Gmail send failed [${response.status}]: ${body}`);
+    throw new Error(`Gmail send failed [${response.status}]: ${body}`);
   }
+
+  const applicantText = `Hi ${application.contactName},\\n\\nThank you for applying to join OFFFEED with ${application.brandName}. We have received your application and our team will review it. We'll email you again when a decision has been made.\\n\\nOFFFEED team`;
+  const applicantHtml = `<div style="font-family:Helvetica,Arial,sans-serif;line-height:1.7;color:#2b1c18"><h2>We've received your brand application.</h2><p>Hi ${escapeHtml(application.contactName)},</p><p>Thank you for applying to join OFFFEED with ${escapeHtml(application.brandName)}. Your application has been received and is now under review.</p><p>We'll email you again when a decision has been made.</p><p>With care,<br>OFFFEED team</p></div>`;
+  await sendVerifiedEmail(application.email, "OFFFEED brand application received", applicantText, applicantHtml);
 }
 
 export async function sendBrandDecisionEmail({ brandName, email, approved, reason, commissionRate }: {
@@ -200,11 +204,14 @@ export async function sendOrderNotificationEmails(order: {
   const detail = `Order: ${order.orderNumber}\nProduct: ${order.productName}\nQuantity: ${order.quantity}\n${variant ? `Variant: ${variant}\n` : ""}Subtotal: ₹${order.lineTotal.toLocaleString("en-IN")}`;
   const customerText = `Hi ${order.customerName},\n\nThank you for shopping with OFFFEED. Your order has been placed successfully.\n\n${detail}\n\nWe'll email you when its status changes.\n\nOFFFEED`;
   const customerHtml = `<div style="font-family:Helvetica,Arial,sans-serif;line-height:1.7;color:#2b1c18"><h2>Thank you for your order.</h2><p>Hi ${escapeHtml(order.customerName)}, your order has been placed successfully.</p><p style="white-space:pre-line">${escapeHtml(detail)}</p><p>We'll email you when its status changes.</p><p>OFFFEED</p></div>`;
-  await sendVerifiedEmail(order.customerEmail, `OFFFEED order confirmed — ${order.orderNumber}`, customerText, customerHtml);
-
   const brandText = `Hi ${order.brandName},\n\nYou have received a new order on OFFFEED.\n\n${detail}\nCustomer: ${order.customerName}\nCustomer email: ${order.customerEmail}\n\nPlease open your OFFFEED brand dashboard to review and fulfil this order.\n\nOFFFEED`;
   const brandHtml = `<div style="font-family:Helvetica,Arial,sans-serif;line-height:1.7;color:#2b1c18"><h2>You have a new OFFFEED order.</h2><p>Hi ${escapeHtml(order.brandName)}, a customer has placed an order for your brand.</p><p style="white-space:pre-line">${escapeHtml(detail)}</p><p>Customer: ${escapeHtml(order.customerName)}<br>Customer email: ${escapeHtml(order.customerEmail)}</p><p>Please open your OFFFEED brand dashboard to review and fulfil this order.</p><p>OFFFEED</p></div>`;
-  await sendVerifiedEmail(order.brandEmail, `New OFFFEED order — ${order.orderNumber}`, brandText, brandHtml);
+  const results = await Promise.allSettled([
+    sendVerifiedEmail(order.customerEmail, `OFFFEED order confirmed — ${order.orderNumber}`, customerText, customerHtml),
+    sendVerifiedEmail(order.brandEmail, `New OFFFEED order — ${order.orderNumber}`, brandText, brandHtml),
+  ]);
+  const failures = results.filter((result) => result.status === "rejected");
+  if (failures.length) throw new Error(`${failures.length} order notification email(s) failed to send.`);
 }
 
 export async function sendOrderStatusEmail(order: {
