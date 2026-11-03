@@ -36,3 +36,15 @@ create index if not exists brand_size_guides_user_category_idx
 
 comment on table public.brand_size_guides is
   'Reusable category-level size guides. A non-null brand_products.size_chart remains a product-specific override.';
+
+drop policy if exists "Public can read approved brand size guides" on public.brand_size_guides;
+create policy "Public can read approved brand size guides"
+  on public.brand_size_guides for select to anon, authenticated
+  using (
+    exists (
+      select 1 from public.brand_applications application
+      where application.id = brand_size_guides.brand_application_id
+        and application.status = 'approved'
+        and application.public_handle is not null
+    )
+  );
