@@ -25,6 +25,7 @@ type ProductWithBrand = {
   price: number;
   productUrl: string | null;
   imageUrl: string | null;
+  imageUrls: string[];
   sizes: string[];
   sizeChart: ProductSizeChart | null;
   colors: string[];
@@ -102,7 +103,7 @@ export const getPublicBrandProfile = createServerFn({ method: "GET" })
 
     const { data: rows, error: productsError } = await supabase
       .from("brand_products")
-      .select("id, product_name, description, category, price, product_url, image_path, sizes, size_chart, colors, tags, audience, created_at")
+      .select("id, product_name, description, category, price, product_url, image_path, image_paths, sizes, size_chart, colors, tags, audience, created_at")
       .eq("brand_application_id", brand.id)
       .eq("status", "published")
       .eq("brand_approved", true)
@@ -113,7 +114,7 @@ export const getPublicBrandProfile = createServerFn({ method: "GET" })
     if (sizeGuideError) throw new Error("This brand’s size guides could not be loaded.");
     const sizeGuideByCategory = new Map((brandSizeGuides ?? []).map((guide) => [guide.category, guide.size_chart]));
 
-    const productPaths = [...new Set((rows ?? []).map((row) => row.image_path).filter((path): path is string => Boolean(path && !path.startsWith("https://"))))];
+    const productPaths = [...new Set((rows ?? []).flatMap((row) => [row.image_path, ...(row.image_paths ?? [])]).filter((path): path is string => Boolean(path && !path.startsWith("https://"))))];
     const brandPaths = [...new Set([brand.logo_path, brand.cover_path].filter((path): path is string => Boolean(path)))];
     const [productFiles, brandFiles] = await Promise.all([
       productPaths.length ? supabase.storage.from("brand-product-images").createSignedUrls(productPaths, 3600) : Promise.resolve({ data: [], error: null }),
@@ -148,6 +149,7 @@ export const getPublicBrandProfile = createServerFn({ method: "GET" })
         price: Number(row.price),
         productUrl: row.product_url,
         imageUrl: getImageUrl(row.image_path, productSigned),
+        imageUrls: (row.image_paths?.length ? row.image_paths : row.image_path ? [row.image_path] : []).map((path) => getImageUrl(path, productSigned)).filter((url): url is string => Boolean(url)),
         sizes: row.sizes,
         sizeChart: (row.size_chart ?? sizeGuideByCategory.get(row.category) ?? null) as unknown as ProductSizeChart | null,
         colors: row.colors,
@@ -206,6 +208,7 @@ export const getShopTheLookProducts = createServerFn({ method: "GET" })
         price: Number(row.price),
         productUrl: row.product_url,
         imageUrl: getImageUrl(row.image_path, signedUrls),
+        imageUrls: (row.image_paths?.length ? row.image_paths : row.image_path ? [row.image_path] : []).map((path) => getImageUrl(path, signedUrls)).filter((url): url is string => Boolean(url)),
         sizes: row.sizes,
         sizeChart: (row.size_chart ?? guideByBrandCategory.get(`${row.brand_application_id}:${row.category}`) ?? null) as unknown as ProductSizeChart | null,
         colors: row.colors,
