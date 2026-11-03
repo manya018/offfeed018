@@ -249,6 +249,12 @@ export const updateBrandOrderTracking = createServerFn({ method: "POST" })
   }).parse(input))
   .handler(async ({ context, data }) => {
     const application = await getApprovedApplication(context);
+    const { data: previousOrder, error: previousOrderError } = await context.supabase.from("brand_orders")
+      .select("customer_name, customer_email, product_name, status")
+      .eq("id", data.orderId)
+      .eq("brand_application_id", application.id)
+      .maybeSingle();
+    if (previousOrderError || !previousOrder) throw new Error("This order could not be found.");
     const now = new Date().toISOString();
     const updates = {
       status: data.status,
@@ -267,6 +273,25 @@ export const updateBrandOrderTracking = createServerFn({ method: "POST" })
       .select("id, order_number, status, tracking_provider, tracking_number, tracking_url, estimated_delivery_start, estimated_delivery_end, dispatched_at, delivered_at")
       .maybeSingle();
     if (error || !order) throw new Error("Order tracking couldn't be updated. Please check that the database migration has been applied.");
+    if (previousOrder.status !== order.status) {
+      try {
+        const { sendOrderStatusEmail } = await import("./brand-notification.server");
+        await sendOrderStatusEmail({
+          orderNumber: order.order_number,
+          customerName: previousOrder.customer_name,
+          customerEmail: previousOrder.customer_email,
+          productName: previousOrder.product_name,
+          status: order.status,
+          trackingProvider: order.tracking_provider,
+          trackingNumber: order.tracking_number,
+          trackingUrl: order.tracking_url,
+          estimatedDeliveryStart: order.estimated_delivery_start,
+          estimatedDeliveryEnd: order.estimated_delivery_end,
+        });
+      } catch (notifyError) {
+        console.error("[order-status-notification] Status was updated, but the customer email could not be sent", order.order_number, notifyError);
+      }
+    }
     return order;
   });
 
