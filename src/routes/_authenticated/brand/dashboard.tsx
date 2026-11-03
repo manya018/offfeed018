@@ -117,10 +117,6 @@ function DispatchProofPanel({ orderId }: { orderId: string }) {
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const [guideCategory, setGuideCategory] = useState("Clothing / Tops");
-  const [guideText, setGuideText] = useState("Measurement | XS | S | M | L\nBust (cm) | 81 | 86 | 91 | 96");
-  const [guideUnit, setGuideUnit] = useState("cm");
-  const [guideSaving, setGuideSaving] = useState(false);
   const [replacing, setReplacing] = useState(false);
 
   const load = async () => {
@@ -313,6 +309,10 @@ function BrandDashboard() {
   const [selectedImports, setSelectedImports] = useState<string[]>([]);
   const [importAudience, setImportAudience] = useState<Array<"her" | "him">>(["her"]);
   const [error, setError] = useState("");
+  const [guideCategory, setGuideCategory] = useState("Clothing / Tops");
+  const [guideText, setGuideText] = useState("Measurement | XS | S | M | L\nBust (cm) | 81 | 86 | 91 | 96");
+  const [guideUnit, setGuideUnit] = useState("cm");
+  const [guideSaving, setGuideSaving] = useState(false);
   const [originPinCode, setOriginPinCode] = useState("");
   const [processingDaysMin, setProcessingDaysMin] = useState("1");
   const [processingDaysMax, setProcessingDaysMax] = useState("2");
