@@ -140,7 +140,7 @@ export async function sendBrandApplicationEmail(application: BrandApplicationEma
     console.error(`[brand-application-email] Admin notification failed [${response.status}]: ${body}`);
   }
 
-  const applicantText = `Hi ${application.contactName},\\n\\nThank you for applying to join OFFFEED with ${application.brandName}. We have received your application and our team will review it. We'll email you again when a decision has been made.\\n\\nOFFFEED team`;
+  const applicantText = `Hi ${application.contactName},\n\nThank you for applying to join OFFFEED with ${application.brandName}. We have received your application and our team will review it. We will email you again when a decision has been made.\n\nOFFFEED team`;
   const applicantHtml = `<div style="font-family:Helvetica,Arial,sans-serif;line-height:1.7;color:#2b1c18"><h2>We've received your brand application.</h2><p>Hi ${escapeHtml(application.contactName)},</p><p>Thank you for applying to join OFFFEED with ${escapeHtml(application.brandName)}. Your application has been received and is now under review.</p><p>We'll email you again when a decision has been made.</p><p>With care,<br>OFFFEED team</p></div>`;
   await sendVerifiedEmail(application.email, "OFFFEED brand application received", applicantText, applicantHtml);
 }
