@@ -23,6 +23,38 @@ export type ForensicReport = {
   error?: string;
 };
 
+export type DisputeViewerData = {
+  role: "brand" | "customer";
+  order: {
+    id: string; order_number: string; product_name: string; selected_size: string; selected_color: string;
+    quantity: number; unit_price: number; currency: string; status: string; customer_name: string;
+    customer_email: string; destination_pin_code: string; created_at: string;
+  };
+  dispatch: {
+    id: string;
+    photos: Array<EvidencePhoto & { url: string }>;
+    videoUrl: string;
+    packingNote: string;
+    status: string;
+    aiReport: ForensicReport | null;
+    createdAt: string;
+  } | null;
+  returns: Array<{
+    id: string; reason: string; customer_details: string; evidence_url: string; status: string;
+    brand_response: string; refund_status: string; created_at: string; updated_at: string;
+    evidence: {
+      id: string;
+      photos: Array<EvidencePhoto & { url: string }>;
+      notes: string;
+      status: string;
+      trustScore: number;
+      aiReport: ForensicReport | null;
+      createdAt: string;
+    } | null;
+  }>;
+};
+
+
 function cleanMediaPath(path: string) {
   const trimmed = path.trim().replace(/^\/+/, "");
   if (!trimmed || trimmed.includes("..") || trimmed.length > 600) throw new Error("That file path isn't valid.");
