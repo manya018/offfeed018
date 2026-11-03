@@ -81,7 +81,7 @@ export async function sendBrandApplicationEmail(application: BrandApplicationEma
 
   const raw = base64(message).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 
-  const response = await fetch(`${GATEWAY_URL}/users/me/messages/send`, {
+  await assertExpectedSender(lovableKey, connectionKey);\n\n  const response = await fetch(`${GATEWAY_URL}/users/me/messages/send`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${lovableKey}`,
@@ -137,10 +137,40 @@ export async function sendBrandDecisionEmail({ brandName, email, approved, reaso
     "",
   ].join("\r\n");
   const raw = base64(message).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-  const response = await fetch(`${GATEWAY_URL}/users/me/messages/send`, {
+  await assertExpectedSender(lovableKey, connectionKey);\n\n  const response = await fetch(`${GATEWAY_URL}/users/me/messages/send`, {
     method: "POST",
     headers: { Authorization: `Bearer ${lovableKey}`, "X-Connection-Api-Key": connectionKey, "Content-Type": "application/json" },
     body: JSON.stringify({ raw }),
   });
   if (!response.ok) throw new Error(`Gmail send failed [${response.status}]: ${await response.text()}`);
+}
+
+
+export async function sendOrderNotificationEmails(order: {
+  orderNumber: string; customerName: string; customerEmail: string; brandName: string; brandEmail: string;
+  productName: string; quantity: number; lineTotal: number; selectedSize?: string; selectedColor?: string;
+}): Promise<void> {
+  const variant = [order.selectedSize, order.selectedColor].filter(Boolean).join(" · ");
+  const detail = `Order: ${order.orderNumber}\\nProduct: ${order.productName}\\nQuantity: ${order.quantity}\\n${variant ? `Variant: ${variant}\\n` : ""}Subtotal: ₹${order.lineTotal.toLocaleString("en-IN")}`;
+  const customerText = `Hi ${order.customerName},\\n\\nThank you for shopping with OFFFEED. Your order has been placed successfully.\\n\\n${detail}\\n\\nWe'll email you when its status changes.\\n\\nOFFFEED`;
+  const customerHtml = `<div style="font-family:Helvetica,Arial,sans-serif;line-height:1.7;color:#2b1c18"><h2>Thank you for your order.</h2><p>Hi ${escapeHtml(order.customerName)}, your order has been placed successfully.</p><p style="white-space:pre-line">${escapeHtml(detail)}</p><p>We'll email you when its status changes.</p><p>OFFFEED</p></div>`;
+  await sendVerifiedEmail(order.customerEmail, `OFFFEED order confirmed — ${order.orderNumber}`, customerText, customerHtml);
+
+  const brandText = `Hi ${order.brandName},\\n\\nYou have received a new order on OFFFEED.\\n\\n${detail}\\nCustomer: ${order.customerName}\\nCustomer email: ${order.customerEmail}\\n\\nPlease open your OFFFEED brand dashboard to review and fulfil this order.\\n\\nOFFFEED`;
+  const brandHtml = `<div style="font-family:Helvetica,Arial,sans-serif;line-height:1.7;color:#2b1c18"><h2>You have a new OFFFEED order.</h2><p>Hi ${escapeHtml(order.brandName)}, a customer has placed an order for your brand.</p><p style="white-space:pre-line">${escapeHtml(detail)}</p><p>Customer: ${escapeHtml(order.customerName)}<br>Customer email: ${escapeHtml(order.customerEmail)}</p><p>Please open your OFFFEED brand dashboard to review and fulfil this order.</p><p>OFFFEED</p></div>`;
+  await sendVerifiedEmail(order.brandEmail, `New OFFFEED order — ${order.orderNumber}`, brandText, brandHtml);
+}
+
+export async function sendOrderStatusEmail(order: {
+  orderNumber: string; customerName: string; customerEmail: string; productName: string; status: string;
+  trackingProvider?: string; trackingNumber?: string; trackingUrl?: string;
+  estimatedDeliveryStart?: string | null; estimatedDeliveryEnd?: string | null;
+}): Promise<void> {
+  const statusLabel = order.status.replaceAll("_", " ");
+  const tracking = [order.trackingProvider, order.trackingNumber].filter(Boolean).join(" · ");
+  const delivery = [order.estimatedDeliveryStart, order.estimatedDeliveryEnd].filter(Boolean).join(" to ");
+  const lines = [`Order: ${order.orderNumber}`, `Product: ${order.productName}`, `New status: ${statusLabel}`, tracking ? `Tracking: ${tracking}` : "", delivery ? `Estimated delivery: ${delivery}` : "", order.trackingUrl ? `Track your parcel: ${order.trackingUrl}` : ""].filter(Boolean).join("\\n");
+  const text = `Hi ${order.customerName},\\n\\nThere's an update on your OFFFEED order.\\n\\n${lines}\\n\\nOFFFEED`;
+  const html = `<div style="font-family:Helvetica,Arial,sans-serif;line-height:1.7;color:#2b1c18"><h2>Your order status has been updated.</h2><p>Hi ${escapeHtml(order.customerName)}, there's an update on your OFFFEED order.</p><p style="white-space:pre-line">${escapeHtml(lines)}</p>${order.trackingUrl ? `<p><a href="${escapeHtml(order.trackingUrl)}">Track your parcel</a></p>` : ""}<p>OFFFEED</p></div>`;
+  await sendVerifiedEmail(order.customerEmail, `OFFFEED order update — ${order.orderNumber}`, text, html);
 }
