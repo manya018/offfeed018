@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowDownToLine, ArrowLeft, ArrowRight, Check, ExternalLink, ImagePlus, LoaderCircle, PackagePlus, PencilLine, Plus, RefreshCw, Search, Shirt, Trash2, Truck, Upload, X } from "lucide-react";
+import { ArrowDownToLine, ArrowLeft, ArrowRight, Check, ExternalLink, ImagePlus, LoaderCircle, PackagePlus, PencilLine, Plus, RefreshCw, Search, ShieldAlert, ShieldCheck, Shirt, Trash2, Truck, Upload, Video, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
@@ -10,6 +10,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { createBrandProduct, getBrandWorkspace, importShopifyCatalog, saveBrandShippingProfile, saveImportedShopifyProducts, updateBrandOrderTracking, updateBrandProductStatus } from "@/lib/brand-products.functions";
+import { submitDispatchEvidence, getDisputeViewerData, rerunReturnAnalysis, type DisputeViewerData, type ForensicReport } from "@/lib/dispute-evidence.functions";
+
 
 export const Route = createFileRoute("/_authenticated/brand/dashboard")({
   head: () => ({ meta: [
