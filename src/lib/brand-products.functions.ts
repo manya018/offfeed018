@@ -13,6 +13,7 @@ const productSchema = z.object({
   price: z.number().positive().max(100000000),
   productUrl: z.string().url().max(2048).optional().nullable(),
   imagePath: z.string().min(1).max(2048),
+  imagePaths: z.array(z.string().min(1).max(2048)).min(1).max(6).optional(),
   sizes: z.array(z.string().trim().min(1).max(40)).max(30),
   sizeChart: sizeChartSchema.optional(),
   colors: z.array(z.string().trim().min(1).max(60)).max(30),
@@ -149,7 +150,7 @@ export const getBrandWorkspace = createServerFn({ method: "GET" })
     if (error || !application) throw new Error("No brand application is connected to this account.");
 
     const { data: products, error: productError } = application.status === "approved"
-      ? await context.supabase.from("brand_products").select("id, product_name, description, category, price, product_url, image_path, sizes, size_chart, colors, tags, audience, source, status, created_at").eq("user_id", context.userId).order("created_at", { ascending: false })
+      ? await context.supabase.from("brand_products").select("id, product_name, description, category, price, product_url, image_path, image_paths, sizes, size_chart, colors, tags, audience, source, status, created_at").eq("user_id", context.userId).order("created_at", { ascending: false })
       : { data: [], error: null };
     if (productError) throw new Error("Your product list couldn't be loaded.");
     const productRows = products ?? [];
@@ -158,7 +159,7 @@ export const getBrandWorkspace = createServerFn({ method: "GET" })
       : { data: [], error: null };
     if (sizeGuideError) throw new Error("Your saved size guides could not be loaded.");
     const sizeGuideByCategory = new Map((sizeGuides ?? []).map((guide) => [guide.category, guide.size_chart]));
-    const paths = productRows.map((product) => product.image_path).filter((path): path is string => Boolean(path && !path.startsWith("https://")));
+    const paths = [...new Set(productRows.flatMap((product) => [product.image_path, ...(product.image_paths ?? [])]).filter((path): path is string => Boolean(path && !path.startsWith("https://"))))];
     const { data: signedFiles, error: signedError } = paths.length
       ? await context.supabase.storage.from("brand-product-images").createSignedUrls(paths, 3600)
       : { data: [], error: null };
@@ -183,7 +184,7 @@ export const getBrandWorkspace = createServerFn({ method: "GET" })
       shippingProfile: safeShippingProfile,
       orders: safeOrderRows,
       sizeGuides: sizeGuides ?? [],
-      products: productRows.map((product) => ({ ...product, size_chart_override: product.size_chart, size_chart: product.size_chart ?? sizeGuideByCategory.get(product.category) ?? null, imageUrl: product.image_path?.startsWith("https://") ? product.image_path : imageUrls.get(product.image_path ?? "") ?? null })),
+      products: productRows.map((product) => ({ ...product, size_chart_override: product.size_chart, size_chart: product.size_chart ?? sizeGuideByCategory.get(product.category) ?? null, imageUrl: product.image_path?.startsWith("https://") ? product.image_path : imageUrls.get(product.image_path ?? "") ?? null, imageUrls: (product.image_paths?.length ? product.image_paths : product.image_path ? [product.image_path] : []).map((path) => path.startsWith("https://") ? path : imageUrls.get(path)).filter((url): url is string => Boolean(url)) })),
     };
   });
 
@@ -316,8 +317,11 @@ export const createBrandProduct = createServerFn({ method: "POST" })
   .handler(async ({ context, data }) => {
     const application = await getApprovedApplication(context);
     if (data.audience.some((audience) => !application.audience.includes(audience))) throw new Error("Choose only the audience saved on your brand application.");
+    const imagePaths = data.imagePaths?.length ? data.imagePaths : [data.imagePath];
+    if (imagePaths.length > 6) throw new Error("A product can have up to 6 photos.");
     const remoteImage = data.imagePath.startsWith("https://") && data.imagePath.length <= 2048;
     const ownedImage = data.imagePath.startsWith(`${context.userId}/`);
+    if (imagePaths.some((path) => !(path.startsWith(`${context.userId}/`) || path.startsWith("https://cdn.shopify.com/") || path.includes(".myshopify.com/") || path.includes(".shopifycdn.net/")))) throw new Error("One of the selected product photos could not be verified.");
     if (!remoteImage && !ownedImage) throw new Error("The selected product image couldn't be verified.");
     if (remoteImage && !data.imagePath.match(/^https:\/\/(cdn\.shopify\.com|[^/]+\.myshopify\.com|[^/]+\.shopifycdn\.net)\//i)) throw new Error("Choose an image from the verified Shopify catalog.");
 
@@ -330,6 +334,7 @@ export const createBrandProduct = createServerFn({ method: "POST" })
       price: data.price,
       product_url: data.productUrl ?? null,
       image_path: data.imagePath,
+      image_paths: imagePaths,
       sizes: data.sizes,
       size_chart: data.sizeChart ?? null,
       colors: data.colors,
