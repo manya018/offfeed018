@@ -611,6 +611,8 @@ function BrandReturnsSection() {
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState("");
   const [responses, setResponses] = useState<Record<string, string>>({});
+  const [viewerOrderId, setViewerOrderId] = useState("");
+
   const loadReturns = async () => {
     setLoading(true);
     try {
@@ -653,6 +655,8 @@ function BrandReturnsSection() {
         <div className="flex flex-wrap items-start justify-between gap-3"><div><p className="text-xs text-muted-foreground">Order ID: {item.order_id}</p><h3 className="mt-1 font-medium">{reasonLabels[item.reason] ?? item.reason.replaceAll("_", " ")}</h3><p className="mt-1 text-sm text-muted-foreground">Requested {new Date(item.created_at).toLocaleDateString("en-IN")} · {item.status.replaceAll("_", " ")}</p></div><Badge variant={item.status === "requested" ? "secondary" : "outline"}>{item.status.replaceAll("_", " ")}</Badge></div>
         {item.customer_details && <p className="mt-3 whitespace-pre-wrap text-sm">{item.customer_details}</p>}
         {item.evidence_url && <a className="mt-2 inline-block text-sm underline underline-offset-4" href={item.evidence_url} target="_blank" rel="noreferrer">View evidence link</a>}
+        <ReturnDisputeViewer orderId={item.order_id} open={viewerOrderId === item.order_id} onToggle={() => setViewerOrderId((current) => (current === item.order_id ? "" : item.order_id))} />
+
         {item.brand_response && <p className="mt-3 text-sm text-muted-foreground">Your response: {item.brand_response}</p>}
         {item.status === "requested" && <div className="mt-4 space-y-3"><label className="block text-sm font-medium" htmlFor={`return-response-${item.id}`}>Response to customer (optional)</label><Textarea id={`return-response-${item.id}`} value={responses[item.id] ?? ""} onChange={(event) => setResponses((old) => ({ ...old, [item.id]: event.target.value }))} maxLength={2000} placeholder="Add a short explanation…" /><div className="flex flex-wrap gap-2"><Button disabled={busyId === item.id} onClick={() => void review(item, "approved")}>{busyId === item.id ? <LoaderCircle className="animate-spin"/> : <Check/>}Approve return</Button><Button variant="outline" disabled={busyId === item.id} onClick={() => void review(item, "rejected")}>Reject request</Button></div></div>}
       </article>)}
@@ -660,6 +664,62 @@ function BrandReturnsSection() {
   </section>;
 }
 
+function ReturnDisputeViewer({ orderId, open, onToggle }: { orderId: string; open: boolean; onToggle: () => void }) {
+  const [data, setData] = useState<DisputeViewerData | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [busyReturnId, setBusyReturnId] = useState("");
+  const load = async () => {
+    setLoading(true);
+    try { setData(await getDisputeViewerData({ data: { orderId } })); }
+    catch (error) { toast.error(error instanceof Error ? error.message : "The dispute viewer couldn't be loaded."); }
+    finally { setLoading(false); }
+  };
+  useEffect(() => { if (open && !data) void load(); }, [open]);
+  const rerun = async (returnId: string) => {
+    setBusyReturnId(returnId);
+    try {
+      const { report } = await rerunReturnAnalysis({ data: { returnId } });
+      toast.success(`AI re-check complete: ${report.verdict.replaceAll("_", " ")} · trust ${report.trust_score}/100.`);
+      await load();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "The AI re-check failed.");
+    } finally { setBusyReturnId(""); }
+  };
+  if (!open) return <Button type="button" variant="outline" size="sm" className="mt-3" onClick={onToggle}>Open dispute viewer</Button>;
+  const dispatch = data?.dispatch ?? null;
+  return <div className="mt-3 rounded-lg border border-border/80 p-3 sm:p-4">
+    {loading && !data ? <p className="text-sm text-muted-foreground"><LoaderCircle className="mr-1 inline size-3.5 animate-spin"/>Loading both sides of the evidence…</p> : data && <>
+      <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">Dispute viewer · {data.order.order_number} · {data.order.product_name}</p>
+      <div className="mt-3 grid gap-4 lg:grid-cols-2">
+        <div className="rounded-lg border border-border/70 p-3">
+          <p className="text-sm font-medium">Brand packing proof</p>
+          {dispatch ? <>
+            <div className="mt-2 grid grid-cols-3 gap-2">{dispatch.photos.map((photo) => <img key={photo.path} src={photo.url} alt="Brand packing proof" className="aspect-square w-full rounded object-cover"/>)}</div>
+            {dispatch.videoUrl && <a className="mt-2 inline-block text-sm underline underline-offset-4" href={dispatch.videoUrl} target="_blank" rel="noreferrer">Watch packing video</a>}
+            <p className="mt-2 text-xs text-muted-foreground">{dispatch.packingNote}</p>
+            <ForensicReportCard report={dispatch.aiReport} title="AI check of the packing proof"/>
+          </> : <p className="mt-2 text-sm text-muted-foreground">No packing proof was recorded for this order.</p>}
+        </div>
+        <div className="rounded-lg border border-border/70 p-3">
+          <p className="text-sm font-medium">Customer return proof</p>
+          {data.returns.length === 0 && <p className="mt-2 text-sm text-muted-foreground">No return requests on this order.</p>}
+          {data.returns.map((item) => <div key={item.id} className="mt-2 border-t border-border/60 pt-2 first:border-0 first:pt-0">
+            <p className="text-xs text-muted-foreground">{item.reason.replaceAll("_", " ")} · {item.status.replaceAll("_", " ")}</p>
+            {item.evidence ? <>
+              <div className="mt-2 grid grid-cols-3 gap-2">{item.evidence.photos.map((photo) => <img key={photo.path} src={photo.url} alt="Customer return proof" className="aspect-square w-full rounded object-cover"/>)}</div>
+              {item.evidence.notes && <p className="mt-2 text-xs">{item.evidence.notes}</p>}
+              <ForensicReportCard report={item.evidence.aiReport} title="AI fraud check of the return proof"/>
+              <Button type="button" variant="ghost" size="sm" className="mt-1" disabled={busyReturnId === item.id} onClick={() => void rerun(item.id)}><RefreshCw className={busyReturnId === item.id ? "animate-spin" : ""}/>Re-run AI check</Button>
+            </> : <p className="mt-2 text-sm text-muted-foreground">No photo proof attached to this request.</p>}
+          </div>)}
+        </div>
+      </div>
+    </>}
+    <Button type="button" variant="ghost" size="sm" className="mt-2" onClick={onToggle}>Close viewer</Button>
+  </div>;
+}
+
 function Stat({ label, value, icon: Icon }: { label: string; value: string; icon: typeof Shirt }) {
+
   return <div className="flex items-center gap-3"><span className="grid size-10 place-items-center rounded-full bg-secondary text-primary"><Icon className="size-4"/></span><span><span className="block text-xs text-muted-foreground">{label}</span><span className="mt-1 block text-xl font-medium">{value}</span></span></div>;
 }
