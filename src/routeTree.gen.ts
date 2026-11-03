@@ -22,6 +22,7 @@ import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as WishlistRouteImport } from './routes/wishlist'
 import { Route as BrandBrandHandleRouteImport } from './routes/brand.$brandHandle'
 import { Route as ForBrandsApplyRouteImport } from './routes/for-brands.apply'
+import { Route as ForBrandsRouteImport } from './routes/for-brands'
 import { Route as LookLookIdRouteImport } from './routes/look.$lookId'
 import { Route as AuthenticatedBrandDashboardRouteImport } from './routes/_authenticated/brand/dashboard'
 
@@ -89,6 +90,11 @@ const ForBrandsApplyRoute = ForBrandsApplyRouteImport.update({
   path: '/for-brands/apply',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ForBrandsRoute = ForBrandsRouteImport.update({
+  id: '/for-brands',
+  path: '/for-brands',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LookLookIdRoute = LookLookIdRouteImport.update({
   id: '/look/$lookId',
   path: '/look/$lookId',
@@ -114,6 +120,7 @@ export interface FileRoutesByFullPath {
   '/wishlist': typeof WishlistRoute
   '/brand/$brandHandle': typeof BrandBrandHandleRoute
   '/for-brands/apply': typeof ForBrandsApplyRoute
+  '/for-brands': typeof ForBrandsRoute
   '/look/$lookId': typeof LookLookIdRoute
   '/brand/dashboard': typeof AuthenticatedBrandDashboardRoute
 }
@@ -130,6 +137,7 @@ export interface FileRoutesByTo {
   '/wishlist': typeof WishlistRoute
   '/brand/$brandHandle': typeof BrandBrandHandleRoute
   '/for-brands/apply': typeof ForBrandsApplyRoute
+  '/for-brands': typeof ForBrandsRoute
   '/look/$lookId': typeof LookLookIdRoute
   '/brand/dashboard': typeof AuthenticatedBrandDashboardRoute
 }
@@ -148,6 +156,7 @@ export interface FileRoutesById {
   '/wishlist': typeof WishlistRoute
   '/brand/$brandHandle': typeof BrandBrandHandleRoute
   '/for-brands/apply': typeof ForBrandsApplyRoute
+  '/for-brands': typeof ForBrandsRoute
   '/look/$lookId': typeof LookLookIdRoute
   '/_authenticated/brand/dashboard': typeof AuthenticatedBrandDashboardRoute
 }
@@ -166,6 +175,7 @@ export interface FileRouteTypes {
     | '/wishlist'
     | '/brand/$brandHandle'
     | '/for-brands/apply'
+    | '/for-brands'
     | '/look/$lookId'
     | '/brand/dashboard'
   fileRoutesByTo: FileRoutesByTo
@@ -182,6 +192,7 @@ export interface FileRouteTypes {
     | '/wishlist'
     | '/brand/$brandHandle'
     | '/for-brands/apply'
+    | '/for-brands'
     | '/look/$lookId'
     | '/brand/dashboard'
   id:
@@ -199,6 +210,7 @@ export interface FileRouteTypes {
     | '/wishlist'
     | '/brand/$brandHandle'
     | '/for-brands/apply'
+    | '/for-brands'
     | '/look/$lookId'
     | '/_authenticated/brand/dashboard'
   fileRoutesById: FileRoutesById
@@ -217,6 +229,7 @@ export interface RootRouteChildren {
   WishlistRoute: typeof WishlistRoute
   BrandBrandHandleRoute: typeof BrandBrandHandleRoute
   ForBrandsApplyRoute: typeof ForBrandsApplyRoute
+  ForBrandsRoute: typeof ForBrandsRoute
   LookLookIdRoute: typeof LookLookIdRoute
 }
 
@@ -313,6 +326,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ForBrandsApplyRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/for-brands': {
+      id: '/for-brands'
+      path: '/for-brands'
+      fullPath: '/for-brands'
+      preLoaderRoute: typeof ForBrandsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/look/$lookId': {
       id: '/look/$lookId'
       path: '/look/$lookId'
@@ -355,6 +375,7 @@ const rootRouteChildren: RootRouteChildren = {
   WishlistRoute: WishlistRoute,
   BrandBrandHandleRoute: BrandBrandHandleRoute,
   ForBrandsApplyRoute: ForBrandsApplyRoute,
+  ForBrandsRoute: ForBrandsRoute,
   LookLookIdRoute: LookLookIdRoute,
 }
 export const routeTree = rootRouteImport
