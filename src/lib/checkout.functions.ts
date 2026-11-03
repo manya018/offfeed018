@@ -67,5 +67,48 @@ export const createOfffeedCheckoutOrders = createServerFn({ method: "POST" })
     if (!Array.isArray(result) || result.length !== data.items.length) {
       throw new Error("We couldn't confirm every item in your order. Please contact OFFFEED before retrying.");
     }
-    return result as OfffeedCheckoutResult[];
+    const orders = result as OfffeedCheckoutResult[];
+    // Email delivery is best-effort: a mail outage must never undo a successfully placed order.
+    try {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { data: savedOrders, error: orderReadError } = await supabaseAdmin
+        .from("brand_orders")
+        .select("id, brand_application_id, order_number, customer_name, customer_email, product_name, quantity, unit_price, selected_size, selected_color")
+        .in("id", orders.map((order) => order.order_id));
+      if (orderReadError) throw orderReadError;
+      const applicationIds = [...new Set((savedOrders ?? []).map((order) => order.brand_application_id))];
+      const { data: applications, error: applicationReadError } = await supabaseAdmin
+        .from("brand_applications")
+        .select("id, brand_name, email")
+        .in("id", applicationIds);
+      if (applicationReadError) throw applicationReadError;
+      const applicationById = new Map((applications ?? []).map((application) => [application.id, application]));
+      const { sendOrderNotificationEmails } = await import("./brand-notification.server");
+      for (const order of savedOrders ?? []) {
+        const application = applicationById.get(order.brand_application_id);
+        if (!application) {
+          console.error("[order-notification] Brand application not found for order", order.order_number);
+          continue;
+        }
+        try {
+          await sendOrderNotificationEmails({
+            orderNumber: order.order_number,
+            customerName: order.customer_name,
+            customerEmail: order.customer_email,
+            brandName: application.brand_name,
+            brandEmail: application.email,
+            productName: order.product_name,
+            quantity: order.quantity,
+            lineTotal: Number(order.unit_price) * order.quantity,
+            selectedSize: order.selected_size,
+            selectedColor: order.selected_color,
+          });
+        } catch (notifyError) {
+          console.error("[order-notification] Order was saved, but an email could not be sent", order.order_number, notifyError);
+        }
+      }
+    } catch (notifyError) {
+      console.error("[order-notification] Order was saved, but notification details could not be loaded", notifyError);
+    }
+    return orders;
   });
