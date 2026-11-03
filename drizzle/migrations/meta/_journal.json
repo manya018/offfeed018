@@ -15,6 +15,13 @@
       "when": 1793643050512,
       "tag": "0001_order_evidence_storage_policies",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1793726400000,
+      "tag": "0002_brand_product_size_chart",
+      "breakpoints": true
     }
   ]
 }
