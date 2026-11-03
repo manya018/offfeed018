@@ -165,7 +165,7 @@ export const getShopTheLookProducts = createServerFn({ method: "GET" })
 
     const { data: rows, error } = await supabase
       .from("brand_products")
-      .select("id, brand_application_id, product_name, description, category, price, product_url, image_path, sizes, colors, tags, audience, created_at")
+      .select("id, brand_application_id, product_name, description, category, price, product_url, image_path, sizes, size_chart, colors, tags, audience, created_at")
       .eq("status", "published")
       .eq("brand_approved", true)
       .contains("audience", [data.audience])
