@@ -5,6 +5,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 
 const audienceValues = ["her", "him"] as const;
+const sizeChartSchema = z.object({ columns: z.array(z.string().trim().min(1).max(40)).min(1).max(30), rows: z.array(z.object({ label: z.string().trim().min(1).max(80), values: z.array(z.string().trim().max(40)).max(30) })).max(40), unit: z.string().trim().max(20).optional() }).nullable();
 const productSchema = z.object({
   name: z.string().trim().min(2).max(160),
   description: z.string().trim().min(10).max(2000),
@@ -13,7 +14,7 @@ const productSchema = z.object({
   productUrl: z.string().url().max(2048).optional().nullable(),
   imagePath: z.string().min(1).max(2048),
   sizes: z.array(z.string().trim().min(1).max(40)).max(30),
-  sizeChart: z.object({ columns: z.array(z.string().trim().min(1).max(40)).max(30), rows: z.array(z.object({ label: z.string().trim().min(1).max(80), values: z.array(z.string().trim().max(40)).max(30) })).max(40), unit: z.string().trim().max(20).optional() }).nullable().optional(),
+  sizeChart: sizeChartSchema.optional(),
   colors: z.array(z.string().trim().min(1).max(60)).max(30),
   tags: z.array(z.string().trim().min(1).max(40)).max(30),
   audience: z.array(z.enum(audienceValues)).min(1),
@@ -152,6 +153,11 @@ export const getBrandWorkspace = createServerFn({ method: "GET" })
       : { data: [], error: null };
     if (productError) throw new Error("Your product list couldn't be loaded.");
     const productRows = products ?? [];
+    const { data: sizeGuides, error: sizeGuideError } = application.status === "approved"
+      ? await context.supabase.from("brand_size_guides").select("id, category, size_chart, updated_at").eq("user_id", context.userId).order("category")
+      : { data: [], error: null };
+    if (sizeGuideError) throw new Error("Your saved size guides could not be loaded.");
+    const sizeGuideByCategory = new Map((sizeGuides ?? []).map((guide) => [guide.category, guide.size_chart]));
     const paths = productRows.map((product) => product.image_path).filter((path): path is string => Boolean(path && !path.startsWith("https://")));
     const { data: signedFiles, error: signedError } = paths.length
       ? await context.supabase.storage.from("brand-product-images").createSignedUrls(paths, 3600)
@@ -176,7 +182,8 @@ export const getBrandWorkspace = createServerFn({ method: "GET" })
       application,
       shippingProfile: safeShippingProfile,
       orders: safeOrderRows,
-      products: productRows.map((product) => ({ ...product, imageUrl: product.image_path?.startsWith("https://") ? product.image_path : imageUrls.get(product.image_path ?? "") ?? null })),
+      sizeGuides: sizeGuides ?? [],
+      products: productRows.map((product) => ({ ...product, size_chart_override: product.size_chart, size_chart: product.size_chart ?? sizeGuideByCategory.get(product.category) ?? null, imageUrl: product.image_path?.startsWith("https://") ? product.image_path : imageUrls.get(product.image_path ?? "") ?? null })),
     };
   });
 
@@ -397,6 +404,51 @@ export const saveImportedShopifyProducts = createServerFn({ method: "POST" })
       existingUrls.add(productUrl.toString());
     }
     return { imported: inserted.length, products: inserted };
+  });
+
+
+export const saveBrandSizeGuide = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({
+    category: z.string().trim().min(1).max(120),
+    sizeChart: sizeChartSchema,
+  }).parse(input))
+  .handler(async ({ context, data }) => {
+    const application = await getApprovedApplication(context);
+    if (!data.sizeChart) throw new Error("Add a size chart before saving.");
+    if (data.sizeChart.rows.some((row) => row.values.length !== data.sizeChart!.columns.length || row.values.some((value) => !value))) {
+      throw new Error("Every measurement row must have one value for each size or variant.");
+    }
+    const { data: guide, error } = await context.supabase.from("brand_size_guides").upsert({
+      brand_application_id: application.id,
+      user_id: context.userId,
+      category: data.category,
+      size_chart: data.sizeChart,
+      updated_at: new Date().toISOString(),
+    }, { onConflict: "brand_application_id,category" }).select("id, category, size_chart, updated_at").single();
+    if (error || !guide) throw new Error("This brand size guide couldn't be saved.");
+    return guide;
+  });
+
+export const updateBrandProductSizeChart = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({
+    productId: z.string().uuid(),
+    sizeChart: sizeChartSchema,
+  }).parse(input))
+  .handler(async ({ context, data }) => {
+    await getApprovedApplication(context);
+    if (data.sizeChart && data.sizeChart.rows.some((row) => row.values.length !== data.sizeChart!.columns.length || row.values.some((value) => !value))) {
+      throw new Error("Every measurement row must have one value for each size or variant.");
+    }
+    const { data: product, error } = await context.supabase.from("brand_products")
+      .update({ size_chart: data.sizeChart })
+      .eq("id", data.productId)
+      .eq("user_id", context.userId)
+      .select("id")
+      .maybeSingle();
+    if (error || !product) throw new Error("This product's size guide couldn't be updated.");
+    return product;
   });
 
 export const updateBrandProductStatus = createServerFn({ method: "POST" })
