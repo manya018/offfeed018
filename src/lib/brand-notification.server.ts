@@ -123,7 +123,9 @@ export async function sendBrandApplicationEmail(application: BrandApplicationEma
 
   const raw = base64(message).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 
-  await assertExpectedSender(lovableKey, connectionKey);\n\n  const response = await fetch(`${GATEWAY_URL}/users/me/messages/send`, {
+  await assertExpectedSender(lovableKey, connectionKey);
+
+  const response = await fetch(`${GATEWAY_URL}/users/me/messages/send`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${lovableKey}`,
@@ -179,7 +181,9 @@ export async function sendBrandDecisionEmail({ brandName, email, approved, reaso
     "",
   ].join("\r\n");
   const raw = base64(message).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-  await assertExpectedSender(lovableKey, connectionKey);\n\n  const response = await fetch(`${GATEWAY_URL}/users/me/messages/send`, {
+  await assertExpectedSender(lovableKey, connectionKey);
+
+  const response = await fetch(`${GATEWAY_URL}/users/me/messages/send`, {
     method: "POST",
     headers: { Authorization: `Bearer ${lovableKey}`, "X-Connection-Api-Key": connectionKey, "Content-Type": "application/json" },
     body: JSON.stringify({ raw }),
