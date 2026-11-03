@@ -75,7 +75,142 @@ type BrandOrder = {
   estimated_delivery_start: string | null; estimated_delivery_end: string | null; created_at: string;
 };
 
+const PACKING_SLOTS = [
+  { key: "product", label: "1. Product being packed" },
+  { key: "details", label: "2. Parcel with the order slip visible" },
+  { key: "sealed", label: "3. Parcel sealed / handover" },
+] as const;
+
+function ForensicReportCard({ report, title }: { report: ForensicReport | null; title: string }) {
+  if (!report) return null;
+  const signals = [...report.manipulation_signals, ...report.ai_generation_signals];
+  return <div className="mt-3 rounded-lg border border-border/80 bg-muted/20 p-3">
+    <div className="flex flex-wrap items-center gap-2">
+      {report.verdict === "clean" ? <ShieldCheck className="size-4 text-primary"/> : <ShieldAlert className="size-4 text-destructive"/>}
+      <p className="text-sm font-medium">{title}</p>
+      <Badge variant={report.verdict === "clean" ? "default" : report.verdict === "likely_fraud" ? "destructive" : "secondary"}>{report.verdict.replaceAll("_", " ")} · trust {report.trust_score}/100</Badge>
+    </div>
+    {report.summary && <p className="mt-2 text-sm text-muted-foreground">{report.summary}</p>}
+    {report.flags.length > 0 && <p className="mt-2 text-xs text-muted-foreground">Flags: {report.flags.join(" · ")}</p>}
+    {signals.length > 0 && <p className="mt-1 text-xs text-destructive">Signals: {signals.join(" · ")}</p>}
+  </div>;
+}
+
+function DispatchProofPanel({ orderId }: { orderId: string }) {
+  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [data, setData] = useState<DisputeViewerData | null>(null);
+  const [files, setFiles] = useState<Record<string, File | null>>({});
+  const [video, setVideo] = useState<File | null>(null);
+  const [note, setNote] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const [replacing, setReplacing] = useState(false);
+
+  const load = async () => {
+    setLoading(true);
+    try {
+      const result = await getDisputeViewerData({ data: { orderId } });
+      setData(result);
+      setNote(result.dispatch?.packingNote ?? "");
+    } catch (loadError) {
+      setError(loadError instanceof Error ? loadError.message : "The packing proof couldn't be loaded.");
+    } finally { setLoading(false); }
+  };
+
+  const pickFile = (slot: string, file: File | null) => {
+    if (file && !(["image/jpeg", "image/png", "image/webp"].includes(file.type))) { setError("Packing photos must be JPG, PNG or WebP."); return; }
+    if (file && file.size > 12 * 1024 * 1024) { setError("Each packing photo must be 12 MB or smaller."); return; }
+    setError("");
+    setFiles((current) => ({ ...current, [slot]: file }));
+  };
+  const pickVideo = (file: File | null) => {
+    if (file && !(["video/mp4", "video/webm", "video/quicktime"].includes(file.type))) { setError("The packing video must be MP4, WebM or MOV."); return; }
+    if (file && file.size > 50 * 1024 * 1024) { setError("The packing video must be 50 MB or smaller."); return; }
+    setError("");
+    setVideo(file);
+  };
+
+  const submit = async () => {
+    setError("");
+    const chosen = PACKING_SLOTS.filter((slot) => files[slot.key]);
+    if (chosen.length < 3) { setError("All three packing photos are required."); return; }
+    if (!video) { setError("A short packing video is required."); return; }
+    if (note.trim().length < 10) { setError("Describe what you packed in at least 10 characters."); return; }
+    setBusy(true);
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) throw new Error("Your sign-in has expired. Sign in again to continue.");
+      const userId = userData.user.id;
+      const upload = async (file: File, folder: string) => {
+        const extension = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
+        const path = `${userId}/${crypto.randomUUID()}-${folder}.${extension}`;
+        const { error: uploadError } = await supabase.storage.from("order-evidence").upload(path, file, { contentType: file.type, upsert: false });
+        if (uploadError) throw new Error("An evidence file couldn't be uploaded. Please try again.");
+        return path;
+      };
+      const photos = [];
+      for (const slot of PACKING_SLOTS) {
+        const file = files[slot.key];
+        if (file) photos.push({ path: await upload(file, slot.key), kind: slot.key });
+      }
+      const videoPath = await upload(video, "packing-video");
+      const result = await submitDispatchEvidence({ data: { orderId, photos, videoPath, packingNote: note.trim() } });
+      toast.success(`Packing proof saved — AI verification: ${result.report.verdict.replaceAll("_", " ")} (trust ${result.report.trust_score}/100).`);
+      setFiles({}); setVideo(null); setReplacing(false);
+      await load();
+    } catch (submitError) {
+      setError(submitError instanceof Error ? submitError.message : "The packing proof couldn't be saved.");
+    } finally { setBusy(false); }
+  };
+
+  const dispatch = data?.dispatch ?? null;
+  return <div className="mt-4 border-t border-border/70 pt-4">
+    <div className="flex flex-wrap items-center gap-2">
+      <Button type="button" variant="outline" size="sm" onClick={() => { const next = !open; setOpen(next); if (next && !data) void load(); }}>
+        <Video/> {loading ? "Loading proof…" : dispatch ? "Packing proof & AI check" : "Add packing proof"}
+      </Button>
+      {dispatch && <Badge variant={dispatch.status === "verified" ? "default" : dispatch.status === "flagged" ? "destructive" : "secondary"}>{dispatch.status === "verified" ? <ShieldCheck className="mr-1 size-3"/> : dispatch.status === "flagged" ? <ShieldAlert className="mr-1 size-3"/> : null}{dispatch.status}</Badge>}
+      {!dispatch && <span className="text-xs text-muted-foreground">Required before dispatch — customers and OFFFEED rely on this in any dispute.</span>}
+    </div>
+    {open && loading && <p className="mt-3 text-sm text-muted-foreground"><LoaderCircle className="mr-1 inline size-3.5 animate-spin"/>Loading the evidence vault…</p>}
+    {open && !loading && <>
+      {dispatch && !replacing && <div className="mt-3">
+        <div className="grid grid-cols-3 gap-2 sm:max-w-md">{dispatch.photos.map((photo) => <img key={photo.path} src={photo.url} alt={`Packing proof: ${photo.kind}`} className="aspect-square w-full rounded object-cover"/>)}</div>
+        {dispatch.videoUrl && <a className="mt-2 inline-block text-sm underline underline-offset-4" href={dispatch.videoUrl} target="_blank" rel="noreferrer">Watch the packing video</a>}
+        <p className="mt-2 text-sm text-muted-foreground">{dispatch.packingNote}</p>
+        <ForensicReportCard report={dispatch.aiReport} title="AI verification of your packing proof"/>
+        <Button type="button" variant="ghost" size="sm" className="mt-2" onClick={() => setReplacing(true)}><Upload/>Replace proof</Button>
+      </div>}
+      {(replacing || !dispatch) && <div className="mt-3 max-w-xl">
+        <p className="text-sm font-medium">Record your packing proof</p>
+        <p className="mt-1 text-xs text-muted-foreground">This vault is compared against customer return photos to protect you from false claims. OFFFEED's AI checks the photos automatically.</p>
+        <div className="mt-3 grid gap-3 sm:grid-cols-3">
+          {PACKING_SLOTS.map((slot) => <label key={slot.key} className="block cursor-pointer rounded-lg border border-dashed border-border/80 p-3 text-xs hover:border-primary/50">
+            <span className="block font-medium">{slot.label}</span>
+            <span className="mt-1 block text-muted-foreground">{files[slot.key] ? files[slot.key]?.name : "Choose photo"}</span>
+            <input type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" onChange={(event) => pickFile(slot.key, event.target.files?.[0] ?? null)}/>
+          </label>)}
+        </div>
+        <label className="mt-3 block cursor-pointer rounded-lg border border-dashed border-border/80 p-3 text-xs hover:border-primary/50 sm:max-w-xs">
+          <span className="block font-medium">4. Packing video (MP4/WebM/MOV, up to 50 MB)</span>
+          <span className="mt-1 block text-muted-foreground">{video ? video.name : "Show yourself packing, with the order details visible"}</span>
+          <input type="file" accept="video/mp4,video/webm,video/quicktime" className="sr-only" onChange={(event) => pickVideo(event.target.files?.[0] ?? null)}/>
+        </label>
+        <Label htmlFor={`packing-note-${orderId}`}>What did you pack?</Label>
+        <Textarea id={`packing-note-${orderId}`} value={note} onChange={(event) => setNote(event.target.value)} maxLength={1000} placeholder="e.g. Rose midi dress in size M, tags attached, wrapped in tissue with the OFFFEED order slip inside." className="mt-2 min-h-20 rounded-lg border-border/80 bg-card"/>
+        {error && <p role="alert" className="mt-2 text-sm text-destructive">{error}</p>}
+        <div className="mt-3 flex flex-wrap gap-2">
+          <Button type="button" disabled={busy} onClick={() => void submit()}>{busy ? <LoaderCircle className="animate-spin"/> : <ShieldCheck/>}{busy ? "Verifying with AI…" : "Save & verify with AI"}</Button>
+          {replacing && <Button type="button" variant="outline" onClick={() => setReplacing(false)}>Cancel</Button>}
+        </div>
+      </div>}
+    </>}
+  </div>;
+}
+
 function BrandOrderCard({ order, onSaved }: { order: BrandOrder; onSaved: () => void }) {
+
   const deliveryAddress = order.delivery_address as unknown as { line1?: string; line2?: string; city?: string; state?: string; landmark?: string };
   const [status, setStatus] = useState(order.status);
   const [provider, setProvider] = useState(order.tracking_provider);
