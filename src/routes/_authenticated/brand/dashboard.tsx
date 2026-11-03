@@ -233,7 +233,9 @@ function BrandOrderCard({ order, onSaved }: { order: BrandOrder; onSaved: () => 
       toast.error(error instanceof Error ? error.message : "Order tracking couldn't be updated.");
     } finally { setSaving(false); }
   };
-  return <form onSubmit={(event) => void save(event)} className="rounded-xl border border-border/80 p-4 sm:p-5">
+  return <section className="rounded-xl border border-border/80 p-4 sm:p-5">
+    <form onSubmit={(event) => void save(event)}>
+
     <div className="flex flex-wrap items-start justify-between gap-3"><div><p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">{order.order_number}</p><h3 className="mt-1 font-medium">{order.product_name} <span className="text-muted-foreground">× {order.quantity}</span></h3><p className="mt-1 text-sm text-muted-foreground">{order.customer_name} · {order.customer_email}</p>{order.customer_phone && <p className="mt-1 text-sm text-muted-foreground">Phone: {order.customer_phone}</p>}<p className="mt-1 text-xs text-muted-foreground">Product subtotal ₹{(order.unit_price * order.quantity).toLocaleString("en-IN")}</p>{(order.selected_size || order.selected_color) && <p className="mt-1 text-xs text-muted-foreground">Variant: {[order.selected_size, order.selected_color].filter(Boolean).join(" · ")}</p>}<p className="mt-2 text-sm">{[deliveryAddress.line1, deliveryAddress.line2, deliveryAddress.landmark, deliveryAddress.city, deliveryAddress.state, order.destination_pin_code].filter(Boolean).join(", ")}</p></div><Badge variant="secondary">{order.status.replaceAll("_", " ")}</Badge></div>
     <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       <div><Label htmlFor={`status-${order.id}`}>Order status</Label><select id={`status-${order.id}`} value={status} onChange={(event) => setStatus(event.target.value)} className="mt-2 h-11 w-full rounded-lg border border-border/80 bg-card px-3 text-sm">{["pending", "confirmed", "processing", "shipped", "out_for_delivery", "delivered", "cancelled"].map((item) => <option key={item} value={item}>{item.replaceAll("_", " ")}</option>)}</select></div>
@@ -243,10 +245,11 @@ function BrandOrderCard({ order, onSaved }: { order: BrandOrder; onSaved: () => 
       <div className="grid grid-cols-2 gap-3"><div><Label htmlFor={`eta-start-${order.id}`}>ETA from</Label><Input id={`eta-start-${order.id}`} type="date" value={deliveryStart} onChange={(event) => setDeliveryStart(event.target.value)} className={fieldClass}/></div><div><Label htmlFor={`eta-end-${order.id}`}>ETA until</Label><Input id={`eta-end-${order.id}`} type="date" value={deliveryEnd} onChange={(event) => setDeliveryEnd(event.target.value)} min={deliveryStart || undefined} className={fieldClass}/></div></div>
     </div>
     <div className="mt-4 flex justify-end"><Button type="submit" disabled={saving}>{saving ? <LoaderCircle className="animate-spin"/> : <Truck/>}{saving ? "Saving…" : "Save tracking update"}</Button></div>
-  </form>;
-  return <section className="rounded-xl border border-border/80 p-4 sm:p-5"><form onSubmit={(event) => void save(event)}>
-
+    </form>
+    <DispatchProofPanel orderId={order.id} />
+  </section>;
 }
+
 
 function BrandDashboard() {
   const queryClient = useQueryClient();
