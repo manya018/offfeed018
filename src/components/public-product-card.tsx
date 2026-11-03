@@ -10,6 +10,7 @@ import { readLikedProductIds, setWishlistItem } from "@/lib/look-collections";
 export function PublicProductCard({ product }: { product: ProductWithBrand }) {
   const [added, setAdded] = useState(false);
   const [liked, setLiked] = useState(false);
+  const [showSizeGuide, setShowSizeGuide] = useState(false);
 
   useEffect(() => {
     try {
@@ -61,6 +62,22 @@ export function PublicProductCard({ product }: { product: ProductWithBrand }) {
           <p className="mt-2 line-clamp-2 text-xs leading-5 text-muted-foreground">
             {[product.sizes.length ? `Sizes ${product.sizes.join(", ")}` : "", product.colors.join(", ")].filter(Boolean).join(" · ")}
           </p>
+        )}
+        {product.sizeChart && product.sizeChart.columns.length > 0 && product.sizeChart.rows.length > 0 && (
+          <div className="mt-2">
+            <button type="button" onClick={() => setShowSizeGuide((value) => !value)} aria-expanded={showSizeGuide} className="text-xs font-medium text-primary underline underline-offset-4">
+              {showSizeGuide ? "Hide size guide" : "View brand size guide"}
+            </button>
+            {showSizeGuide && (
+              <div className="mt-2 max-w-full overflow-x-auto rounded-lg border border-border/70 p-2">
+                <table className="w-full min-w-max text-left text-[11px]">
+                  <thead><tr><th className="px-2 py-1.5 font-semibold">Measurement</th>{product.sizeChart.columns.map((column) => <th key={column} className="px-2 py-1.5 font-semibold">{column}</th>)}</tr></thead>
+                  <tbody>{product.sizeChart.rows.map((row) => <tr key={row.label} className="border-t border-border/60"><th className="px-2 py-1.5 font-medium">{row.label}</th>{row.values.map((value, index) => <td key={`${row.label}-${index}`} className="px-2 py-1.5 text-muted-foreground">{value}</td>)}</tr>)}</tbody>
+                </table>
+                {product.sizeChart.unit && <p className="mt-2 text-[10px] text-muted-foreground">Unit: {product.sizeChart.unit}</p>}
+              </div>
+            )}
+          </div>
         )}
         <div className="mt-3 flex items-center gap-1">
           <Button variant="outline" size="sm" className="min-w-0 flex-1" onClick={() => { addToOfffeedCart(product); setAdded(true); }}>
