@@ -109,6 +109,9 @@ export const getPublicBrandProfile = createServerFn({ method: "GET" })
       .order("created_at", { ascending: false })
       .limit(120);
     if (productsError) throw new Error("This brand’s products could not be loaded.");
+    const { data: brandSizeGuides, error: sizeGuideError } = await supabase.from("brand_size_guides").select("category, size_chart").eq("brand_application_id", brand.id);
+    if (sizeGuideError) throw new Error("This brand’s size guides could not be loaded.");
+    const sizeGuideByCategory = new Map((brandSizeGuides ?? []).map((guide) => [guide.category, guide.size_chart]));
 
     const productPaths = [...new Set((rows ?? []).map((row) => row.image_path).filter((path): path is string => Boolean(path && !path.startsWith("https://"))))];
     const brandPaths = [...new Set([brand.logo_path, brand.cover_path].filter((path): path is string => Boolean(path)))];
@@ -146,7 +149,7 @@ export const getPublicBrandProfile = createServerFn({ method: "GET" })
         productUrl: row.product_url,
         imageUrl: getImageUrl(row.image_path, productSigned),
         sizes: row.sizes,
-        sizeChart: row.size_chart as unknown as ProductSizeChart | null,
+        sizeChart: (row.size_chart ?? sizeGuideByCategory.get(row.category) ?? null) as unknown as ProductSizeChart | null,
         colors: row.colors,
         tags: row.tags,
         audience: row.audience,
@@ -182,6 +185,9 @@ export const getShopTheLookProducts = createServerFn({ method: "GET" })
       .eq("status", "approved");
     if (brandsError) throw new Error("Brand details for this edit could not be loaded.");
     const brandById = new Map((brands ?? []).filter((brand) => brand.public_handle).map((brand) => [brand.id, brand]));
+    const { data: sharedGuides, error: sharedGuidesError } = await supabase.from("brand_size_guides").select("brand_application_id, category, size_chart").in("brand_application_id", applicationIds);
+    if (sharedGuidesError) throw new Error("Size guides for this edit could not be loaded.");
+    const guideByBrandCategory = new Map((sharedGuides ?? []).map((guide) => [`${guide.brand_application_id}:${guide.category}`, guide.size_chart]));
     const productPaths = [...new Set((rows ?? []).map((row) => row.image_path).filter((path): path is string => Boolean(path && !path.startsWith("https://"))))];
     const { data: signedFiles, error: signedError } = productPaths.length
       ? await supabase.storage.from("brand-product-images").createSignedUrls(productPaths, 3600)
@@ -201,7 +207,7 @@ export const getShopTheLookProducts = createServerFn({ method: "GET" })
         productUrl: row.product_url,
         imageUrl: getImageUrl(row.image_path, signedUrls),
         sizes: row.sizes,
-        sizeChart: row.size_chart as unknown as ProductSizeChart | null,
+        sizeChart: (row.size_chart ?? guideByBrandCategory.get(`${row.brand_application_id}:${row.category}`) ?? null) as unknown as ProductSizeChart | null,
         colors: row.colors,
         tags: row.tags,
         audience: row.audience,
