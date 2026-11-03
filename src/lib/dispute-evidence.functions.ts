@@ -306,8 +306,8 @@ export const getDisputeViewerData = createServerFn({ method: "POST" })
       .eq("id", data.orderId)
       .maybeSingle();
     if (error || !order) throw new Error("Order not found.");
-    const isBrand = order.customer_name !== undefined && false;
     // Resolve the viewer's role directly from the two ownership columns.
+
     const { data: roleRow } = await context.supabase
       .from("brand_orders")
       .select("brand_user_id, customer_user_id")
