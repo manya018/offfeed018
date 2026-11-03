@@ -1,0 +1,33 @@
+name: Apply brand product size chart migration
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  apply-size-chart-column:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+
+      - name: Apply the size chart schema change
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          if [ -z "$SUPABASE_DB_URL" ]; then
+            echo "Missing repository secret: SUPABASE_DB_URL"
+            exit 1
+          fi
+          psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 <<'SQL'
+          BEGIN;
+          ALTER TABLE public.brand_products
+            ADD COLUMN IF NOT EXISTS size_chart JSONB;
+          COMMENT ON COLUMN public.brand_products.size_chart IS
+            'Brand-authored product-specific size guide: columns, measurement rows, and optional unit.';
+          COMMIT;
+          SQL
