@@ -137,7 +137,7 @@ export async function sendBrandApplicationEmail(application: BrandApplicationEma
 
   if (!response.ok) {
     const body = await response.text();
-    throw new Error(`Gmail send failed [${response.status}]: ${body}`);
+    console.error(`[brand-application-email] Admin notification failed [${response.status}]: ${body}`);
   }
 
   const applicantText = `Hi ${application.contactName},\\n\\nThank you for applying to join OFFFEED with ${application.brandName}. We have received your application and our team will review it. We'll email you again when a decision has been made.\\n\\nOFFFEED team`;
