@@ -13,6 +13,7 @@ const productSchema = z.object({
   productUrl: z.string().url().max(2048).optional().nullable(),
   imagePath: z.string().min(1).max(2048),
   sizes: z.array(z.string().trim().min(1).max(40)).max(30),
+  sizeChart: z.object({ columns: z.array(z.string().trim().min(1).max(40)).max(30), rows: z.array(z.object({ label: z.string().trim().min(1).max(80), values: z.array(z.string().trim().max(40)).max(30) })).max(40), unit: z.string().trim().max(20).optional() }).nullable().optional(),
   colors: z.array(z.string().trim().min(1).max(60)).max(30),
   tags: z.array(z.string().trim().min(1).max(40)).max(30),
   audience: z.array(z.enum(audienceValues)).min(1),
@@ -147,7 +148,7 @@ export const getBrandWorkspace = createServerFn({ method: "GET" })
     if (error || !application) throw new Error("No brand application is connected to this account.");
 
     const { data: products, error: productError } = application.status === "approved"
-      ? await context.supabase.from("brand_products").select("id, product_name, description, category, price, product_url, image_path, sizes, colors, tags, audience, source, status, created_at").eq("user_id", context.userId).order("created_at", { ascending: false })
+      ? await context.supabase.from("brand_products").select("id, product_name, description, category, price, product_url, image_path, sizes, size_chart, colors, tags, audience, source, status, created_at").eq("user_id", context.userId).order("created_at", { ascending: false })
       : { data: [], error: null };
     if (productError) throw new Error("Your product list couldn't be loaded.");
     const productRows = products ?? [];
@@ -323,6 +324,7 @@ export const createBrandProduct = createServerFn({ method: "POST" })
       product_url: data.productUrl ?? null,
       image_path: data.imagePath,
       sizes: data.sizes,
+      size_chart: data.sizeChart ?? null,
       colors: data.colors,
       tags: data.tags,
       audience: data.audience,
