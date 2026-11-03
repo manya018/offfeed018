@@ -148,7 +148,7 @@ export const getBrandWorkspace = createServerFn({ method: "GET" })
     if (error || !application) throw new Error("No brand application is connected to this account.");
 
     const { data: products, error: productError } = application.status === "approved"
-      ? await context.supabase.from("brand_products").select("id, product_name, description, category, price, product_url, image_path, sizes, size_chart, colors, tags, audience, source, status, created_at").eq("user_id", context.userId).order("created_at", { ascending: false })
+      ? await context.supabase.from("brand_products").select("id, product_name, description, category, price, product_url, image_path, sizes, colors, tags, audience, source, status, created_at").eq("user_id", context.userId).order("created_at", { ascending: false })
       : { data: [], error: null };
     if (productError) throw new Error("Your product list couldn't be loaded.");
     const productRows = products ?? [];
@@ -324,7 +324,6 @@ export const createBrandProduct = createServerFn({ method: "POST" })
       product_url: data.productUrl ?? null,
       image_path: data.imagePath,
       sizes: data.sizes,
-      size_chart: data.sizeChart ?? null,
       colors: data.colors,
       tags: data.tags,
       audience: data.audience,
