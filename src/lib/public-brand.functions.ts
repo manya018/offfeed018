@@ -15,6 +15,8 @@ const shopInput = z.object({
 
 type Audience = "her" | "him";
 
+type ProductSizeChart = { columns: string[]; rows: Array<{ label: string; values: string[] }>; unit?: string };
+
 type ProductWithBrand = {
   id: string;
   productName: string;
@@ -24,6 +26,7 @@ type ProductWithBrand = {
   productUrl: string | null;
   imageUrl: string | null;
   sizes: string[];
+  sizeChart: ProductSizeChart | null;
   colors: string[];
   tags: string[];
   audience: string[];
@@ -99,7 +102,7 @@ export const getPublicBrandProfile = createServerFn({ method: "GET" })
 
     const { data: rows, error: productsError } = await supabase
       .from("brand_products")
-      .select("id, product_name, description, category, price, product_url, image_path, sizes, colors, tags, audience, created_at")
+      .select("id, product_name, description, category, price, product_url, image_path, sizes, size_chart, colors, tags, audience, created_at")
       .eq("brand_application_id", brand.id)
       .eq("status", "published")
       .eq("brand_approved", true)
@@ -143,6 +146,7 @@ export const getPublicBrandProfile = createServerFn({ method: "GET" })
         productUrl: row.product_url,
         imageUrl: getImageUrl(row.image_path, productSigned),
         sizes: row.sizes,
+        sizeChart: row.size_chart as unknown as ProductSizeChart | null,
         colors: row.colors,
         tags: row.tags,
         audience: row.audience,
