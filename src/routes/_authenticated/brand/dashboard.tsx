@@ -299,8 +299,8 @@ function BrandDashboard() {
   const manualSectionRef = useRef<HTMLElement | null>(null);
   const importSectionRef = useRef<HTMLElement | null>(null);
   const [draft, setDraft] = useState<DraftProduct>(blankProduct);
-  const [image, setImage] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState("");
+  const [images, setImages] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const [importBusy, setImportBusy] = useState(false);
   const [imported, setImported] = useState<ImportedProduct[]>([]);
@@ -387,8 +387,9 @@ function BrandDashboard() {
     await queryClient.invalidateQueries({ queryKey: ["brand-workspace"] });
     setMode(null);
     setDraft({ ...blankProduct, audience: supportedAudience.length ? [supportedAudience[0]] : ["her"] });
-    setImage(null);
-    setImagePreview("");
+    imagePreviews.forEach((preview) => URL.revokeObjectURL(preview));
+    setImages([]);
+    setImagePreviews([]);
     setImported([]);
     setSelectedImports([]);
     setError("");
@@ -437,22 +438,32 @@ function BrandDashboard() {
   });
 
   const handleImage = (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    if (!(["image/jpeg", "image/png", "image/webp"].includes(file.type)) || file.size > 20 * 1024 * 1024) {
-      setError("Choose a JPG, PNG or WebP image up to 20 MB.");
+    const selected = Array.from(event.target.files ?? []);
+    if (!selected.length) return;
+    if (selected.some((file) => !(["image/jpeg", "image/png", "image/webp"].includes(file.type)) || file.size > 20 * 1024 * 1024)) {
+      setError("Choose JPG, PNG or WebP images up to 20 MB each.");
       event.target.value = "";
       return;
     }
-    if (imagePreview) URL.revokeObjectURL(imagePreview);
-    setImage(file);
-    setImagePreview(URL.createObjectURL(file));
+    if (images.length + selected.length > 6) {
+      setError("You can upload up to 6 photos for each product.");
+      event.target.value = "";
+      return;
+    }
+    setImages((current) => [...current, ...selected]);
+    setImagePreviews((current) => [...current, ...selected.map((file) => URL.createObjectURL(file))]);
     setError("");
+    event.target.value = "";
+  };
+  const removeProductImage = (index: number) => {
+    URL.revokeObjectURL(imagePreviews[index]);
+    setImages((current) => current.filter((_, itemIndex) => itemIndex !== index));
+    setImagePreviews((current) => current.filter((_, itemIndex) => itemIndex !== index));
   };
 
   const submitManual = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!image || !application) { setError("Add a product photo before saving."); return; }
+    if (!images.length || !application) { setError("Add at least one product photo before saving."); return; }
     if (draft.listingType === "bundle" && !draft.bundleItems.trim()) { setError("List the pieces included in this complete look."); return; }
     if (!draft.audience.length || draft.audience.some((value) => !supportedAudience.includes(value))) { setError("Choose an audience available to your brand."); return; }
     const price = Number(draft.price);
@@ -461,11 +472,16 @@ function BrandDashboard() {
     setSaving(true); setError("");
     const { data: userResult } = await supabase.auth.getUser();
     if (!userResult.user) { setError("Your sign-in has expired. Sign in again to continue."); setSaving(false); return; }
-    const extension = image.type === "image/png" ? "png" : image.type === "image/webp" ? "webp" : "jpg";
-    const path = `${userResult.user.id}/${crypto.randomUUID()}-product.${extension}`;
-    const { error: uploadError } = await supabase.storage.from("brand-product-images").upload(path, image, { contentType: image.type, cacheControl: "3600", upsert: false });
-    if (uploadError) { setError("The product photo couldn't be uploaded. Please try again."); setSaving(false); return; }
+    const uploadedPaths: string[] = [];
     try {
+      for (const file of images) {
+        const extension = file.type === "image/png" ? "png" : file.type === "image/webp" ? "webp" : "jpg";
+        const path = `${userResult.user.id}/${crypto.randomUUID()}-product.${extension}`;
+        const { error: uploadError } = await supabase.storage.from("brand-product-images").upload(path, file, { contentType: file.type, cacheControl: "3600", upsert: false });
+        if (uploadError) throw new Error("A product photo couldn't be uploaded. Please try again.");
+        uploadedPaths.push(path);
+      }
+      const path = uploadedPaths[0];
       await createBrandProduct({ data: {
         name: draft.name,
         description: draft.listingType === "bundle" ? `${draft.description.trim()}\n\nIncluded in this look:\n${draft.bundleItems.split(",").map((item) => item.trim()).filter(Boolean).join("\n")}` : draft.description,
@@ -473,6 +489,7 @@ function BrandDashboard() {
         price,
         productUrl: draft.productUrl.trim() || null,
         imagePath: path,
+        imagePaths: uploadedPaths,
         sizes: availableSizes,
         sizeChart: null,
         colors: parseList(draft.colors),
@@ -482,7 +499,7 @@ function BrandDashboard() {
       toast.success("Product saved as a draft.");
       await refresh();
     } catch (saveError) {
-      await supabase.storage.from("brand-product-images").remove([path]);
+      if (uploadedPaths.length) await supabase.storage.from("brand-product-images").remove(uploadedPaths);
       setError(saveError instanceof Error ? saveError.message : "This product couldn't be saved.");
     } finally { setSaving(false); }
   };
@@ -649,7 +666,7 @@ function BrandDashboard() {
               <div><Label htmlFor="product-colors">{draft.department === "Jewellery" ? "Metal / colour" : "Colours"}</Label><Input id="product-colors" value={draft.colors} onChange={(event) => updateDraft("colors", event.target.value)} placeholder={draft.department === "Jewellery" ? "Gold, silver, rose gold" : "Ivory, Rose, Black"} className={fieldClass}/></div>
               <div><Label htmlFor="product-tags">Tags</Label><Input id="product-tags" value={draft.tags} onChange={(event) => updateDraft("tags", event.target.value)} placeholder="#collegewear, #minimal, #pink" className={fieldClass}/></div>
               <div className="sm:col-span-2"><p className="text-sm font-medium">Show in</p><div className="mt-2 flex flex-wrap gap-2">{supportedAudience.map((item) => <Button key={item} type="button" size="sm" variant={draft.audience.includes(item) ? "default" : "outline"} aria-pressed={draft.audience.includes(item)} onClick={() => toggleDraftAudience(item)}>{draft.audience.includes(item) && <Check className="size-4"/>}{item === "her" ? "Her space" : "Him space"}</Button>)}</div></div>
-              <div className="sm:col-span-2"><p className="text-sm font-medium">Product photo</p><input ref={fileInput} type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" onChange={handleImage}/><Button type="button" variant="outline" className="mt-2 h-12 w-full justify-start" onClick={() => fileInput.current?.click()}>{imagePreview ? <><img src={imagePreview} alt="Product preview" className="size-9 rounded object-cover"/>{image?.name}</> : <><ImagePlus/>Choose a product photo (JPG, PNG or WebP · up to 20 MB)</>}</Button></div>
+              <div className="sm:col-span-2"><p className="text-sm font-medium">Product photos <span className="text-muted-foreground">({images.length}/6)</span></p><input ref={fileInput} type="file" multiple accept="image/jpeg,image/png,image/webp" className="sr-only" onChange={handleImage}/><Button type="button" variant="outline" className="mt-2 h-12 w-full justify-start" disabled={images.length >= 6} onClick={() => fileInput.current?.click()}><ImagePlus/>{images.length ? "Add more photos" : "Choose product photos"} (JPG, PNG or WebP · up to 20 MB each)</Button>{imagePreviews.length > 0 && <div className="mt-3 grid grid-cols-3 gap-3 sm:grid-cols-6">{imagePreviews.map((preview, index) => <div key={preview} className="relative"><img src={preview} alt={`Product preview ${index + 1}`} className="aspect-square w-full rounded object-cover"/><button type="button" aria-label={`Remove photo ${index + 1}`} onClick={() => removeProductImage(index)} className="absolute right-1 top-1 rounded-full bg-background/90 p-1"><X className="size-3"/></button>{index === 0 && <span className="mt-1 block text-[10px] text-muted-foreground">Cover photo</span>}</div>)}</div>}</div>
               {error && <p role="alert" className="sm:col-span-2 text-sm text-destructive">{error}</p>}
               <div className="flex flex-wrap gap-2 sm:col-span-2"><Button type="button" variant="outline" onClick={() => setMode(null)}>Cancel</Button><Button type="submit" disabled={saving}>{saving ? <LoaderCircle className="animate-spin"/> : <PackagePlus/>}Save as draft</Button></div>
             </form>
