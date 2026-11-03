@@ -250,7 +250,7 @@ export const updateBrandOrderTracking = createServerFn({ method: "POST" })
   .handler(async ({ context, data }) => {
     const application = await getApprovedApplication(context);
     const { data: previousOrder, error: previousOrderError } = await context.supabase.from("brand_orders")
-      .select("customer_name, customer_email, product_name, status")
+      .select("customer_name, customer_email, product_name, status, tracking_provider, tracking_number, tracking_url, estimated_delivery_start, estimated_delivery_end")
       .eq("id", data.orderId)
       .eq("brand_application_id", application.id)
       .maybeSingle();
@@ -273,7 +273,7 @@ export const updateBrandOrderTracking = createServerFn({ method: "POST" })
       .select("id, order_number, status, tracking_provider, tracking_number, tracking_url, estimated_delivery_start, estimated_delivery_end, dispatched_at, delivered_at")
       .maybeSingle();
     if (error || !order) throw new Error("Order tracking couldn't be updated. Please check that the database migration has been applied.");
-    if (previousOrder.status !== order.status) {
+    if (previousOrder.status !== order.status || previousOrder.tracking_provider !== order.tracking_provider || previousOrder.tracking_number !== order.tracking_number || previousOrder.tracking_url !== order.tracking_url || previousOrder.estimated_delivery_start !== order.estimated_delivery_start || previousOrder.estimated_delivery_end !== order.estimated_delivery_end) {
       try {
         const { sendOrderStatusEmail } = await import("./brand-notification.server");
         await sendOrderStatusEmail({
