@@ -201,6 +201,7 @@ export const getShopTheLookProducts = createServerFn({ method: "GET" })
         productUrl: row.product_url,
         imageUrl: getImageUrl(row.image_path, signedUrls),
         sizes: row.sizes,
+        sizeChart: row.size_chart as unknown as ProductSizeChart | null,
         colors: row.colors,
         tags: row.tags,
         audience: row.audience,
