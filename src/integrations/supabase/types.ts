@@ -248,6 +248,7 @@ export type Database = {
           product_name?: string
           product_url?: string | null
           sizes?: string[]
+          size_chart?: Json | null
           source?: string
           status?: string
           tags?: string[]
