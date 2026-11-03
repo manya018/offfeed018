@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
-import { createBrandProduct, getBrandWorkspace, importShopifyCatalog, saveBrandShippingProfile, saveImportedShopifyProducts, updateBrandOrderTracking, updateBrandProductStatus } from "@/lib/brand-products.functions";
+import { createBrandProduct, getBrandWorkspace, importShopifyCatalog, saveBrandShippingProfile, saveBrandSizeGuide, saveImportedShopifyProducts, updateBrandOrderTracking, updateBrandProductSizeChart, updateBrandProductStatus } from "@/lib/brand-products.functions";
 import { submitDispatchEvidence, getDisputeViewerData, rerunReturnAnalysis, type DisputeViewerData, type ForensicReport } from "@/lib/dispute-evidence.functions";
 
 
@@ -69,6 +69,7 @@ const categoryOptions: Record<ProductDepartment, string[]> = {
 };
 const fieldClass = "mt-2 h-11 rounded-lg border-border/80 bg-card px-3";
 const parseList = (value: string) => value.split(",").map((item) => item.trim().replace(/^#/, "")).filter(Boolean);
+const formatSizeChart = (chart: { columns: string[]; rows: Array<{ label: string; values: string[] }>; unit?: string } | null) => chart ? ["Measurement | " + chart.columns.join(" | "), ...chart.rows.map((row) => row.label + " | " + row.values.join(" | "))].join("\n") : "";
 const parseSizeChart = (value: string, unit: string) => {
   const lines = value.split("\n").map((line) => line.split("|").map((cell) => cell.trim())).filter((cells) => cells.some(Boolean));
   if (lines.length < 2 || lines[0].length < 2 || lines[0][0].toLowerCase() !== "measurement") return null;
@@ -116,6 +117,10 @@ function DispatchProofPanel({ orderId }: { orderId: string }) {
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [guideCategory, setGuideCategory] = useState("Clothing / Tops");
+  const [guideText, setGuideText] = useState("Measurement | XS | S | M | L\nBust (cm) | 81 | 86 | 91 | 96");
+  const [guideUnit, setGuideUnit] = useState("cm");
+  const [guideSaving, setGuideSaving] = useState(false);
   const [replacing, setReplacing] = useState(false);
 
   const load = async () => {
@@ -330,10 +335,24 @@ function BrandDashboard() {
   }, [shippingProfile]);
   const supportedAudience = useMemo(() => (application?.audience ?? ["her"]).filter((item): item is "her" | "him" => item === "her" || item === "him"), [application?.audience]);
   const products = workspace.data?.products ?? [];
+  const sizeGuides = workspace.data?.sizeGuides ?? [];
   const sortedProducts = useMemo(() => [...products].sort((a, b) => a.category.localeCompare(b.category) || a.product_name.localeCompare(b.product_name)), [products]);
   const orders = workspace.data?.orders ?? [];
   const publishedCount = products.filter((product) => product.status === "published").length;
   const commission = Number(application?.commission_rate ?? 0.18);
+
+  const saveCategoryGuide = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const chart = parseSizeChart(guideText, guideUnit);
+    if (!chart) { toast.error("Check the chart format and make sure every row has a value for each size."); return; }
+    setGuideSaving(true);
+    try {
+      await saveBrandSizeGuide({ data: { category: guideCategory, sizeChart: chart } });
+      await queryClient.invalidateQueries({ queryKey: ["brand-workspace"] });
+      toast.success("Reusable category size guide saved.");
+    } catch (saveError) { toast.error(saveError instanceof Error ? saveError.message : "The size guide could not be saved."); }
+    finally { setGuideSaving(false); }
+  };
 
   const refresh = async () => {
     await queryClient.invalidateQueries({ queryKey: ["brand-workspace"] });
@@ -508,6 +527,15 @@ function BrandDashboard() {
         <Stat label="Your share" value={`${Math.round((1 - commission) * 100)}%`} icon={PackagePlus}/>
       </div>
 
+      <section className="border-b border-border/70 py-7" aria-labelledby="brand-size-guides-heading">
+        <div className="max-w-3xl"><p className="text-xs font-semibold uppercase tracking-[0.15em] text-primary">REUSABLE SIZE GUIDES</p><h2 id="brand-size-guides-heading" className="mt-2 font-display text-3xl">Set it once. Use it across products.</h2><p className="mt-2 text-sm leading-6 text-muted-foreground">Create one default chart for each category. New products and existing products without a custom chart will use it automatically. Product-specific overrides stay separate.</p></div>
+        <form onSubmit={(event) => void saveCategoryGuide(event)} className="mt-5 max-w-3xl rounded-xl border border-border/80 p-4 sm:p-5">
+          <div className="grid gap-4 sm:grid-cols-2"><div><Label htmlFor="brand-guide-category">Category</Label><select id="brand-guide-category" value={guideCategory} onChange={(event) => { const next = event.target.value; setGuideCategory(next); const existing = sizeGuides.find((guide: any) => guide.category === next); setGuideText(existing ? formatSizeChart(existing.size_chart) : "Measurement | XS | S | M | L\\nBust (cm) | 81 | 86 | 91 | 96"); setGuideUnit(existing?.size_chart?.unit ?? "cm"); }} className={fieldClass}>{Object.entries(categoryOptions).flatMap(([department, categories]) => categories.map((category) => <option key={category} value={department + " / " + category}>{department} · {category}</option>))}</select></div><div><Label htmlFor="brand-guide-unit">Measurement unit</Label><Input id="brand-guide-unit" value={guideUnit} onChange={(event) => setGuideUnit(event.target.value)} placeholder="cm, in, mm, UK/EU" className={fieldClass}/></div></div>
+          <Label htmlFor="brand-guide-table" className="mt-4 block">Size guide table</Label><Textarea id="brand-guide-table" value={guideText} onChange={(event) => setGuideText(event.target.value)} className="mt-2 min-h-36 font-mono text-xs" placeholder="Measurement | XS | S | M\\nBust (cm) | 81 | 86 | 91"/>
+          <p className="mt-2 text-xs leading-5 text-muted-foreground">Use | to separate table cells. First row: size or variant names. Following rows: measurements. Supports clothing, footwear, jewellery, bags, watches and custom options.</p>
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-3"><p className="text-xs text-muted-foreground">{sizeGuides.length} reusable guides saved</p><Button type="submit" disabled={guideSaving}>{guideSaving ? <LoaderCircle className="animate-spin"/> : <Check/>}Save category guide</Button></div>
+        </form>
+      </section>
       <section className="border-b border-border/70 py-7" aria-labelledby="shipping-settings-heading">
         <div className="max-w-3xl">
           <p className="text-xs font-semibold uppercase tracking-[0.15em] text-primary">DIRECT-TO-CUSTOMER SHIPPING</p>
@@ -593,7 +621,7 @@ function BrandDashboard() {
               <div><Label htmlFor="product-price">Price (₹)</Label><Input id="product-price" type="number" min="1" step="0.01" value={draft.price} onChange={(event) => updateDraft("price", event.target.value)} required className={fieldClass}/><p className="mt-2 text-xs text-muted-foreground">At ₹{Number(draft.price || 0).toLocaleString("en-IN")}, you receive ₹{(Number(draft.price || 0) * (1 - commission)).toLocaleString("en-IN", { maximumFractionDigits: 2 })} after OFFFEED’s 18% fee.</p></div>
               <div><Label htmlFor="product-link">Product link <span className="font-normal text-muted-foreground">(optional)</span></Label><Input id="product-link" type="url" value={draft.productUrl} onChange={(event) => updateDraft("productUrl", event.target.value)} placeholder="https://yourbrand.com/product" className={fieldClass}/></div>
               {draft.listingType === "product" && <div className="sm:col-span-2"><Label htmlFor="product-sizes">Available sizes / variants (optional)</Label><Input id="product-sizes" value={draft.sizes} onChange={(event) => updateDraft("sizes", event.target.value)} placeholder={draft.department === "Clothing" ? "XXS, XS, S, M, L, XL, 2XL … 10XL" : draft.department === "Footwear" ? "UK 5, UK 6, UK 7, EU 40, EU 41" : draft.department === "Jewellery" ? "Ring 6, 7, 8 or 16, 17, 18" : "Small, Medium, Large or custom options"} className={fieldClass}/><p className="mt-2 text-xs text-muted-foreground">{draft.department === "Clothing" ? "Inclusive sizing supported up to 10XL. Enter only sizes stocked for this product." : "Enter the exact options customers can select for this product."}</p></div>}
-              {draft.listingType === "product" && <div className="sm:col-span-2 rounded-xl border border-border/80 p-4"><Label htmlFor="product-size-chart">Custom size guide (optional)</Label><Textarea id="product-size-chart" value={draft.sizeChartText} onChange={(event) => updateDraft("sizeChartText", event.target.value)} placeholder={draft.department === "Clothing" ? "Measurement | XS | S | M | L\nBust (cm) | 81 | 86 | 91 | 96\nWaist (cm) | 61 | 66 | 71 | 76\nLength (cm) | 60 | 61 | 62 | 63" : draft.department === "Jewellery" ? "Measurement | Ring 6 | Ring 7 | Ring 8\nInner diameter (mm) | 16.5 | 17.3 | 18.1\nCircumference (mm) | 51.8 | 54.4 | 56.9" : draft.department === "Footwear" ? "Measurement | UK 5 | UK 6 | UK 7 | UK 8\nEU size | 38 | 39 | 40 | 41\nFoot length (cm) | 24 | 24.7 | 25.4 | 26.1" : draft.category === "Watches" ? "Measurement | 28 mm | 32 mm | 36 mm\nCase diameter (mm) | 28 | 32 | 36\nStrap length (mm) | 180 | 190 | 200\nWrist circumference (cm) | 14-17 | 15-18 | 16-19" : draft.category.includes("Bag") || draft.department === "Accessories" ? "Measurement | Small | Medium | Large\nHeight (cm) | 18 | 25 | 32\nWidth (cm) | 12 | 20 | 28\nDepth (cm) | 6 | 10 | 14" : "Measurement | Option 1 | Option 2 | Option 3\nLength (cm) | 10 | 12 | 14\nWidth (cm) | 5 | 6 | 7"} className="mt-2 min-h-32 rounded-lg border-border/80 bg-card px-3 py-3 font-mono text-xs"/><div className="mt-3 max-w-xs"><Label htmlFor="product-size-chart-unit">Measurement unit (optional)</Label><Input id="product-size-chart-unit" value={draft.sizeChartUnit} onChange={(event) => updateDraft("sizeChartUnit", event.target.value)} placeholder="cm, in, mm, UK/EU or custom" className={fieldClass}/></div><p className="mt-2 text-xs leading-5 text-muted-foreground">Create a chart for clothing, jewellery, watches, footwear, bags or any other product. Edit every heading and value. First row: Measurement followed by your sizes or variants; add one measurement per line using | between cells. If you enter Available sizes, keep the chart columns in the same order.</p></div>}
+              {draft.listingType === "product" && <div className="sm:col-span-2 rounded-xl border border-border/80 p-4"><Label htmlFor="product-size-chart">Custom size guide (optional)</Label><Textarea id="product-size-chart" value={draft.sizeChartText} onChange={(event) => updateDraft("sizeChartText", event.target.value)} placeholder={draft.department === "Clothing" ? "Measurement | XS | S | M | L\nBust (cm) | 81 | 86 | 91 | 96\nWaist (cm) | 61 | 66 | 71 | 76\nLength (cm) | 60 | 61 | 62 | 63" : draft.department === "Jewellery" ? "Measurement | Ring 6 | Ring 7 | Ring 8\nInner diameter (mm) | 16.5 | 17.3 | 18.1\nCircumference (mm) | 51.8 | 54.4 | 56.9" : draft.department === "Footwear" ? "Measurement | UK 5 | UK 6 | UK 7 | UK 8\nEU size | 38 | 39 | 40 | 41\nFoot length (cm) | 24 | 24.7 | 25.4 | 26.1" : draft.category === "Watches" ? "Measurement | 28 mm | 32 mm | 36 mm\nCase diameter (mm) | 28 | 32 | 36\nStrap length (mm) | 180 | 190 | 200\nWrist circumference (cm) | 14-17 | 15-18 | 16-19" : draft.category.includes("Bag") || draft.department === "Accessories" ? "Measurement | Small | Medium | Large\nHeight (cm) | 18 | 25 | 32\nWidth (cm) | 12 | 20 | 28\nDepth (cm) | 6 | 10 | 14" : "Measurement | Option 1 | Option 2 | Option 3\nLength (cm) | 10 | 12 | 14\nWidth (cm) | 5 | 6 | 7"} className="mt-2 min-h-32 rounded-lg border-border/80 bg-card px-3 py-3 font-mono text-xs"/><div className="mt-3 max-w-xs"><Label htmlFor="product-size-chart-unit">Measurement unit (optional)</Label><Input id="product-size-chart-unit" value={draft.sizeChartUnit} onChange={(event) => updateDraft("sizeChartUnit", event.target.value)} placeholder="cm, in, mm, UK/EU or custom" className={fieldClass}/></div><p className="mt-2 text-xs leading-5 text-muted-foreground">Leave this blank to use the saved brand guide for this category. Add a chart here only when this product needs its own measurements. Create a chart for clothing, jewellery, watches, footwear, bags or any other product. Edit every heading and value. First row: Measurement followed by your sizes or variants; add one measurement per line using | between cells. If you enter Available sizes, keep the chart columns in the same order.</p></div>}
               <div><Label htmlFor="product-colors">{draft.department === "Jewellery" ? "Metal / colour" : "Colours"}</Label><Input id="product-colors" value={draft.colors} onChange={(event) => updateDraft("colors", event.target.value)} placeholder={draft.department === "Jewellery" ? "Gold, silver, rose gold" : "Ivory, Rose, Black"} className={fieldClass}/></div>
               <div><Label htmlFor="product-tags">Tags</Label><Input id="product-tags" value={draft.tags} onChange={(event) => updateDraft("tags", event.target.value)} placeholder="#collegewear, #minimal, #pink" className={fieldClass}/></div>
               <div className="sm:col-span-2"><p className="text-sm font-medium">Show in</p><div className="mt-2 flex flex-wrap gap-2">{supportedAudience.map((item) => <Button key={item} type="button" size="sm" variant={draft.audience.includes(item) ? "default" : "outline"} aria-pressed={draft.audience.includes(item)} onClick={() => toggleDraftAudience(item)}>{draft.audience.includes(item) && <Check className="size-4"/>}{item === "her" ? "Her space" : "Him space"}</Button>)}</div></div>
