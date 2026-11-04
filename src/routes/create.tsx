@@ -400,6 +400,18 @@ function CreateLookPage() {
               {matchedLooks.length > 0 ? <div className="mt-6 columns-1 gap-6 sm:columns-2 lg:columns-4">{matchedLooks.map((look, index) => <LookCard key={look.id} look={look} tall={index % 2 === 0} />)}</div>
                 : <p className="mt-5 rounded-2xl border border-dashed p-5 text-center text-sm text-muted-foreground">No close editorial look matches yet. Explore the full lookbook for more inspiration.</p>}
             </section>
+            {matchedJewelleryReferences.length > 0 && <section aria-labelledby="lens-jewellery-heading">
+              <div className="flex flex-wrap items-end justify-between gap-3">
+                <div><p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">HIM · Jewellery edit</p><h3 id="lens-jewellery-heading" className="mt-2 font-display text-3xl">Jewellery details like yours</h3></div>
+                <Link to="/discover" search={{ category: "jewellery" }} className="text-sm font-medium text-primary hover:underline">Explore HIM Jewellery <ArrowRight className="ml-1 inline size-4" /></Link>
+              </div>
+              <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+                {matchedJewelleryReferences.map((reference) => <Link key={reference.id} to="/discover" search={{ category: "jewellery" }} className="group overflow-hidden rounded-2xl border bg-card">
+                  <img src={reference.image} alt={reference.title} loading="lazy" className="aspect-[4/5] w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]" />
+                  <div className="p-3"><p className="font-medium">{reference.title}</p><p className="mt-1 text-xs leading-5 text-muted-foreground">{reference.note}</p></div>
+                </Link>)}
+              </div>
+            </section>}
             <section aria-labelledby="lens-products-heading">
               <div className="flex flex-wrap items-end justify-between gap-3"><div><p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Shop independent brands</p><h3 id="lens-products-heading" className="mt-2 font-display text-3xl">Shop the pieces</h3></div><Link to="/discover" className="text-sm font-medium text-primary hover:underline">Browse products <ArrowRight className="ml-1 inline size-4" /></Link></div>
               {matchedProducts.length > 0 ? <div className="mt-6 grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 sm:gap-x-6 lg:grid-cols-4">{matchedProducts.map((product) => <PublicProductCard key={product.id} product={product} />)}</div>
