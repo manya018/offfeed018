@@ -11,6 +11,7 @@ const shopInput = z.object({
   minPrice: z.number().nonnegative().optional(),
   maxPrice: z.number().positive().optional(),
   requireMatch: z.boolean().optional(),
+  resultLimit: z.number().int().min(1).max(60).optional(),
 });
 
 type Audience = "her" | "him";
@@ -225,7 +226,7 @@ export const getShopTheLookProducts = createServerFn({ method: "GET" })
       .filter(({ product, score }) => (!data.categoryOnly || score > 0 || (data.aesthetic === "clothing" && /tops|t-shirt|polo|shirt|blouse|dress|skirt|denim|jean|trouser|pant|short|co.?ord|jumpsuit|jacket|outerwear|knitwear|hoodie|sweatshirt|activewear|lingerie|loungewear|saree|lehenga|kurta|suit|anarkali|sharara|dupatta|indo.?western|sherwani|nehru|bandhgala|dhoti|waistcoat|sneaker|heel|flat|sandal|boot|loafer|footwear|complete look|mixed look/i.test(product.category))) && (!data.requireMatch || score > 0))
       .sort((left, right) => right.score - left.score);
     return ranked
-      .slice(0, data.categoryOnly ? 60 : 8)
+      .slice(0, data.resultLimit ?? (data.categoryOnly ? 60 : 8))
       .map(({ product }) => product);
   });
 
