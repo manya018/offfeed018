@@ -15,7 +15,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { PublicProductCard } from "@/components/public-product-card";
 import { LookCard } from "@/components/look-card";
-import { himLooks, looks, type Look } from "@/lib/offfeed-data";
+import { himJewelleryReferences, himLooks, looks, type JewelleryReference, type Look } from "@/lib/offfeed-data";
 import { getShopTheLookProducts, type ProductWithBrand } from "@/lib/public-brand.functions";
 import { analyzeOutfitImage, rankOutfitImageMatches, type OutfitImageAnalysis, type OutfitVisualMatch } from "@/lib/offfeed-lens.functions";
 import { useStyleSpace } from "@/lib/style-space";
@@ -77,6 +77,7 @@ function CreateLookPage() {
   const [matchError, setMatchError] = useState("");
   const [matchedProducts, setMatchedProducts] = useState<ProductWithBrand[]>([]);
   const [matchedLooks, setMatchedLooks] = useState<Look[]>([]);
+  const [matchedJewelleryReferences, setMatchedJewelleryReferences] = useState<JewelleryReference[]>([]);
   const [lensAnalysis, setLensAnalysis] = useState<OutfitImageAnalysis | null>(null);
   const { space } = useStyleSpace();
   const fileInput = useRef<HTMLInputElement>(null);
@@ -99,6 +100,7 @@ function CreateLookPage() {
     setLensAnalysis(null);
     setMatchedProducts([]);
     setMatchedLooks([]);
+    setMatchedJewelleryReferences([]);
     setMatchError("");
   };
 
@@ -111,6 +113,7 @@ function CreateLookPage() {
     setMatchError("");
     setMatchedProducts([]);
     setMatchedLooks([]);
+    setMatchedJewelleryReferences([]);
     setLensAnalysis(null);
     try {
       const imageDataUrl = await compressImageForLens(outfitFile);
@@ -139,6 +142,13 @@ function CreateLookPage() {
         title: look.title,
         imageUrl: await makeCandidateImageDataUrl(look.image),
       })));
+      const jewelleryReferences = space === "him" ? himJewelleryReferences : [];
+      const jewelleryCandidates = await Promise.all(jewelleryReferences.map(async (reference) => ({
+        id: `reference:${reference.id}`,
+        kind: "look" as const,
+        title: reference.title,
+        imageUrl: await makeCandidateImageDataUrl(reference.image),
+      })));
       const productCandidates = products
         .filter((product) => product.imageUrl || product.imageUrls[0])
         .map((product) => ({
@@ -147,7 +157,7 @@ function CreateLookPage() {
           title: product.productName,
           imageUrl: (product.imageUrl ?? product.imageUrls[0])!,
         }));
-      if (lookCandidates.length === 0 && productCandidates.length === 0) {
+      if (lookCandidates.length === 0 && jewelleryCandidates.length === 0 && productCandidates.length === 0) {
         setMatchError("There aren't enough catalogue photos available for visual matching yet.");
         return;
       }
@@ -158,6 +168,9 @@ function CreateLookPage() {
       const lookMatches = lookCandidates.length
         ? await rankOutfitImageMatches({ data: { queryImageDataUrl: imageDataUrl, candidates: lookCandidates } })
         : [];
+      const jewelleryMatches = jewelleryCandidates.length
+        ? await rankOutfitImageMatches({ data: { queryImageDataUrl: imageDataUrl, candidates: jewelleryCandidates } })
+        : [];
       const productMatches: OutfitVisualMatch[] = [];
       for (let index = 0; index < productCandidates.length; index += 12) {
         const batch = productCandidates.slice(index, index + 12);
@@ -166,10 +179,12 @@ function CreateLookPage() {
         });
         productMatches.push(...batchMatches);
       }
-      const visualMatches = [...lookMatches, ...productMatches];
+      const visualMatches = [...lookMatches, ...jewelleryMatches, ...productMatches];
       const lookScores = new Map(lookMatches.map((match) => [match.id.slice(5), match.score]));
+      const jewelleryScores = new Map(jewelleryMatches.map((match) => [match.id.slice(10), match.score]));
       const productScores = new Map(productMatches.map((match) => [match.id.slice(8), match.score]));
       setMatchedLooks(lookPool.filter((look) => lookScores.has(look.id)).sort((a, b) => (lookScores.get(b.id) ?? 0) - (lookScores.get(a.id) ?? 0)).slice(0, 4));
+      setMatchedJewelleryReferences(jewelleryReferences.filter((reference) => jewelleryScores.has(reference.id)).sort((a, b) => (jewelleryScores.get(b.id) ?? 0) - (jewelleryScores.get(a.id) ?? 0)).slice(0, 4));
       setMatchedProducts(products.filter((product) => productScores.has(product.id)).sort((a, b) => (productScores.get(b.id) ?? 0) - (productScores.get(a.id) ?? 0)).slice(0, 8));
       if (visualMatches.length === 0) {
         setMatchError("We couldn't find close visual matches in the current OFFFEED catalogue. Try another photo or explore Discover.");
@@ -268,6 +283,7 @@ function CreateLookPage() {
     setSaved(false);
     setMatchedProducts([]);
     setMatchedLooks([]);
+    setMatchedJewelleryReferences([]);
     setMatchError("");
     setLensAnalysis(null);
     if (fileInput.current) fileInput.current.value = "";
@@ -304,7 +320,7 @@ function CreateLookPage() {
               <span className="mt-1 text-xs text-muted-foreground">JPG, PNG or WEBP · up to 10 MB</span>
             </>}
           </button>
-          {outfitFile && <p className="mt-3 flex items-center gap-2 text-sm text-muted-foreground"><Check className="size-4 text-primary" />{outfitFile.name}<button type="button" aria-label="Remove inspiration image" onClick={() => { if (outfitPreview) URL.revokeObjectURL(outfitPreview); setOutfitFile(null); setOutfitPreview(""); setLensAnalysis(null); setMatchedProducts([]); setMatchedLooks([]); setMatchError(""); if (fileInput.current) fileInput.current.value = ""; }} className="ml-auto rounded-full p-1 hover:bg-muted"><X className="size-4" /></button></p>}
+          {outfitFile && <p className="mt-3 flex items-center gap-2 text-sm text-muted-foreground"><Check className="size-4 text-primary" />{outfitFile.name}<button type="button" aria-label="Remove inspiration image" onClick={() => { if (outfitPreview) URL.revokeObjectURL(outfitPreview); setOutfitFile(null); setOutfitPreview(""); setLensAnalysis(null); setMatchedProducts([]); setMatchedLooks([]); setMatchedJewelleryReferences([]); setMatchError(""); if (fileInput.current) fileInput.current.value = ""; }} className="ml-auto rounded-full p-1 hover:bg-muted"><X className="size-4" /></button></p>}
           {outfitFile && <div className="mt-4 space-y-2"><Button type="button" onClick={findSimilarOutfits} disabled={matching} className="w-full rounded-full">{matching ? "Reading your outfit…" : "Find similar on OFFFEED"} <Sparkles className="ml-2 size-4" /></Button><p className="text-center text-xs text-muted-foreground">OFFFEED Lens analyses a compressed copy of your photo. It is not saved to your account.</p></div>}
           <div className="mt-5 rounded-2xl bg-muted/40 p-4">
             <p className="text-sm font-medium">The OFFFEED twist</p>
