@@ -358,8 +358,8 @@ function CreateLookPage() {
       <section className="mt-12">
         <div className="text-center">
           <span className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">{lensAnalysis ? "OFFFEED LENS · IMAGE MATCHES" : "Your recipe, your finds"}</span>
-          <h2 className="mt-2 font-display text-3xl sm:text-4xl">{lensAnalysis ? "Pieces inspired by your photo." : "Pieces that match your mood."}</h2>
-          <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-muted-foreground">{lensAnalysis ? lensAnalysis.summary : "We’ll look through approved, published OFFFEED brand listings for pieces that fit your style choices and budget."}</p>
+          <h2 className="mt-2 font-display text-3xl sm:text-4xl">{lensAnalysis ? "Visual matches from your photo." : "Pieces that match your mood."}</h2>
+          <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-muted-foreground">{lensAnalysis ? `${lensAnalysis.summary} Matches are ranked by comparing the uploaded image directly with catalogue photos.` : "We’ll look through approved, published OFFFEED brand listings for pieces that fit your style choices and budget."}</p>
           {lensAnalysis && <div className="mx-auto mt-4 flex max-w-3xl flex-wrap justify-center gap-2">{lensAnalysis.items.map((item, index) => <span key={`${item.category}-${index}`} className="rounded-full border bg-card px-3 py-1.5 text-xs text-muted-foreground">{[item.color, item.category, item.pattern].filter(Boolean).join(" · ")}</span>)}</div>}
         </div>
         {matching ? <p className="py-12 text-center text-sm text-muted-foreground">Finding your kind of pieces and looks…</p>
