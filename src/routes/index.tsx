@@ -8,6 +8,7 @@ import himTailoring from "@/assets/offfeed-him-tailoring.jpg";
 import himGorpcore from "@/assets/offfeed-him-gorpcore.jpg";
 import himStreetwear from "@/assets/offfeed-him-streetwear.jpg";
 import { useStyleSpace } from "@/lib/style-space";
+import { OfffeedNote } from "@/components/offfeed-note";
 
 // No head() here: the home route inherits title/description/og/twitter from
 // __root.tsx, and ships no og:image so serve-time hosting can inject the
@@ -47,6 +48,8 @@ function Index() {
           <span className="absolute left-[73%] top-[87%] z-10 rounded-full border border-border bg-card/90 px-3 py-1.5 text-xs shadow-sm backdrop-blur">{isHim ? "streetwear" : "minimal"}</span>
         </div>
       </section>
+
+      <OfffeedNote audience={isHim ? "him" : "her"} placement="home" />
 
       <section className="bg-secondary px-5 py-20 text-center"><p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">A softer way to discover</p><h2 className="mx-auto mt-4 max-w-3xl font-display text-4xl sm:text-5xl">Follow your taste, not the crowd.</h2><Button className="mt-8" variant="outline" asChild><Link to="/discover">Find your next look</Link></Button></section>
 
