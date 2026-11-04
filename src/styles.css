@@ -380,3 +380,37 @@ main > section.mx-auto {
     padding-right: clamp(3rem, 4vw, 5rem);
   }
 }
+
+
+/* Header fit: keep the primary call-to-action fully visible on desktop. */
+.site-header-inner {
+  max-width: none;
+  gap: clamp(0.55rem, 1.25vw, 1.25rem);
+  padding-left: clamp(0.75rem, 2vw, 2rem);
+  padding-right: clamp(0.75rem, 2vw, 2rem);
+}
+.site-header-nav {
+  flex: 1 1 auto;
+  justify-content: center;
+  gap: clamp(0.65rem, 1.45vw, 1.5rem);
+}
+.site-header-nav a {
+  white-space: nowrap;
+  font-size: clamp(0.72rem, 0.85vw, 0.875rem);
+}
+.site-header-actions {
+  gap: clamp(0rem, 0.2vw, 0.25rem);
+}
+.site-header-cta {
+  padding-left: clamp(0.65rem, 1vw, 1rem);
+  padding-right: clamp(0.65rem, 1vw, 1rem);
+  font-size: clamp(0.7rem, 0.8vw, 0.875rem);
+}
+@media (min-width: 1024px) and (max-width: 1280px) {
+  .site-header-logo { font-size: 1.25rem; letter-spacing: 0.1em; }
+  .site-header-inner { gap: 0.5rem; }
+  .site-header-nav { gap: 0.6rem; }
+  .site-header-actions > a,
+  .site-header-actions > button { width: 2.1rem; }
+  .site-header-cta { width: auto !important; }
+}
