@@ -36,6 +36,7 @@ export const analyzeOutfitImage = createServerFn({ method: "POST" })
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        "Authorization": `Bearer ${apiKey}`,
         "Lovable-API-Key": apiKey,
       },
       body: JSON.stringify({
