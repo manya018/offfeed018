@@ -146,6 +146,7 @@ function CreateLookPage() {
     setSaved(false);
     setMatchError("");
     setMatchedProducts([]);
+    setMatchedLooks([]);
     setLensAnalysis(null);
     setMatching(true);
     const budgetRange = budget === "Under ₹1,000"
