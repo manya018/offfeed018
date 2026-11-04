@@ -17,7 +17,7 @@ import { PublicProductCard } from "@/components/public-product-card";
 import { LookCard } from "@/components/look-card";
 import { himLooks, looks, type Look } from "@/lib/offfeed-data";
 import { getShopTheLookProducts, type ProductWithBrand } from "@/lib/public-brand.functions";
-import { analyzeOutfitImage, type OutfitImageAnalysis } from "@/lib/offfeed-lens.functions";
+import { analyzeOutfitImage, rankOutfitImageMatches, type OutfitImageAnalysis } from "@/lib/offfeed-lens.functions";
 import { useStyleSpace } from "@/lib/style-space";
 import { toast } from "sonner";
 
@@ -109,28 +109,43 @@ function CreateLookPage() {
         setMatchError("We could identify the image, but couldn't find clear clothing details. Try a brighter, full-outfit photo.");
         return;
       }
-      const lookTokens = [...new Set([
-        ...analysis.items.flatMap((item) => [item.category, item.color, item.pattern, item.material, ...item.searchTerms]),
-        ...analysis.searchTerms,
-        analysis.overallStyle,
-      ].join(" ").toLowerCase().split(/[^a-z0-9]+/).filter((token) => token.length > 2))];
       const lookPool = space === "him" ? himLooks : looks;
-      const rankedLooks = lookPool.map((look) => {
-        const searchable = [look.title, look.aesthetic, look.occasion, look.season, look.description].join(" ").toLowerCase();
-        const score = lookTokens.reduce((total, token) => total + (searchable.includes(token) ? 1 : 0), 0);
-        return { look, score };
-      }).filter(({ score }) => score > 0).sort((a, b) => b.score - a.score);
-      setMatchedLooks(rankedLooks.slice(0, 4).map(({ look }) => look));
       const products = await getShopTheLookProducts({
         data: {
           audience: space === "him" ? "him" : "her",
           aesthetic: visualQuery,
-          requireMatch: true,
+          resultLimit: 60,
         },
       });
-      setMatchedProducts(products.slice(0, 8));
-      if (products.length === 0) {
-        setMatchError("We couldn't find close catalogue matches yet. Try another angle or browse all independent brands in Discover.");
+      const lookCandidates = await Promise.all(lookPool.map(async (look) => ({
+        id: `look:${look.id}`,
+        kind: "look" as const,
+        title: look.title,
+        imageUrl: await makeCandidateImageDataUrl(look.image),
+      })));
+      const productCandidates = products
+        .filter((product) => product.imageUrl || product.imageUrls[0])
+        .slice(0, 8)
+        .map((product) => ({
+          id: `product:${product.id}`,
+          kind: "product" as const,
+          title: product.productName,
+          imageUrl: product.imageUrl ?? product.imageUrls[0],
+        }));
+      const candidates = [...lookCandidates, ...productCandidates].slice(0, 16);
+      if (candidates.length === 0) {
+        setMatchError("There aren't enough catalogue photos available for visual matching yet.");
+        return;
+      }
+      const visualMatches = await rankOutfitImageMatches({
+        data: { queryImageDataUrl: imageDataUrl, candidates },
+      });
+      const lookScores = new Map(visualMatches.filter((match) => match.id.startsWith("look:")).map((match) => [match.id.slice(5), match.score]));
+      const productScores = new Map(visualMatches.filter((match) => match.id.startsWith("product:")).map((match) => [match.id.slice(8), match.score]));
+      setMatchedLooks(lookPool.filter((look) => lookScores.has(look.id)).sort((a, b) => (lookScores.get(b.id) ?? 0) - (lookScores.get(a.id) ?? 0)).slice(0, 4));
+      setMatchedProducts(products.filter((product) => productScores.has(product.id)).sort((a, b) => (productScores.get(b.id) ?? 0) - (productScores.get(a.id) ?? 0)).slice(0, 8));
+      if (visualMatches.length === 0) {
+        setMatchError("We couldn't find close visual matches in the current OFFFEED catalogue. Try another photo or explore Discover.");
       }
     } catch (error) {
       setMatchError(error instanceof Error ? error.message : "OFFFEED Lens couldn't analyse this image. Please try again.");
