@@ -116,9 +116,9 @@ function StyleIdentityPage() {
     void load();
     const { data: { subscription } } = supabase.auth.onAuthStateChange(() => { window.setTimeout(() => { if (active) void load(); }, 0); });
     return () => { active = false; subscription.unsubscribe(); };
-  // space is intentionally omitted: changing the Her/Him selector should not reload and overwrite edits.
+  // Keep this load tied to mount/auth changes, not the shared Her/Him selector.
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [client, setSpace]);
+  }, [client]);
 
   const toggle = (key: "aesthetics" | "colors" | "fits" | "categories" | "occasions", value: string) => {
     setPreferences((current) => {
