@@ -97,7 +97,7 @@ export const analyzeOutfitImage = createServerFn({ method: "POST" })
 
 const visualMatchInputSchema = z.object({
   queryImageDataUrl: z.string().min(1).max(3_000_000)
-    .regex(/^data:image\\/(jpeg|png|webp);base64,[A-Za-z0-9+/]+=*$/, "Please upload a supported image."),
+    .regex(/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/]+=*$/, "Please upload a supported image."),
   candidates: z.array(z.object({
     id: z.string().trim().min(1).max(100),
     kind: z.enum(["look", "product"]),
@@ -119,7 +119,7 @@ export type OutfitVisualMatch = z.infer<typeof visualMatchResultSchema>["matches
 
 function isAllowedCandidateImage(imageUrl: string) {
   if (imageUrl.startsWith("data:image/")) {
-    return /^data:image\\/(jpeg|png|webp);base64,[A-Za-z0-9+/]+=*$/.test(imageUrl);
+    return /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/]+=*$/.test(imageUrl);
   }
   try {
     const parsed = new URL(imageUrl);
@@ -200,7 +200,7 @@ export const rankOutfitImageMatches = createServerFn({ method: "POST" })
     if (!raw) throw new Error("OFFFEED Lens couldn't read the visual matching response.");
     let parsed: unknown;
     try {
-      parsed = JSON.parse(raw.replace(/^\\s*\\`\\`\\`(?:json)?\\s*/i, "").replace(/\\s*\\`\\`\\`\\s*$/, ""));
+      parsed = JSON.parse(raw.replace(/^\s*```(?:json)?\s*/i, "").replace(/\s*```\s*$/, ""));
     } catch {
       throw new Error("OFFFEED Lens couldn't understand the visual matching response.");
     }
