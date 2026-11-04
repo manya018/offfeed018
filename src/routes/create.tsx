@@ -141,23 +141,34 @@ function CreateLookPage() {
       })));
       const productCandidates = products
         .filter((product) => product.imageUrl || product.imageUrls[0])
-        .slice(0, 8)
         .map((product) => ({
           id: `product:${product.id}`,
           kind: "product" as const,
           title: product.productName,
           imageUrl: (product.imageUrl ?? product.imageUrls[0])!,
         }));
-      const candidates = [...lookCandidates, ...productCandidates].slice(0, 16);
-      if (candidates.length === 0) {
+      if (lookCandidates.length === 0 && productCandidates.length === 0) {
         setMatchError("There aren't enough catalogue photos available for visual matching yet.");
         return;
       }
-      const visualMatches = await rankOutfitImageMatches({
-        data: { queryImageDataUrl: imageDataUrl, candidates },
-      });
-      const lookScores = new Map(visualMatches.filter((match) => match.id.startsWith("look:")).map((match) => [match.id.slice(5), match.score]));
-      const productScores = new Map(visualMatches.filter((match) => match.id.startsWith("product:")).map((match) => [match.id.slice(8), match.score]));
+
+      // Compare every available look and product image, in bounded batches.
+      // This avoids silently excluding a relevant jewellery item just because
+      // it did not appear among the first few text-ranked products.
+      const lookMatches = lookCandidates.length
+        ? await rankOutfitImageMatches({ data: { queryImageDataUrl: imageDataUrl, candidates: lookCandidates } })
+        : [];
+      const productMatches = [];
+      for (let index = 0; index < productCandidates.length; index += 12) {
+        const batch = productCandidates.slice(index, index + 12);
+        const batchMatches = await rankOutfitImageMatches({
+          data: { queryImageDataUrl: imageDataUrl, candidates: batch },
+        });
+        productMatches.push(...batchMatches);
+      }
+      const visualMatches = [...lookMatches, ...productMatches];
+      const lookScores = new Map(lookMatches.map((match) => [match.id.slice(5), match.score]));
+      const productScores = new Map(productMatches.map((match) => [match.id.slice(8), match.score]));
       setMatchedLooks(lookPool.filter((look) => lookScores.has(look.id)).sort((a, b) => (lookScores.get(b.id) ?? 0) - (lookScores.get(a.id) ?? 0)).slice(0, 4));
       setMatchedProducts(products.filter((product) => productScores.has(product.id)).sort((a, b) => (productScores.get(b.id) ?? 0) - (productScores.get(a.id) ?? 0)).slice(0, 8));
       if (visualMatches.length === 0) {
