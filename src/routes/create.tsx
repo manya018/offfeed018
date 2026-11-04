@@ -238,10 +238,24 @@ function CreateLookPage() {
     try {
       const previous = JSON.parse(localStorage.getItem("offfeed-style-dna") || "[]");
       const entries = Array.isArray(previous) ? previous : [];
+      const savedAt = new Date().toISOString();
       localStorage.setItem("offfeed-style-dna", JSON.stringify([
-        { id: `style-${Date.now()}`, recipe, createdAt: new Date().toISOString() },
+        {
+          id: `style-${Date.now()}`,
+          recipe,
+          createdAt: savedAt,
+          preferences: {
+            vibe,
+            occasion,
+            palette,
+            budget,
+            details: details.trim(),
+            audience: space === "him" ? "him" : "her",
+          },
+        },
         ...entries,
       ].slice(0, 20)));
+      window.dispatchEvent(new CustomEvent("offfeed-style-dna-updated"));
       setSaved(true);
       toast.success("Your Style DNA is saved on this device.");
     } catch {
