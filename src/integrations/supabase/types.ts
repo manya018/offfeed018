@@ -200,9 +200,11 @@ export type Database = {
           description: string
           id: string
           image_path: string | null
+          image_paths: string[]
           price: number
           product_name: string
           product_url: string | null
+          size_chart: Json | null
           sizes: string[]
           size_chart: Json | null
           source: string
@@ -222,9 +224,11 @@ export type Database = {
           description: string
           id?: string
           image_path?: string | null
+          image_paths?: string[]
           price: number
           product_name: string
           product_url?: string | null
+          size_chart?: Json | null
           sizes?: string[]
           size_chart?: Json | null
           source?: string
@@ -244,9 +248,11 @@ export type Database = {
           description?: string
           id?: string
           image_path?: string | null
+          image_paths?: string[]
           price?: number
           product_name?: string
           product_url?: string | null
+          size_chart?: Json | null
           sizes?: string[]
           size_chart?: Json | null
           source?: string
@@ -363,6 +369,44 @@ export type Database = {
             foreignKeyName: "brand_shipping_profiles_brand_application_id_fkey"
             columns: ["brand_application_id"]
             isOneToOne: true
+            referencedRelation: "brand_applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      brand_size_guides: {
+        Row: {
+          brand_application_id: string
+          category: string
+          created_at: string
+          id: string
+          size_chart: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          brand_application_id: string
+          category: string
+          created_at?: string
+          id?: string
+          size_chart: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          brand_application_id?: string
+          category?: string
+          created_at?: string
+          id?: string
+          size_chart?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brand_size_guides_brand_application_id_fkey"
+            columns: ["brand_application_id"]
+            isOneToOne: false
             referencedRelation: "brand_applications"
             referencedColumns: ["id"]
           },
