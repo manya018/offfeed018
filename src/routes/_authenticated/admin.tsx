@@ -35,7 +35,7 @@ const navItems = [
   { id: "settings", label: "Settings", icon: Settings },
 ] as const;
 
-type Section = typeof navItems[number]["id"];
+type Section = typeof navItems[number]["id"];\ntype AdminOverview = Awaited<ReturnType<typeof getAdminOverview>>;\ntype AdminBrand = Awaited<ReturnType<typeof getAdminBrands>>[number];
 
 function OwnerAdminDashboard() {
   const [section, setSection] = useState<Section>("overview");
@@ -55,7 +55,7 @@ function OwnerAdminDashboard() {
     const query = brandSearch.trim().toLowerCase();
     return !query || [brand.brand_name, brand.contact_name, brand.email, brand.social_handle].some((value) => value?.toLowerCase().includes(query));
   }), [brands.data, brandSearch]);
-  const activeNav = navItems.find((item) => item.id === section);
+  const activeNav = navItems.find((item) => item.id === section);\n  const ActiveSectionIcon = activeNav?.icon ?? ClipboardList;
 
   return (
     <div className="min-h-screen bg-[#f7f4ef] text-[#302824]">
@@ -132,7 +132,7 @@ function OwnerAdminDashboard() {
             </section> : null}
             {section !== "overview" && section !== "brands" ? <section className="rounded-2xl border border-[#e8dfd6] bg-[#fbf9f5] p-8 md:p-12">
               <div className="mx-auto max-w-lg text-center">
-                <div className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-[#efe4de] text-[#76534b]">{activeNav ? <activeNav.icon className="size-6"/> : <ClipboardList className="size-6"/>}</div>
+                <div className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-[#efe4de] text-[#76534b]">{activeNav ? <ActiveSectionIcon className="size-6"/> : <ClipboardList className="size-6"/>}</div>
                 <p className="mt-5 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#a28e84]">Owner HQ module</p>
                 <h1 className="mt-2 font-serif text-3xl text-[#493a34]">{activeNav?.label}</h1>
                 <p className="mt-2 text-sm leading-6 text-[#887a72]">This module is reserved in the admin navigation. Its operational data and actions will be connected in the next implementation pass, without showing placeholder metrics as real marketplace data.</p>
@@ -147,7 +147,7 @@ function OwnerAdminDashboard() {
   );
 }
 
-function OverviewSection({ overview, brands, onOpenBrands }: { overview: ReturnType<typeof useQuery<any>>; brands: ReturnType<typeof useQuery<any>>; onOpenBrands: () => void }) {
+function OverviewSection({ overview, brands, onOpenBrands }: { overview: { data: AdminOverview | undefined; isLoading: boolean; isError: boolean; error: unknown; refetch: () => unknown }; brands: { data: AdminBrand[] | undefined; isLoading: boolean; refetch: () => unknown }; onOpenBrands: () => void }) {
   const stats = [
     { label: "Brand applications", value: overview.data?.totalBrands, icon: Store, note: "All submitted applications" },
     { label: "Pending review", value: overview.data?.pendingBrands, icon: CircleAlert, note: "Awaiting your decision" },
@@ -167,7 +167,7 @@ function OverviewSection({ overview, brands, onOpenBrands }: { overview: ReturnT
     <div className="mt-6 grid gap-5 xl:grid-cols-[1.3fr_0.7fr]">
       <div className="rounded-2xl border border-[#e8dfd6] bg-[#fbf9f5] p-6">
         <div className="flex items-center justify-between"><div><p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#a28e84]">Needs attention</p><h2 className="mt-1 font-serif text-2xl text-[#493a34]">Brand review queue</h2></div><Button variant="ghost" size="sm" onClick={onOpenBrands} className="text-[#76534b]">View all <ChevronRight className="ml-1 size-4"/></Button></div>
-        {brands.isLoading ? <div className="py-8 text-sm text-[#94857d]">Loading brand applications…</div> : (brands.data ?? []).filter((brand: any) => brand.status === "pending").length === 0 ? <div className="py-8 text-sm text-[#94857d]">No pending brand applications right now.</div> : <div className="mt-4 divide-y divide-[#eee6df]">{(brands.data ?? []).filter((brand: any) => brand.status === "pending").slice(0, 5).map((brand: any) => <div key={brand.id} className="flex items-center justify-between gap-3 py-3"><div className="min-w-0"><p className="truncate text-sm font-medium text-[#57463e]">{brand.brand_name}</p><p className="text-xs text-[#9a8a81]">{brand.category} · {brand.email}</p></div><Badge className="bg-amber-50 text-amber-800 hover:bg-amber-50">Pending</Badge></div>)}</div>}
+        {brands.isLoading ? <div className="py-8 text-sm text-[#94857d]">Loading brand applications…</div> : (brands.data ?? []).filter((brand) => brand.status === "pending").length === 0 ? <div className="py-8 text-sm text-[#94857d]">No pending brand applications right now.</div> : <div className="mt-4 divide-y divide-[#eee6df]">{(brands.data ?? []).filter((brand) => brand.status === "pending").slice(0, 5).map((brand) => <div key={brand.id} className="flex items-center justify-between gap-3 py-3"><div className="min-w-0"><p className="truncate text-sm font-medium text-[#57463e]">{brand.brand_name}</p><p className="text-xs text-[#9a8a81]">{brand.category} · {brand.email}</p></div><Badge className="bg-amber-50 text-amber-800 hover:bg-amber-50">Pending</Badge></div>)}</div>}
       </div>
       <div className="rounded-2xl border border-[#e8dfd6] bg-[#f0e8e1] p-6"><div className="flex items-center gap-2 text-[#76534b]"><ShieldCheck className="size-5"/><span className="text-xs font-semibold uppercase tracking-[0.16em]">Owner controls</span></div><h2 className="mt-4 font-serif text-2xl text-[#493a34]">Your marketplace. Your decisions.</h2><p className="mt-2 text-sm leading-6 text-[#806e64]">Review brands, monitor activity and manage OFFFEED operations from one private workspace.</p><div className="mt-5 rounded-xl border border-[#dfd0c6] bg-[#fbf9f5]/70 p-3"><p className="text-[10px] uppercase tracking-widest text-[#a08e84]">Signed-in owner</p><p className="mt-1 break-all text-sm font-medium text-[#76534b]">manyagupta018@gmail.com</p></div></div>
     </div>
