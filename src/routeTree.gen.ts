@@ -25,6 +25,7 @@ import { Route as ForBrandsApplyRouteImport } from './routes/for-brands.apply'
 import { Route as ForBrandsRouteImport } from './routes/for-brands'
 import { Route as LookLookIdRouteImport } from './routes/look.$lookId'
 import { Route as AuthenticatedBrandDashboardRouteImport } from './routes/_authenticated/brand/dashboard'
+import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -106,6 +107,11 @@ const AuthenticatedBrandDashboardRoute =
     path: '/brand/dashboard',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -123,6 +129,7 @@ export interface FileRoutesByFullPath {
   '/for-brands': typeof ForBrandsRoute
   '/look/$lookId': typeof LookLookIdRoute
   '/brand/dashboard': typeof AuthenticatedBrandDashboardRoute
+  '/admin': typeof AuthenticatedAdminRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -159,6 +166,7 @@ export interface FileRoutesById {
   '/for-brands': typeof ForBrandsRoute
   '/look/$lookId': typeof LookLookIdRoute
   '/_authenticated/brand/dashboard': typeof AuthenticatedBrandDashboardRoute
+  '/_authenticated/admin': typeof AuthenticatedAdminRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -178,6 +186,7 @@ export interface FileRouteTypes {
     | '/for-brands'
     | '/look/$lookId'
     | '/brand/dashboard'
+    | '/admin'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -213,6 +222,7 @@ export interface FileRouteTypes {
     | '/for-brands'
     | '/look/$lookId'
     | '/_authenticated/brand/dashboard'
+    | '/_authenticated/admin'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -231,6 +241,7 @@ export interface RootRouteChildren {
   ForBrandsApplyRoute: typeof ForBrandsApplyRoute
   ForBrandsRoute: typeof ForBrandsRoute
   LookLookIdRoute: typeof LookLookIdRoute
+  AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -347,15 +358,24 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedBrandDashboardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin': {
+      id: '/_authenticated/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AuthenticatedAdminRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedBrandDashboardRoute: typeof AuthenticatedBrandDashboardRoute
+  AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedBrandDashboardRoute: AuthenticatedBrandDashboardRoute,
+  AuthenticatedAdminRoute: AuthenticatedAdminRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
