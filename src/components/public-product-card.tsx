@@ -7,6 +7,7 @@ import type { ProductWithBrand } from "@/lib/public-brand.functions";
 import { addToOfffeedCart } from "@/lib/cart";
 import { readLikedProductIds, setWishlistItem } from "@/lib/look-collections";
 import { MoodboardSaveButton } from "@/components/moodboard-save-button";
+import { FindMySize } from "@/components/find-my-size";
 
 export function PublicProductCard({ product }: { product: ProductWithBrand }) {
   const [added, setAdded] = useState(false);
@@ -80,6 +81,7 @@ export function PublicProductCard({ product }: { product: ProductWithBrand }) {
             )}
           </div>
         )}
+        <FindMySize chart={product.sizeChart} productName={product.productName} />
         <div className="mt-3 flex items-center gap-1">
           <Button variant="outline" size="sm" className="min-w-0 flex-1" onClick={() => { addToOfffeedCart(product); setAdded(true); }}>
             {added ? <Check /> : <ShoppingBag />}{added ? "Saved" : "Save"}
