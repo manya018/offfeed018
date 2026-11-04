@@ -8,6 +8,7 @@ import { offfeedCartEventName, readOfffeedCart } from "@/lib/cart";
 const links = [
   { label: "Home", to: "/" as const },
   { label: "Discover", to: "/discover" as const },
+  { label: "The EDIT", to: "/edit" as const },
   { label: "Explore", to: "/explore" as const },
   { label: "Create", to: "/create" as const },
   { label: "For Brands", to: "/for-brands/apply" as const },
