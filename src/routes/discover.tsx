@@ -70,12 +70,12 @@ function DiscoverPage() {
   const { category } = Route.useSearch();
   const { space } = useStyleSpace();
   const isHim = space === "him";
-  const activeStyleDNA = styleDNA?.audience === space ? styleDNA : null;
   const collection = isHim ? himLooks : looks;
   const moodList = isHim ? himMoods : moods;
   const moodArtwork = isHim ? himMoodImages : moodImages;
   const [filter, setFilter] = useState("All");
   const [styleDNA, setStyleDNA] = useState<SavedStyleDNA | null>(null);
+  const activeStyleDNA = styleDNA?.audience === space ? styleDNA : null;
   useEffect(() => {
     const syncStyleDNA = () => setStyleDNA(readSavedStyleDNA());
     syncStyleDNA();
@@ -142,7 +142,7 @@ function DiscoverPage() {
     else if (productSort === "price-low") filteredProducts.sort((a, b) => a.price - b.price);
     else if (productSort === "price-high") filteredProducts.sort((a, b) => b.price - a.price);
     else if (filter === "For You" && activeStyleDNA) {
-      const range = styleBudgetRange(styleDNA.budget);
+      const range = styleBudgetRange(activeStyleDNA.budget);
       filteredProducts.sort((a, b) => {
         const score = (product: ProductWithBrand) => {
           const text = [product.productName, product.category, ...product.tags, ...product.colors].join(" ");
@@ -161,7 +161,7 @@ function DiscoverPage() {
       if (["All", "Trending", "For You", "New", "Color", "Style", "Price"].includes(filter)) return true;
       return `${look.aesthetic} ${look.occasion} ${look.season}`.toLowerCase().includes(filter.toLowerCase());
     });
-    if (filter === "For You" && styleDNA) {
+    if (filter === "For You" && activeStyleDNA) {
       return [...results].sort((a, b) =>
         styleMatchScore(`${b.title} ${b.aesthetic} ${b.occasion} ${b.season}`, activeStyleDNA) -
         styleMatchScore(`${a.title} ${a.aesthetic} ${a.occasion} ${a.season}`, activeStyleDNA)
