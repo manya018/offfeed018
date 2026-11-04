@@ -44,9 +44,10 @@ function OwnerAdminDashboard() {
   const overview = useQuery({ queryKey: ["owner-admin", "overview"], queryFn: () => getAdminOverview(), retry: 1 });
   const brands = useQuery({ queryKey: ["owner-admin", "brands"], queryFn: () => getAdminBrands(), enabled: section === "brands" || section === "overview", retry: 1 });
   const updateStatus = useMutation({
-    mutationFn: (input: { brandId: string; status: "approved" | "rejected" | "pending" }) => updateAdminBrandStatus({ data: input }),
+    mutationFn: (input: { brandId: string; status: "approved" | "declined" | "under_review" }) => updateAdminBrandStatus({ data: input }),
     onSuccess: (brand) => {
-      toast.success(`${brand.brand_name} marked ${brand.status}.`);
+      if (brand.emailSent === false) toast.warning(`${brand.brand_name} status saved, but the decision email could not be sent.`);
+      else toast.success(`${brand.brand_name} marked ${brand.status}.`);
       queryClient.invalidateQueries({ queryKey: ["owner-admin"] });
     },
     onError: (error) => toast.error(error instanceof Error ? error.message : "Could not update brand status."),
@@ -117,14 +118,14 @@ function OwnerAdminDashboard() {
                 {brands.isLoading ? <div className="flex items-center justify-center gap-2 p-12 text-sm text-[#887a72]"><LoaderCircle className="size-4 animate-spin"/> Loading applications…</div> : brands.isError ? <div className="p-8 text-sm text-red-700">{brands.error instanceof Error ? brands.error.message : "Could not load brands."}<Button variant="outline" size="sm" className="ml-3" onClick={() => brands.refetch()}>Retry</Button></div> : filteredBrands.length === 0 ? <div className="p-12 text-center"><Store className="mx-auto size-8 text-[#b9a79d]"/><p className="mt-3 font-medium text-[#57463e]">No brand applications found</p><p className="mt-1 text-sm text-[#94857d]">Applications will appear here when brands register.</p></div> : <div className="divide-y divide-[#eee6df]">
                   {filteredBrands.map((brand) => <div key={brand.id} className="flex flex-col gap-4 p-5 xl:flex-row xl:items-center xl:justify-between">
                     <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-center gap-2"><h3 className="font-serif text-xl text-[#493a34]">{brand.brand_name}</h3><Badge variant="outline" className={`capitalize ${brand.status === "approved" ? "border-emerald-200 bg-emerald-50 text-emerald-800" : brand.status === "rejected" ? "border-red-200 bg-red-50 text-red-700" : "border-amber-200 bg-amber-50 text-amber-800"}`}>{brand.status}</Badge></div>
+                      <div className="flex flex-wrap items-center gap-2"><h3 className="font-serif text-xl text-[#493a34]">{brand.brand_name}</h3><Badge variant="outline" className={`capitalize ${brand.status === "approved" ? "border-emerald-200 bg-emerald-50 text-emerald-800" : brand.status === "declined" ? "border-red-200 bg-red-50 text-red-700" : "border-amber-200 bg-amber-50 text-amber-800"}`}>{brand.status}</Badge></div>
                       <p className="mt-1 text-xs text-[#8b7d75]">{brand.contact_name} · {brand.email}</p>
                       <p className="mt-1 text-xs text-[#a08e84]">{brand.category} · {brand.social_handle || "No social handle"} · {new Date(brand.created_at).toLocaleDateString("en-IN")}</p>
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
                       {brand.website_url && <Button asChild size="sm" variant="outline" className="border-[#e1d5cc]"><a href={brand.website_url} target="_blank" rel="noreferrer">Website <ArrowUpRight className="ml-1 size-3"/></a></Button>}
                       {brand.status !== "approved" && <Button size="sm" disabled={updateStatus.isPending} onClick={() => updateStatus.mutate({ brandId: brand.id, status: "approved" })} className="bg-[#76534b] text-white hover:bg-[#63443e]"><Check className="mr-1 size-3.5"/> Approve</Button>}
-                      {brand.status !== "rejected" && <Button size="sm" variant="outline" disabled={updateStatus.isPending} onClick={() => updateStatus.mutate({ brandId: brand.id, status: "rejected" })} className="border-[#e5c9c3] text-[#9b5149] hover:bg-[#fbefed]"><X className="mr-1 size-3.5"/> Reject</Button>}
+                      {brand.status !== "declined" && <Button size="sm" variant="outline" disabled={updateStatus.isPending} onClick={() => updateStatus.mutate({ brandId: brand.id, status: "declined" })} className="border-[#e5c9c3] text-[#9b5149] hover:bg-[#fbefed]"><X className="mr-1 size-3.5"/> Decline</Button>}
                     </div>
                   </div>)}
                 </div>}
@@ -167,7 +168,7 @@ function OverviewSection({ overview, brands, onOpenBrands }: { overview: { data:
     <div className="mt-6 grid gap-5 xl:grid-cols-[1.3fr_0.7fr]">
       <div className="rounded-2xl border border-[#e8dfd6] bg-[#fbf9f5] p-6">
         <div className="flex items-center justify-between"><div><p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#a28e84]">Needs attention</p><h2 className="mt-1 font-serif text-2xl text-[#493a34]">Brand review queue</h2></div><Button variant="ghost" size="sm" onClick={onOpenBrands} className="text-[#76534b]">View all <ChevronRight className="ml-1 size-4"/></Button></div>
-        {brands.isLoading ? <div className="py-8 text-sm text-[#94857d]">Loading brand applications…</div> : (brands.data ?? []).filter((brand) => brand.status === "pending").length === 0 ? <div className="py-8 text-sm text-[#94857d]">No pending brand applications right now.</div> : <div className="mt-4 divide-y divide-[#eee6df]">{(brands.data ?? []).filter((brand) => brand.status === "pending").slice(0, 5).map((brand) => <div key={brand.id} className="flex items-center justify-between gap-3 py-3"><div className="min-w-0"><p className="truncate text-sm font-medium text-[#57463e]">{brand.brand_name}</p><p className="text-xs text-[#9a8a81]">{brand.category} · {brand.email}</p></div><Badge className="bg-amber-50 text-amber-800 hover:bg-amber-50">Pending</Badge></div>)}</div>}
+        {brands.isLoading ? <div className="py-8 text-sm text-[#94857d]">Loading brand applications…</div> : (brands.data ?? []).filter((brand) => brand.status === "under_review").length === 0 ? <div className="py-8 text-sm text-[#94857d]">No brand applications are awaiting review right now.</div> : <div className="mt-4 divide-y divide-[#eee6df]">{(brands.data ?? []).filter((brand) => brand.status === "pending").slice(0, 5).map((brand) => <div key={brand.id} className="flex items-center justify-between gap-3 py-3"><div className="min-w-0"><p className="truncate text-sm font-medium text-[#57463e]">{brand.brand_name}</p><p className="text-xs text-[#9a8a81]">{brand.category} · {brand.email}</p></div><Badge className="bg-amber-50 text-amber-800 hover:bg-amber-50">Under review</Badge></div>)}</div>}
       </div>
       <div className="rounded-2xl border border-[#e8dfd6] bg-[#f0e8e1] p-6"><div className="flex items-center gap-2 text-[#76534b]"><ShieldCheck className="size-5"/><span className="text-xs font-semibold uppercase tracking-[0.16em]">Owner controls</span></div><h2 className="mt-4 font-serif text-2xl text-[#493a34]">Your marketplace. Your decisions.</h2><p className="mt-2 text-sm leading-6 text-[#806e64]">Review brands, monitor activity and manage OFFFEED operations from one private workspace.</p><div className="mt-5 rounded-xl border border-[#dfd0c6] bg-[#fbf9f5]/70 p-3"><p className="text-[10px] uppercase tracking-widest text-[#a08e84]">Signed-in owner</p><p className="mt-1 break-all text-sm font-medium text-[#76534b]">manyagupta018@gmail.com</p></div></div>
     </div>
