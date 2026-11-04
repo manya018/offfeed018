@@ -78,6 +78,18 @@ const parseSizeChart = (value: string, unit: string) => {
   return { columns, rows, ...(unit.trim() ? { unit: unit.trim() } : {}) };
 };
 
+const parseEditableSizeChart = (value: string) => {
+  const lines = value.split("\n").map((line) => line.split("|").map((cell) => cell.trim())).filter((cells) => cells.some(Boolean));
+  const columns = (lines[0]?.[0]?.toLowerCase() === "measurement" ? lines[0].slice(1) : ["XS", "S", "M", "L"]).map((cell) => cell || "");
+  const rows = (lines[0]?.[0]?.toLowerCase() === "measurement" ? lines.slice(1) : [["Bust (cm)", "81", "86", "91", "96"]]).map((cells) => ({
+    label: cells[0] ?? "",
+    values: Array.from({ length: columns.length }, (_, index) => cells[index + 1] ?? ""),
+  }));
+  return { columns: columns.length ? columns : ["XS", "S", "M", "L"], rows: rows.length ? rows : [{ label: "", values: columns.map(() => "") }] };
+};
+const serializeEditableSizeChart = (columns: string[], rows: Array<{ label: string; values: string[] }>) =>
+  ["Measurement | " + columns.join(" | "), ...rows.map((row) => row.label + " | " + columns.map((_, index) => row.values[index] ?? "").join(" | "))].join("\n");
+
 type BrandOrder = {
   id: string; order_number: string; customer_name: string; customer_email: string; customer_phone: string;
   delivery_address: import("@/integrations/supabase/types").Json; destination_pin_code: string; product_name: string; selected_size: string; selected_color: string; quantity: number; unit_price: number; currency: string;
@@ -365,6 +377,7 @@ function BrandDashboard() {
   const supportedAudience = useMemo(() => (application?.audience ?? ["her"]).filter((item): item is "her" | "him" => item === "her" || item === "him"), [application?.audience]);
   const products = workspace.data?.products ?? [];
   const sizeGuides = workspace.data?.sizeGuides ?? [];
+  const guideDraft = parseEditableSizeChart(guideText);
   const sortedProducts = useMemo(() => [...products].sort((a, b) => a.category.localeCompare(b.category) || a.product_name.localeCompare(b.product_name)), [products]);
   const orders = workspace.data?.orders ?? [];
   const publishedCount = products.filter((product) => product.status === "published").length;
@@ -572,7 +585,42 @@ function BrandDashboard() {
         <div className="max-w-3xl"><p className="text-xs font-semibold uppercase tracking-[0.15em] text-primary">REUSABLE SIZE GUIDES</p><h2 id="brand-size-guides-heading" className="mt-2 font-display text-3xl">Set it once. Use it across products.</h2><p className="mt-2 text-sm leading-6 text-muted-foreground">Create one default chart for each category. New products and existing products without a custom chart will use it automatically. Product-specific overrides stay separate.</p></div>
         <form onSubmit={(event) => void saveCategoryGuide(event)} className="mt-5 max-w-3xl rounded-xl border border-border/80 p-4 sm:p-5">
           <div className="grid gap-4 sm:grid-cols-2"><div><Label htmlFor="brand-guide-category">Category</Label><select id="brand-guide-category" value={guideCategory} onChange={(event) => { const next = event.target.value; setGuideCategory(next); const existing = sizeGuides.find((guide: any) => guide.category === next); setGuideText(existing ? formatSizeChart(existing.size_chart) : "Measurement | XS | S | M | L\nBust (cm) | 81 | 86 | 91 | 96"); setGuideUnit(existing?.size_chart?.unit ?? "cm"); }} className={fieldClass}>{Object.entries(categoryOptions).flatMap(([department, categories]) => categories.map((category) => <option key={category} value={department + " / " + category}>{department} · {category}</option>))}</select></div><div><Label htmlFor="brand-guide-unit">Measurement unit</Label><Input id="brand-guide-unit" value={guideUnit} onChange={(event) => setGuideUnit(event.target.value)} placeholder="cm, in, mm, UK/EU" className={fieldClass}/></div></div>
-          <Label htmlFor="brand-guide-table" className="mt-4 block">Size guide table</Label><Textarea id="brand-guide-table" value={guideText} onChange={(event) => setGuideText(event.target.value)} className="mt-2 min-h-36 font-mono text-xs" placeholder="Measurement | XS | S | M\nBust (cm) | 81 | 86 | 91"/>
+          <div className="mt-4">
+            <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+              <Label>Size guide table</Label>
+              <div className="flex flex-wrap gap-2">
+                <Button type="button" size="sm" variant="outline" onClick={() => setGuideText(serializeEditableSizeChart(guideDraft.columns, [...guideDraft.rows, { label: "", values: guideDraft.columns.map(() => "") }]))}><Plus className="size-3.5"/>Add measurement</Button>
+                <Button type="button" size="sm" variant="outline" onClick={() => setGuideText(serializeEditableSizeChart([...guideDraft.columns, ""], guideDraft.rows.map((row) => ({ ...row, values: [...row.values, ""] }))))}><Plus className="size-3.5"/>Add size</Button>
+              </div>
+            </div>
+            <div className="overflow-x-auto rounded-lg border border-border/80">
+              <table className="w-full min-w-[560px] border-collapse text-sm">
+                <thead className="bg-muted/40">
+                  <tr>
+                    <th scope="col" className="min-w-40 border-b border-r border-border/70 p-2 text-left font-medium">Measurement</th>
+                    {guideDraft.columns.map((column, columnIndex) => <th scope="col" key={columnIndex} className="min-w-24 border-b border-r border-border/70 p-2">
+                      <div className="flex items-center gap-1">
+                        <Input aria-label={`Size column ${columnIndex + 1}`} value={column} onChange={(event) => setGuideText(serializeEditableSizeChart(guideDraft.columns.map((item, index) => index === columnIndex ? event.target.value : item), guideDraft.rows))} placeholder="Size" className="h-9 min-w-0 bg-background text-center"/>
+                        <Button type="button" size="icon" variant="ghost" aria-label={`Remove size ${column || columnIndex + 1}`} disabled={guideDraft.columns.length <= 1} onClick={() => setGuideText(serializeEditableSizeChart(guideDraft.columns.filter((_, index) => index !== columnIndex), guideDraft.rows.map((row) => ({ ...row, values: row.values.filter((_, index) => index !== columnIndex) }))))}><Trash2 className="size-3.5"/></Button>
+                      </div>
+                    </th>)}
+                  </tr>
+                </thead>
+                <tbody>
+                  {guideDraft.rows.map((row, rowIndex) => <tr key={rowIndex} className="border-b border-border/60 last:border-0">
+                    <th scope="row" className="border-r border-border/70 p-2">
+                      <Input aria-label={`Measurement name ${rowIndex + 1}`} value={row.label} onChange={(event) => setGuideText(serializeEditableSizeChart(guideDraft.columns, guideDraft.rows.map((item, index) => index === rowIndex ? { ...item, label: event.target.value } : item)))} placeholder="e.g. Bust (cm)" className="h-9 bg-background"/>
+                    </th>
+                    {guideDraft.columns.map((_, columnIndex) => <td key={columnIndex} className="border-r border-border/70 p-2">
+                      <Input aria-label={`${row.label || `Measurement ${rowIndex + 1}`} for ${guideDraft.columns[columnIndex] || `size ${columnIndex + 1}`}`} value={row.values[columnIndex] ?? ""} onChange={(event) => setGuideText(serializeEditableSizeChart(guideDraft.columns, guideDraft.rows.map((item, index) => index === rowIndex ? { ...item, values: item.values.map((value, cellIndex) => cellIndex === columnIndex ? event.target.value : value) } : item)))} placeholder="Value" className="h-9 bg-background text-center"/>
+                    </td>)}
+                    <td className="w-10 p-1"><Button type="button" size="icon" variant="ghost" aria-label={`Remove measurement ${row.label || rowIndex + 1}`} disabled={guideDraft.rows.length <= 1} onClick={() => setGuideText(serializeEditableSizeChart(guideDraft.columns, guideDraft.rows.filter((_, index) => index !== rowIndex)))}><Trash2 className="size-3.5"/></Button></td>
+                  </tr>)}
+                </tbody>
+              </table>
+            </div>
+            <p className="mt-2 text-xs leading-5 text-muted-foreground">Edit each size and measurement directly. Add or remove rows and columns as needed. The saved guide is reused by products in this category unless a product has its own override.</p>
+          </div>
           <p className="mt-2 text-xs leading-5 text-muted-foreground">Use | to separate table cells. First row: size or variant names. Following rows: measurements. Supports clothing, footwear, jewellery, bags, watches and custom options.</p>
           <div className="mt-4 flex flex-wrap items-center justify-between gap-3"><p className="text-xs text-muted-foreground">{sizeGuides.length} reusable guides saved</p><Button type="submit" disabled={guideSaving}>{guideSaving ? <LoaderCircle className="animate-spin"/> : <Check/>}Save category guide</Button></div>
         </form>
