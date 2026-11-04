@@ -9,17 +9,17 @@ const inputSchema = z.object({
 });
 
 const analysisSchema = z.object({
-  overallStyle: z.string().trim().max(100),
-  summary: z.string().trim().max(240),
+  overallStyle: z.string().trim().max(100).default(""),
+  summary: z.string().trim().max(240).default(""),
   items: z.array(z.object({
-    category: z.string().trim().max(50),
-    color: z.string().trim().max(40),
-    pattern: z.string().trim().max(40),
-    material: z.string().trim().max(40),
-    fit: z.string().trim().max(40),
-    searchTerms: z.array(z.string().trim().min(1).max(40)).max(6),
-  })).max(6),
-  searchTerms: z.array(z.string().trim().min(1).max(40)).max(12),
+    category: z.string().trim().max(50).default(""),
+    color: z.string().trim().max(40).default(""),
+    pattern: z.string().trim().max(40).default(""),
+    material: z.string().trim().max(40).default(""),
+    fit: z.string().trim().max(40).default(""),
+    searchTerms: z.array(z.string().trim().min(1).max(40)).max(6).default([]),
+  })).max(6).default([]),
+  searchTerms: z.array(z.string().trim().min(1).max(40)).max(12).default([]),
 });
 
 export type OutfitImageAnalysis = z.infer<typeof analysisSchema>;
