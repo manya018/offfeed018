@@ -35,7 +35,9 @@ const navItems = [
   { id: "settings", label: "Settings", icon: Settings },
 ] as const;
 
-type Section = typeof navItems[number]["id"];\ntype AdminOverview = Awaited<ReturnType<typeof getAdminOverview>>;\ntype AdminBrand = Awaited<ReturnType<typeof getAdminBrands>>[number];
+type Section = typeof navItems[number]["id"];
+type AdminOverview = Awaited<ReturnType<typeof getAdminOverview>>;
+type AdminBrand = Awaited<ReturnType<typeof getAdminBrands>>[number];
 
 function OwnerAdminDashboard() {
   const [section, setSection] = useState<Section>("overview");
@@ -56,7 +58,8 @@ function OwnerAdminDashboard() {
     const query = brandSearch.trim().toLowerCase();
     return !query || [brand.brand_name, brand.contact_name, brand.email, brand.social_handle].some((value) => value?.toLowerCase().includes(query));
   }), [brands.data, brandSearch]);
-  const activeNav = navItems.find((item) => item.id === section);\n  const ActiveSectionIcon = activeNav?.icon ?? ClipboardList;
+  const activeNav = navItems.find((item) => item.id === section);
+  const ActiveSectionIcon = activeNav?.icon ?? ClipboardList;
 
   return (
     <div className="min-h-screen bg-[#f7f4ef] text-[#302824]">
