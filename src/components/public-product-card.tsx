@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import type { ProductWithBrand } from "@/lib/public-brand.functions";
 import { addToOfffeedCart } from "@/lib/cart";
 import { readLikedProductIds, setWishlistItem } from "@/lib/look-collections";
+import { MoodboardSaveButton } from "@/components/moodboard-save-button";
 
 export function PublicProductCard({ product }: { product: ProductWithBrand }) {
   const [added, setAdded] = useState(false);
@@ -83,6 +84,7 @@ export function PublicProductCard({ product }: { product: ProductWithBrand }) {
           <Button variant="outline" size="sm" className="min-w-0 flex-1" onClick={() => { addToOfffeedCart(product); setAdded(true); }}>
             {added ? <Check /> : <ShoppingBag />}{added ? "Saved" : "Save"}
           </Button>
+          <MoodboardSaveButton item={{ id: product.id, type: "product", title: product.productName, image: product.imageUrl ?? product.imageUrls[0] ?? "", subtitle: product.brand.name, href: `/brand/${product.brand.handle}`, price: product.price }} />
           <Button variant="ghost" size="icon" aria-label={liked ? "Remove product from wishlist" : "Like product"} onClick={toggleWishlist}>
             <Heart className={liked ? "fill-current text-primary" : ""} />
           </Button>
