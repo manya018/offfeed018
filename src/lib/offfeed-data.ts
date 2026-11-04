@@ -48,6 +48,21 @@ export const himLooks: Look[] = [
   { id: "city-uniform", title: "City Uniform", aesthetic: "Japanese streetwear", occasion: "City day", season: "Winter", image: himStreetwear2, saves: "3.0k", description: "Relaxed black layers, precise proportions and a little room to move." },
 ];
 
+
+export type JewelleryReference = { id: string; title: string; note: string; image: string };
+
+export const himJewelleryReferences: JewelleryReference[] = [
+  { id: "him-starburst-pendant", title: "Starburst pendant", note: "A sculptural silver pendant on a fine chain", image: "/images/jewellery/ChatGPT%20Image%20Oct%2014%2C%202026%2C%2010_02_37%20PM.jpg" },
+  { id: "him-black-dogtag", title: "Black dog-tag pendant", note: "Clean, dark-toned metal with a minimal edge", image: "/images/jewellery/ChatGPT%20Image%20Oct%2014%2C%202026%2C%2010_02_45%20PM.jpg" },
+  { id: "him-double-silver-bracelet", title: "Double silver chain bracelet", note: "Layered links with a polished finish", image: "/images/jewellery/ChatGPT%20Image%20Oct%2014%2C%202026%2C%2010_02_53%20PM.jpg" },
+  { id: "him-initial-bar-bracelet", title: "Initial bar bracelet", note: "A personal detail in a clean silver silhouette", image: "/images/jewellery/ChatGPT%20Image%20Oct%2014%2C%202026%2C%2010_03_00%20PM.jpg" },
+  { id: "him-black-geometric-pendant", title: "Black geometric pendant", note: "A bold black-and-silver everyday chain", image: "/images/jewellery/ChatGPT%20Image%20Oct%2014%2C%202026%2C%2010_03_06%20PM.jpg" },
+  { id: "him-slim-gold-bracelet", title: "Slim gold bracelet", note: "A subtle gold accent for everyday styling", image: "/images/jewellery/ChatGPT%20Image%20Oct%2014%2C%202026%2C%2010_03_12%20PM.jpg" },
+  { id: "him-silver-snake-chain", title: "Silver snake chain", note: "A smooth, understated silver essential", image: "/images/jewellery/ChatGPT%20Image%20Oct%2014%2C%202026%2C%2010_03_19%20PM.jpg" },
+  { id: "him-gold-snake-chain", title: "Gold snake chain", note: "Warm gold with a clean, classic profile", image: "/images/jewellery/ChatGPT%20Image%20Oct%2014%2C%202026%2C%2010_03_26%20PM.jpg" },
+  { id: "him-geometric-gold-hoop", title: "Geometric gold hoop", note: "A sharp, modern finishing detail", image: "/images/jewellery/ChatGPT%20Image%20Oct%2014%2C%202026%2C%2010_03_33%20PM.jpg" },
+];
+
 export const moods = ["Clean Girl", "Coquette", "Old Money", "Streetwear", "Y2K", "Soft Girl", "Dark Feminine", "Minimal", "Café Core", "Model Off Duty", "Indie", "Vintage"];
 
 export const moodImages = [minimal, coquette, oldMoney, y2k, minimal2, coquette2, oldMoney2, y2k2];
