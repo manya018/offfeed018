@@ -10,6 +10,7 @@ const links = [
   { label: "Discover", to: "/discover" as const },
   { label: "Explore", to: "/explore" as const },
   { label: "Create", to: "/create" as const },
+  { label: "My Style", to: "/style-identity" as const },
   { label: "For Brands", to: "/for-brands/apply" as const },
   { label: "About", to: "/about" as const },
 ];
