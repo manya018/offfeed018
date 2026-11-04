@@ -9,6 +9,41 @@ import { himLooks, himMoodImages, himMoods, looks, moodImages, moods } from "@/l
 import { useStyleSpace } from "@/lib/style-space";
 import { readLikedLookIds, setWishlistItem, rememberReferenceInspiration, toggleSavedReferenceInspiration, readSavedReferenceInspirationIds } from "@/lib/look-collections";
 import { toast } from "sonner";
+
+type SavedStyleDNA = {
+  vibe?: string;
+  occasion?: string;
+  palette?: string;
+  budget?: string;
+  details?: string;
+  audience?: "her" | "him";
+};
+
+function readSavedStyleDNA(): SavedStyleDNA | null {
+  try {
+    const entries = JSON.parse(window.localStorage.getItem("offfeed-style-dna") || "[]");
+    const latest = Array.isArray(entries) ? entries.find((entry) => entry?.preferences && typeof entry.preferences === "object") : null;
+    return latest?.preferences ?? null;
+  } catch {
+    return null;
+  }
+}
+
+function styleMatchScore(text: string, dna: SavedStyleDNA | null): number {
+  if (!dna) return 0;
+  const haystack = text.toLowerCase();
+  const terms = [dna.vibe, dna.occasion, dna.palette, dna.details]
+    .filter((value): value is string => Boolean(value))
+    .flatMap((value) => value.toLowerCase().split(/[^a-z0-9]+/).filter((part) => part.length > 2));
+  return terms.reduce((score, term) => score + (haystack.includes(term) ? 1 : 0), 0);
+}
+
+function styleBudgetRange(budget?: string) {
+  if (budget === "Under ₹1,000") return { min: 0, max: 999.99 };
+  if (budget === "₹1,000–₹2,500") return { min: 1000, max: 2500 };
+  if (budget === "₹2,500–₹5,000") return { min: 2500, max: 5000 };
+  return null;
+}
 import { IndianWearEdit } from "@/components/indian-wear-edit";
 import { OfffeedNote } from "@/components/offfeed-note";
 import gulaboBanner from "@/assets/indian-wear/Gulabo_The_Desi_Girl_Edit.webp";
@@ -39,6 +74,17 @@ function DiscoverPage() {
   const moodList = isHim ? himMoods : moods;
   const moodArtwork = isHim ? himMoodImages : moodImages;
   const [filter, setFilter] = useState("All");
+  const [styleDNA, setStyleDNA] = useState<SavedStyleDNA | null>(null);
+  useEffect(() => {
+    const syncStyleDNA = () => setStyleDNA(readSavedStyleDNA());
+    syncStyleDNA();
+    window.addEventListener("storage", syncStyleDNA);
+    window.addEventListener("offfeed-style-dna-updated", syncStyleDNA);
+    return () => {
+      window.removeEventListener("storage", syncStyleDNA);
+      window.removeEventListener("offfeed-style-dna-updated", syncStyleDNA);
+    };
+  }, []);
   const [query, setQuery] = useState("");
   const [visible, setVisible] = useState(6);
   const [clothingMenuOpen, setClothingMenuOpen] = useState(true);
@@ -94,15 +140,34 @@ function DiscoverPage() {
     if (productSort === "newest") filteredProducts.sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
     else if (productSort === "price-low") filteredProducts.sort((a, b) => a.price - b.price);
     else if (productSort === "price-high") filteredProducts.sort((a, b) => b.price - a.price);
+    else if (filter === "For You" && styleDNA) {
+      const range = styleBudgetRange(styleDNA.budget);
+      filteredProducts.sort((a, b) => {
+        const score = (product: ProductWithBrand) => {
+          const text = [product.productName, product.category, ...product.tags, ...product.colors].join(" ");
+          return styleMatchScore(text, styleDNA) * 3 + (range && product.price >= range.min && product.price <= range.max ? 2 : 0);
+        };
+        return score(b) - score(a);
+      });
+    }
     return filteredProducts;
   }, [categoryProducts, selectedClothingCategory, productBrand, productColor, productSize, productStyle, productMinPrice, productMaxPrice, productSort]);
   const resetProductFilters = () => { setProductBrand("All brands"); setProductColor("All colours"); setProductSize("All sizes"); setProductStyle("All styles"); setProductMinPrice(""); setProductMaxPrice(""); setProductSort("recommended"); };
-  const filtered = useMemo(() => collection.filter((look) => {
-    const searchMatch = `${look.title} ${look.aesthetic} ${look.occasion} ${look.season}`.toLowerCase().includes(query.toLowerCase());
-    if (!searchMatch) return false;
-    if (["All", "Trending", "For You", "New", "Color", "Style", "Price"].includes(filter)) return true;
-    return `${look.aesthetic} ${look.occasion} ${look.season}`.toLowerCase().includes(filter.toLowerCase());
-  }), [collection, filter, query]);
+  const filtered = useMemo(() => {
+    const results = collection.filter((look) => {
+      const searchMatch = `${look.title} ${look.aesthetic} ${look.occasion} ${look.season}`.toLowerCase().includes(query.toLowerCase());
+      if (!searchMatch) return false;
+      if (["All", "Trending", "For You", "New", "Color", "Style", "Price"].includes(filter)) return true;
+      return `${look.aesthetic} ${look.occasion} ${look.season}`.toLowerCase().includes(filter.toLowerCase());
+    });
+    if (filter === "For You" && styleDNA) {
+      return [...results].sort((a, b) =>
+        styleMatchScore(`${b.title} ${b.aesthetic} ${b.occasion} ${b.season}`, styleDNA) -
+        styleMatchScore(`${a.title} ${a.aesthetic} ${a.occasion} ${a.season}`, styleDNA)
+      );
+    }
+    return results;
+  }, [collection, filter, query, styleDNA]);
 
   if (category === "jewellery" || category === "accessories" || category === "indian-wear") {
     const indianWear = category === "indian-wear";
@@ -295,6 +360,12 @@ function DiscoverPage() {
         <div className="hidden border-t border-[#e8ddd5] px-4 py-3 lg:block"><p className="text-[10px] leading-5 text-[#927e74]">Find it before your feed does.</p></div>
       </aside>
       <div className="min-w-0 flex-1">
+    {styleDNA && <div className="mx-auto mt-4 max-w-[1500px] rounded-2xl border border-[#e8d9d0] bg-white/80 px-5 py-3 text-sm text-[#725d53]">
+      <span className="font-semibold">Your Style DNA is active</span>
+      <span className="mx-2 text-[#b8898c]">·</span>
+      {[styleDNA.vibe, styleDNA.occasion, styleDNA.palette].filter(Boolean).join(" · ")}
+      <span className="ml-2 text-xs text-[#927e74]">Choose For You to prioritise matching looks and pieces.</span>
+    </div>}
     <section className="relative mx-auto mt-1 max-w-[1500px] overflow-hidden border-y border-[#eadbd2] bg-[linear-gradient(105deg,#f5e6e3_0%,#fbf7f0_52%,#edf0e8_100%)] px-5 py-10 sm:mt-6 sm:rounded-[1.75rem] sm:border sm:px-10 sm:py-14 lg:px-16 lg:py-16">
       <div aria-hidden="true" className="pointer-events-none absolute -right-24 -top-32 size-96 rounded-full border border-white/70"/>
       <div className="relative z-10 grid items-center gap-8 lg:grid-cols-[1.05fr_.95fr] lg:gap-12">
