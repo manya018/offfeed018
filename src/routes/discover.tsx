@@ -10,6 +10,7 @@ import { useStyleSpace } from "@/lib/style-space";
 import { readLikedLookIds, setWishlistItem, rememberReferenceInspiration, toggleSavedReferenceInspiration, readSavedReferenceInspirationIds } from "@/lib/look-collections";
 import { toast } from "sonner";
 import { IndianWearEdit } from "@/components/indian-wear-edit";
+import { OfffeedNote } from "@/components/offfeed-note";
 import gulaboBanner from "@/assets/indian-wear/Gulabo_The_Desi_Girl_Edit.webp";
 import nawabBanner from "@/assets/indian-wear/Nawab_The_Desi_Gentleman_Edit.webp";
 
@@ -179,6 +180,7 @@ function DiscoverPage() {
         <h1 className={(calmHerJewellery || calmHerAccessories) ? "mt-2 font-display text-5xl font-medium tracking-[-0.045em] text-stone-800 sm:text-7xl" : "mt-4 font-display text-5xl font-medium sm:text-7xl"}>{calmHerJewellery ? <><em className="font-normal text-[#c58d98]">Her</em> Jewellery</> : calmHerAccessories ? <><em className="font-normal text-[#c58d98]">Her</em> Accessories</> : <>{jewellery ? "Jewellery" : "Accessories"} <em className="font-normal text-primary">edit.</em></>}</h1>
         <p className={(calmHerJewellery || calmHerAccessories) ? "mx-auto mt-4 max-w-lg text-[15px] leading-7 text-stone-500" : "mx-auto mt-5 max-w-xl leading-7 text-muted-foreground"}>{calmHerJewellery ? "Delicate details, everyday pieces and little treasures from independent brands." : calmHerAccessories ? "Bags, sunglasses and watches — little details, softly collected." : jewellery ? "Discover independent jewellery labels, delicate everyday pieces and statement finds." : "Find bags, sunglasses, belts and finishing touches from independent brands."}</p>
       </section>}
+      <OfffeedNote audience={isHim ? "him" : "her"} placement="category" />
       <section className={(calmHerJewellery || calmHerAccessories || indianWear) ? "mt-10 sm:mt-14" : "mt-12"}>
         {!calmHerJewellery && !calmHerAccessories && <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
           <div><p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">{jewellery ? "A tiny jewellery daydream" : "The accessories edit"} · {isHim ? "Him" : "Her"}</p><h2 className="mt-2 font-display text-3xl sm:text-4xl">{isHim ? "The details make the mood." : jewellery ? <>Little treasures, <em className="font-normal text-primary">softly found.</em></> : <>The finishing touches, <em className="font-normal text-primary">considered.</em></>}</h2></div>
@@ -313,6 +315,8 @@ function DiscoverPage() {
       </div>
     </section>
 
+    <OfffeedNote audience={isHim ? "him" : "her"} placement="discover" />
+
     <section className="mx-auto max-w-[1440px] px-5 pt-12 lg:px-10 lg:pt-16">
       <div className="mb-5"><p className="text-[10px] font-semibold uppercase tracking-[.23em] text-[#a17e75]">What's catching eyes</p><h2 className="mt-2 font-display text-3xl sm:text-4xl">Trending discoveries</h2></div>
       <div className="flex flex-wrap gap-2">{moodList.slice(0, 8).map((mood) => <button type="button" key={mood} onClick={() => { setQuery(mood); setFilter("All"); }} className="rounded-full border border-[#e7d9d0] bg-white px-4 py-2.5 text-sm text-[#725d53] transition hover:border-[#c9979d] hover:bg-[#f8eeeb]">{mood} <span className="ml-1 text-[#b8898c]">↗</span></button>)}</div>
@@ -327,6 +331,8 @@ function DiscoverPage() {
       <div className="mb-6 flex flex-wrap items-end justify-between gap-3"><div><p className="text-[10px] font-semibold uppercase tracking-[.23em] text-[#a17e75]">The people behind the pieces</p><h2 className="mt-2 font-display text-3xl sm:text-4xl">Featured independent brands</h2></div><p className="max-w-sm text-sm leading-6 text-[#87756c]">Discover the independent labels bringing something different to the feed.</p></div>
       {categoryLoading ? <p className="py-8 text-center text-[#87756c]">Finding independent labels…</p> : featuredBrands.length ? <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-5">{featuredBrands.map((product) => <button type="button" key={product.brand.handle} onClick={() => { window.location.href = `/brand/${product.brand.handle}`; }} className="group overflow-hidden rounded-[1.2rem] border border-[#eadfd7] bg-white text-left shadow-[0_12px_35px_-28px_rgba(70,48,40,.35)]"><div className="overflow-hidden bg-[#f0e9e2]"><img src={product.imageUrl || moodArtwork[0]} alt={product.brand.name} loading="lazy" className="aspect-[4/3] w-full object-cover transition duration-700 group-hover:scale-105"/></div><div className="px-4 py-4"><p className="text-[10px] font-semibold uppercase tracking-[.18em] text-[#a17e75]">Independent label</p><h3 className="mt-1 font-display text-xl">{product.brand.name}</h3><p className="mt-1 text-xs text-[#927e74]">{product.brand.category} · Discover brand ↗</p></div></button>)}</div> : <p className="rounded-xl border border-dashed border-[#dfd1c7] bg-white/60 px-5 py-8 text-center text-sm text-[#87756c]">Independent brands will be featured here as their approved products are published on OFFFEED.</p>}
     </section>
+
+    <OfffeedNote audience={isHim ? "him" : "her"} placement="lookbook" />
 
     <section className="mx-auto max-w-[1440px] px-5 pt-14 lg:px-10">
       <div className="mb-6"><p className="text-[10px] font-semibold uppercase tracking-[.23em] text-[#a17e75]">Not on every feed. Yet.</p><h2 className="mt-2 font-display text-3xl sm:text-4xl">Hidden gems</h2><p className="mt-2 max-w-sm text-sm leading-6 text-[#87756c]">The less obvious finds that deserve a little more attention.</p></div>
