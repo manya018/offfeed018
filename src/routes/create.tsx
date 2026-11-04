@@ -96,9 +96,9 @@ function CreateLookPage() {
       const analysis = await analyzeOutfitImage({ data: { imageDataUrl } });
       setLensAnalysis(analysis);
       const visualQuery = [
-        analysis.overallStyle,
+        ...analysis.items.flatMap((item) => [item.category, item.color, item.pattern, item.material, ...item.searchTerms]),
         ...analysis.searchTerms,
-        ...analysis.items.flatMap((item) => [item.category, item.color, item.pattern, item.material, item.fit, ...item.searchTerms]),
+        analysis.overallStyle,
       ].filter(Boolean).join(" ").slice(0, 80);
       if (!visualQuery.trim()) {
         setMatchError("We could identify the image, but couldn't find clear clothing details. Try a brighter, full-outfit photo.");
