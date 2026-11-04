@@ -70,6 +70,7 @@ function DiscoverPage() {
   const { category } = Route.useSearch();
   const { space } = useStyleSpace();
   const isHim = space === "him";
+  const activeStyleDNA = styleDNA?.audience === space ? styleDNA : null;
   const collection = isHim ? himLooks : looks;
   const moodList = isHim ? himMoods : moods;
   const moodArtwork = isHim ? himMoodImages : moodImages;
@@ -140,18 +141,18 @@ function DiscoverPage() {
     if (productSort === "newest") filteredProducts.sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
     else if (productSort === "price-low") filteredProducts.sort((a, b) => a.price - b.price);
     else if (productSort === "price-high") filteredProducts.sort((a, b) => b.price - a.price);
-    else if (filter === "For You" && styleDNA) {
+    else if (filter === "For You" && activeStyleDNA) {
       const range = styleBudgetRange(styleDNA.budget);
       filteredProducts.sort((a, b) => {
         const score = (product: ProductWithBrand) => {
           const text = [product.productName, product.category, ...product.tags, ...product.colors].join(" ");
-          return styleMatchScore(text, styleDNA) * 3 + (range && product.price >= range.min && product.price <= range.max ? 2 : 0);
+          return styleMatchScore(text, activeStyleDNA) * 3 + (range && product.price >= range.min && product.price <= range.max ? 2 : 0);
         };
         return score(b) - score(a);
       });
     }
     return filteredProducts;
-  }, [categoryProducts, selectedClothingCategory, productBrand, productColor, productSize, productStyle, productMinPrice, productMaxPrice, productSort, filter, styleDNA]);
+  }, [categoryProducts, selectedClothingCategory, productBrand, productColor, productSize, productStyle, productMinPrice, productMaxPrice, productSort, filter, activeStyleDNA]);
   const resetProductFilters = () => { setProductBrand("All brands"); setProductColor("All colours"); setProductSize("All sizes"); setProductStyle("All styles"); setProductMinPrice(""); setProductMaxPrice(""); setProductSort("recommended"); };
   const filtered = useMemo(() => {
     const results = collection.filter((look) => {
@@ -162,12 +163,12 @@ function DiscoverPage() {
     });
     if (filter === "For You" && styleDNA) {
       return [...results].sort((a, b) =>
-        styleMatchScore(`${b.title} ${b.aesthetic} ${b.occasion} ${b.season}`, styleDNA) -
-        styleMatchScore(`${a.title} ${a.aesthetic} ${a.occasion} ${a.season}`, styleDNA)
+        styleMatchScore(`${b.title} ${b.aesthetic} ${b.occasion} ${b.season}`, activeStyleDNA) -
+        styleMatchScore(`${a.title} ${a.aesthetic} ${a.occasion} ${a.season}`, activeStyleDNA)
       );
     }
     return results;
-  }, [collection, filter, query, styleDNA]);
+  }, [collection, filter, query, activeStyleDNA]);
 
   if (category === "jewellery" || category === "accessories" || category === "indian-wear") {
     const indianWear = category === "indian-wear";
@@ -360,10 +361,10 @@ function DiscoverPage() {
         <div className="hidden border-t border-[#e8ddd5] px-4 py-3 lg:block"><p className="text-[10px] leading-5 text-[#927e74]">Find it before your feed does.</p></div>
       </aside>
       <div className="min-w-0 flex-1">
-    {styleDNA && <div className="mx-auto mt-4 max-w-[1500px] rounded-2xl border border-[#e8d9d0] bg-white/80 px-5 py-3 text-sm text-[#725d53]">
+    {activeStyleDNA && <div className="mx-auto mt-4 max-w-[1500px] rounded-2xl border border-[#e8d9d0] bg-white/80 px-5 py-3 text-sm text-[#725d53]">
       <span className="font-semibold">Your Style DNA is active</span>
       <span className="mx-2 text-[#b8898c]">·</span>
-      {[styleDNA.vibe, styleDNA.occasion, styleDNA.palette].filter(Boolean).join(" · ")}
+      {[activeStyleDNA.vibe, activeStyleDNA.occasion, activeStyleDNA.palette].filter(Boolean).join(" · ")}
       <span className="ml-2 text-xs text-[#927e74]">Choose For You to prioritise matching looks and pieces.</span>
     </div>}
     <section className="relative mx-auto mt-1 max-w-[1500px] overflow-hidden border-y border-[#eadbd2] bg-[linear-gradient(105deg,#f5e6e3_0%,#fbf7f0_52%,#edf0e8_100%)] px-5 py-10 sm:mt-6 sm:rounded-[1.75rem] sm:border sm:px-10 sm:py-14 lg:px-16 lg:py-16">
