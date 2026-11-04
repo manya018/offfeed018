@@ -151,7 +151,7 @@ function DiscoverPage() {
       });
     }
     return filteredProducts;
-  }, [categoryProducts, selectedClothingCategory, productBrand, productColor, productSize, productStyle, productMinPrice, productMaxPrice, productSort]);
+  }, [categoryProducts, selectedClothingCategory, productBrand, productColor, productSize, productStyle, productMinPrice, productMaxPrice, productSort, filter, styleDNA]);
   const resetProductFilters = () => { setProductBrand("All brands"); setProductColor("All colours"); setProductSize("All sizes"); setProductStyle("All styles"); setProductMinPrice(""); setProductMaxPrice(""); setProductSort("recommended"); };
   const filtered = useMemo(() => {
     const results = collection.filter((look) => {
