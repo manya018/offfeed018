@@ -15,6 +15,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { PublicProductCard } from "@/components/public-product-card";
 import { getShopTheLookProducts, type ProductWithBrand } from "@/lib/public-brand.functions";
+import { analyzeOutfitImage, type OutfitImageAnalysis } from "@/lib/offfeed-lens.functions";
 import { useStyleSpace } from "@/lib/style-space";
 import { toast } from "sonner";
 
@@ -22,6 +23,27 @@ const vibes = ["Minimal", "Streetwear", "Soft romantic", "Old money", "Indie", "
 const occasions = ["Everyday", "College", "Date night", "Party", "Festive", "Work", "Vacation"];
 const budgets = ["Under ₹1,000", "₹1,000–₹2,500", "₹2,500–₹5,000", "No limit"];
 const palettes = ["Neutrals", "Earthy tones", "Black & white", "Pastels", "Bold colours", "Denim blues"];
+
+async function compressImageForLens(file: File): Promise<string> {
+  const bitmap = await createImageBitmap(file);
+  const scale = Math.min(1, 1280 / Math.max(bitmap.width, bitmap.height));
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+  canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+  const context = canvas.getContext("2d");
+  if (!context) throw new Error("Your browser could not prepare this image.");
+  context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+  bitmap.close();
+  const blob = await new Promise<Blob>((resolve, reject) => {
+    canvas.toBlob((result) => result ? resolve(result) : reject(new Error("Your image could not be prepared.")), "image/jpeg", 0.82);
+  });
+  return await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => typeof reader.result === "string" ? resolve(reader.result) : reject(new Error("Your image could not be read."));
+    reader.onerror = () => reject(new Error("Your image could not be read."));
+    reader.readAsDataURL(blob);
+  });
+}
 
 function CreateLookPage() {
   const [outfitFile, setOutfitFile] = useState<File | null>(null);
@@ -36,6 +58,7 @@ function CreateLookPage() {
   const [matching, setMatching] = useState(false);
   const [matchError, setMatchError] = useState("");
   const [matchedProducts, setMatchedProducts] = useState<ProductWithBrand[]>([]);
+  const [lensAnalysis, setLensAnalysis] = useState<OutfitImageAnalysis | null>(null);
   const { space } = useStyleSpace();
   const fileInput = useRef<HTMLInputElement>(null);
 
@@ -54,6 +77,49 @@ function CreateLookPage() {
     setOutfitPreview(URL.createObjectURL(file));
     setRecipe("");
     setSaved(false);
+    setLensAnalysis(null);
+    setMatchedProducts([]);
+    setMatchError("");
+  };
+
+  const findSimilarOutfits = async () => {
+    if (!outfitFile) {
+      toast.error("Upload an outfit photo first.");
+      return;
+    }
+    setMatching(true);
+    setMatchError("");
+    setMatchedProducts([]);
+    setLensAnalysis(null);
+    try {
+      const imageDataUrl = await compressImageForLens(outfitFile);
+      const analysis = await analyzeOutfitImage({ data: { imageDataUrl } });
+      setLensAnalysis(analysis);
+      const visualQuery = [
+        analysis.overallStyle,
+        ...analysis.searchTerms,
+        ...analysis.items.flatMap((item) => [item.category, item.color, item.pattern, item.material, item.fit, ...item.searchTerms]),
+      ].filter(Boolean).join(" ").slice(0, 80);
+      if (!visualQuery.trim()) {
+        setMatchError("We could identify the image, but couldn't find clear clothing details. Try a brighter, full-outfit photo.");
+        return;
+      }
+      const products = await getShopTheLookProducts({
+        data: {
+          audience: space === "him" ? "him" : "her",
+          aesthetic: visualQuery,
+          requireMatch: true,
+        },
+      });
+      setMatchedProducts(products.slice(0, 8));
+      if (products.length === 0) {
+        setMatchError("We couldn't find close catalogue matches yet. Try another angle or browse all independent brands in Discover.");
+      }
+    } catch (error) {
+      setMatchError(error instanceof Error ? error.message : "OFFFEED Lens couldn't analyse this image. Please try again.");
+    } finally {
+      setMatching(false);
+    }
   };
 
   const buildRecipe = async () => {
@@ -141,6 +207,7 @@ function CreateLookPage() {
     setSaved(false);
     setMatchedProducts([]);
     setMatchError("");
+    setLensAnalysis(null);
     if (fileInput.current) fileInput.current.value = "";
   };
 
@@ -154,7 +221,7 @@ function CreateLookPage() {
           Create a look that feels like <em className="font-normal text-primary">you.</em>
         </h1>
         <p className="mx-auto mt-4 max-w-2xl text-muted-foreground">
-          Save an outfit that caught your eye, build its Style DNA, and turn your taste into a shareable style recipe. No AI try-on, no credits — just your style, your way.
+          Upload an outfit for OFFFEED Lens to understand its pieces and find similar styles from independent brands, then build a Style DNA that feels like you.
         </p>
       </div>
 
@@ -164,7 +231,7 @@ function CreateLookPage() {
             <div className="rounded-2xl bg-primary/10 p-3 text-primary"><ImagePlus className="size-5" /></div>
             <div>
               <h2 className="font-display text-2xl">01. Keep the inspiration</h2>
-              <p className="mt-1 text-sm text-muted-foreground">Upload a look you love from anywhere. The image stays in this page and is not sent to an AI service.</p>
+              <p className="mt-1 text-sm text-muted-foreground">Upload a look you love. Your photo is only sent for analysis when you choose to find similar pieces.</p>
             </div>
           </div>
           <input ref={fileInput} type="file" accept="image/png,image/jpeg,image/webp" className="sr-only" aria-label="Upload outfit inspiration" onChange={(event) => acceptImage(event.target.files?.[0])} />
@@ -176,6 +243,7 @@ function CreateLookPage() {
             </>}
           </button>
           {outfitFile && <p className="mt-3 flex items-center gap-2 text-sm text-muted-foreground"><Check className="size-4 text-primary" />{outfitFile.name}<button type="button" aria-label="Remove inspiration image" onClick={() => { if (outfitPreview) URL.revokeObjectURL(outfitPreview); setOutfitFile(null); setOutfitPreview(""); if (fileInput.current) fileInput.current.value = ""; }} className="ml-auto rounded-full p-1 hover:bg-muted"><X className="size-4" /></button></p>}
+          {outfitFile && <div className="mt-4 space-y-2"><Button type="button" onClick={findSimilarOutfits} disabled={matching} className="w-full rounded-full">{matching ? "Reading your outfit…" : "Find similar on OFFFEED"} <Sparkles className="ml-2 size-4" /></Button><p className="text-center text-xs text-muted-foreground">OFFFEED Lens analyses a compressed copy of your photo. It is not saved to your account.</p></div>}
           <div className="mt-5 rounded-2xl bg-muted/40 p-4">
             <p className="text-sm font-medium">The OFFFEED twist</p>
             <p className="mt-1 text-sm leading-6 text-muted-foreground">Your choices become a little Style DNA card — a mood, colour story, occasion and budget you can save or share with friends.</p>
@@ -238,9 +306,10 @@ function CreateLookPage() {
       </section>}
       <section className="mt-12">
         <div className="text-center">
-          <span className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">Your recipe, your finds</span>
-          <h2 className="mt-2 font-display text-3xl sm:text-4xl">Pieces that match your mood.</h2>
-          <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-muted-foreground">We’ll look through approved, published OFFFEED brand listings for pieces that fit your style choices and budget.</p>
+          <span className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">{lensAnalysis ? "OFFFEED LENS · IMAGE MATCHES" : "Your recipe, your finds"}</span>
+          <h2 className="mt-2 font-display text-3xl sm:text-4xl">{lensAnalysis ? "Pieces inspired by your photo." : "Pieces that match your mood."}</h2>
+          <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-muted-foreground">{lensAnalysis ? lensAnalysis.summary : "We’ll look through approved, published OFFFEED brand listings for pieces that fit your style choices and budget."}</p>
+          {lensAnalysis && <div className="mx-auto mt-4 flex max-w-3xl flex-wrap justify-center gap-2">{lensAnalysis.items.map((item, index) => <span key={`${item.category}-${index}`} className="rounded-full border bg-card px-3 py-1.5 text-xs text-muted-foreground">{[item.color, item.category, item.pattern].filter(Boolean).join(" · ")}</span>)}</div>}
         </div>
         {matching ? <p className="py-12 text-center text-sm text-muted-foreground">Finding your kind of pieces…</p>
           : matchError ? <p role="status" className="mx-auto mt-6 max-w-xl rounded-2xl border p-4 text-center text-sm text-muted-foreground">{matchError}</p>
