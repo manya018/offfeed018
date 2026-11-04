@@ -33,7 +33,7 @@ export const getAdminOverview = createServerFn({ method: "GET" })
     const errors = [brands.error, pendingBrands.error, products.error, orders.error, returns.error].filter(Boolean);
     if (errors.length) {
       console.error("[admin-overview] Failed to load marketplace counts", errors);
-      throw new Error("Marketplace overview could not be loaded. Check that the OFFFEED admin database migration has been applied.");
+      throw new Error("Marketplace overview could not be loaded. Check the Supabase server configuration and database connectivity.");
     }
     return {
       totalBrands: brands.count ?? 0,
