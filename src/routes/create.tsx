@@ -146,7 +146,7 @@ function CreateLookPage() {
           id: `product:${product.id}`,
           kind: "product" as const,
           title: product.productName,
-          imageUrl: product.imageUrl ?? product.imageUrls[0],
+          imageUrl: (product.imageUrl ?? product.imageUrls[0])!,
         }));
       const candidates = [...lookCandidates, ...productCandidates].slice(0, 16);
       if (candidates.length === 0) {
