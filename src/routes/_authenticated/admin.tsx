@@ -1,12 +1,12 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Activity, ArrowUpRight, Bell, Boxes, Check, ChevronRight, CircleAlert, ClipboardList, LayoutDashboard, LoaderCircle, Package, RefreshCw, Search, Settings, ShieldCheck, Store, Truck, Users, Wallet, X } from "lucide-react";
+import { Activity, ArrowUpRight, Bell, Boxes, Check, ChevronRight, CircleAlert, ClipboardList, ImagePlus, LayoutDashboard, LoaderCircle, Package, RefreshCw, Search, Settings, ShieldCheck, Store, Truck, Users, Wallet, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { verifyAdminAccess, getAdminOverview, getAdminBrands, updateAdminBrandStatus } from "@/lib/admin.functions";
+import { verifyAdminAccess, getAdminOverview, getAdminBrands, getAdminProducts, updateAdminBrandStatus } from "@/lib/admin.functions";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   beforeLoad: async () => {
@@ -42,9 +42,12 @@ type AdminBrand = Awaited<ReturnType<typeof getAdminBrands>>[number];
 function OwnerAdminDashboard() {
   const [section, setSection] = useState<Section>("overview");
   const [brandSearch, setBrandSearch] = useState("");
+  const [productSearch, setProductSearch] = useState("");
+  const [productStatus, setProductStatus] = useState("all");
   const queryClient = useQueryClient();
   const overview = useQuery({ queryKey: ["owner-admin", "overview"], queryFn: () => getAdminOverview(), retry: 1 });
   const brands = useQuery({ queryKey: ["owner-admin", "brands"], queryFn: () => getAdminBrands(), enabled: section === "brands" || section === "overview", retry: 1 });
+  const products = useQuery({ queryKey: ["owner-admin", "products"], queryFn: () => getAdminProducts(), enabled: section === "products", retry: 1 });
   const updateStatus = useMutation({
     mutationFn: (input: { brandId: string; status: "approved" | "declined" | "under_review" }) => updateAdminBrandStatus({ data: input }),
     onSuccess: (brand) => {
@@ -58,6 +61,12 @@ function OwnerAdminDashboard() {
     const query = brandSearch.trim().toLowerCase();
     return !query || [brand.brand_name, brand.contact_name, brand.email, brand.social_handle].some((value) => value?.toLowerCase().includes(query));
   }), [brands.data, brandSearch]);
+  const filteredProducts = useMemo(() => (products.data ?? []).filter((product) => {
+    const query = productSearch.trim().toLowerCase();
+    const matchesSearch = !query || [product.product_name, product.brand_name, product.brand_email, product.category, product.source].some((value) => value?.toLowerCase().includes(query));
+    const matchesStatus = productStatus === "all" || product.status?.toLowerCase() === productStatus;
+    return matchesSearch && matchesStatus;
+  }), [products.data, productSearch, productStatus]);
   const activeNav = navItems.find((item) => item.id === section);
   const ActiveSectionIcon = activeNav?.icon ?? ClipboardList;
 
@@ -134,7 +143,53 @@ function OwnerAdminDashboard() {
                 </div>}
               </div>
             </section> : null}
-            {section !== "overview" && section !== "brands" ? <section className="rounded-2xl border border-[#e8dfd6] bg-[#fbf9f5] p-8 md:p-12">
+            {section === "products" ? <section>
+              <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+                <div>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#a28e84]">Marketplace catalogue</p>
+                  <h1 className="mt-1 font-serif text-3xl text-[#493a34]">Products & looks</h1>
+                  <p className="mt-1 text-sm text-[#887a72]">Monitor product listings and complete looks submitted by OFFFEED brands. This view is read-only.</p>
+                </div>
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <div className="relative w-full sm:w-64">
+                    <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[#a28e84]"/>
+                    <Input value={productSearch} onChange={(event) => setProductSearch(event.target.value)} placeholder="Search listings or brands…" className="border-[#e4d9d0] bg-[#fbf9f5] pl-9"/>
+                  </div>
+                  <select aria-label="Filter products by status" value={productStatus} onChange={(event) => setProductStatus(event.target.value)} className="h-10 rounded-md border border-[#e4d9d0] bg-[#fbf9f5] px-3 text-sm text-[#57463e]">
+                    <option value="all">All statuses</option>
+                    <option value="published">Published</option>
+                    <option value="draft">Draft</option>
+                  </select>
+                </div>
+              </div>
+              <div className="mb-4 flex flex-wrap items-center gap-2 text-xs text-[#887a72]">
+                <Badge variant="outline" className="border-[#d9c9bf] bg-[#f5eee8] text-[#76534b]">{products.data?.length ?? 0} listings loaded</Badge>
+                <span>{filteredProducts.length} matching your filters</span>
+                <Button variant="ghost" size="sm" onClick={() => void products.refetch()} className="ml-auto text-[#76534b]"><RefreshCw className="mr-1 size-3.5"/>Refresh</Button>
+              </div>
+              <div className="overflow-hidden rounded-2xl border border-[#e8dfd6] bg-[#fbf9f5]">
+                {products.isLoading ? <div className="flex items-center justify-center gap-2 p-12 text-sm text-[#887a72]"><LoaderCircle className="size-4 animate-spin"/>Loading marketplace listings…</div>
+                  : products.isError ? <div className="p-8 text-sm text-red-700">{products.error instanceof Error ? products.error.message : "Could not load products and looks."}<Button variant="outline" size="sm" className="ml-3" onClick={() => void products.refetch()}>Retry</Button></div>
+                  : filteredProducts.length === 0 ? <div className="p-12 text-center"><Boxes className="mx-auto size-8 text-[#b9a79d]"/><p className="mt-3 font-medium text-[#57463e]">{products.data?.length ? "No listings match these filters" : "No products or looks yet"}</p><p className="mt-1 text-sm text-[#94857d]">{products.data?.length ? "Try a different search or status filter." : "When approved brands add products or complete looks, they will appear here."}</p></div>
+                  : <div className="divide-y divide-[#eee6df]">
+                    {filteredProducts.map((product) => <article key={product.id} className="grid grid-cols-[76px_minmax(0,1fr)] gap-4 p-4 sm:grid-cols-[88px_minmax(0,1fr)_auto] sm:items-center">
+                      <div className="size-[76px] overflow-hidden rounded-lg bg-[#f0eae4] sm:size-[88px]">{product.imageUrl ? <img src={product.imageUrl} alt={product.product_name} className="size-full object-cover"/> : <div className="grid size-full place-items-center"><ImagePlus className="size-5 text-[#b9a79d]"/></div>}</div>
+                      <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-2"><h3 className="truncate font-serif text-lg text-[#493a34]">{product.product_name}</h3><Badge variant="outline" className={product.status === "published" ? "border-emerald-200 bg-emerald-50 text-emerald-800" : "border-amber-200 bg-amber-50 text-amber-800"}>{product.status || "unknown"}</Badge>{product.source === "shopify" && <Badge variant="outline">Shopify</Badge>}</div>
+                        <p className="mt-1 text-sm text-[#76534b]">{product.brand_name} <span className="text-[#a08e84]">· {product.brand_email || "No brand email"}</span></p>
+                        <p className="mt-1 text-xs text-[#8b7d75]">{product.category} · {product.audience.map((item) => item === "her" ? "HER" : item === "him" ? "HIM" : item.toUpperCase()).join(" + ") || "No audience"} · {new Date(product.created_at).toLocaleDateString("en-IN")}</p>
+                        <p className="mt-1 truncate text-xs text-[#a08e84]">{product.sizes.length ? "Sizes: " + product.sizes.join(", ") : "No sizes"}{product.colors.length ? " · Colours: " + product.colors.join(", ") : ""}</p>
+                      </div>
+                      <div className="col-span-2 flex items-center justify-between gap-3 sm:col-span-1 sm:flex-col sm:items-end">
+                        <p className="font-medium text-[#493a34]">{product.currency === "INR" ? "₹" : product.currency + " "}{Number(product.price).toLocaleString("en-IN")}</p>
+                        {product.product_url && <a href={product.product_url} target="_blank" rel="noreferrer" className="text-xs text-[#76534b] underline underline-offset-2">Original listing</a>}
+                      </div>
+                    </article>)}
+                  </div>}
+              </div>
+              <p className="mt-3 text-[11px] text-[#a08e84]">Showing the latest 500 listings at most. No listing status or brand data is changed from this screen.</p>
+            </section> : null}
+            {section !== "overview" && section !== "brands" && section !== "products" ? <section className="rounded-2xl border border-[#e8dfd6] bg-[#fbf9f5] p-8 md:p-12">
               <div className="mx-auto max-w-lg text-center">
                 <div className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-[#efe4de] text-[#76534b]">{activeNav ? <ActiveSectionIcon className="size-6"/> : <ClipboardList className="size-6"/>}</div>
                 <p className="mt-5 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#a28e84]">Owner HQ module</p>
