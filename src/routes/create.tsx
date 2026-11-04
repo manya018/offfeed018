@@ -14,6 +14,8 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PublicProductCard } from "@/components/public-product-card";
+import { LookCard } from "@/components/look-card";
+import { himLooks, looks, type Look } from "@/lib/offfeed-data";
 import { getShopTheLookProducts, type ProductWithBrand } from "@/lib/public-brand.functions";
 import { analyzeOutfitImage, type OutfitImageAnalysis } from "@/lib/offfeed-lens.functions";
 import { useStyleSpace } from "@/lib/style-space";
@@ -58,6 +60,7 @@ function CreateLookPage() {
   const [matching, setMatching] = useState(false);
   const [matchError, setMatchError] = useState("");
   const [matchedProducts, setMatchedProducts] = useState<ProductWithBrand[]>([]);
+  const [matchedLooks, setMatchedLooks] = useState<Look[]>([]);
   const [lensAnalysis, setLensAnalysis] = useState<OutfitImageAnalysis | null>(null);
   const { space } = useStyleSpace();
   const fileInput = useRef<HTMLInputElement>(null);
@@ -79,6 +82,7 @@ function CreateLookPage() {
     setSaved(false);
     setLensAnalysis(null);
     setMatchedProducts([]);
+    setMatchedLooks([]);
     setMatchError("");
   };
 
@@ -90,6 +94,7 @@ function CreateLookPage() {
     setMatching(true);
     setMatchError("");
     setMatchedProducts([]);
+    setMatchedLooks([]);
     setLensAnalysis(null);
     try {
       const imageDataUrl = await compressImageForLens(outfitFile);
@@ -104,6 +109,18 @@ function CreateLookPage() {
         setMatchError("We could identify the image, but couldn't find clear clothing details. Try a brighter, full-outfit photo.");
         return;
       }
+      const lookTokens = [...new Set([
+        ...analysis.items.flatMap((item) => [item.category, item.color, item.pattern, item.material, ...item.searchTerms]),
+        ...analysis.searchTerms,
+        analysis.overallStyle,
+      ].join(" ").toLowerCase().split(/[^a-z0-9]+/).filter((token) => token.length > 2))];
+      const lookPool = space === "him" ? himLooks : looks;
+      const rankedLooks = lookPool.map((look) => {
+        const searchable = [look.title, look.aesthetic, look.occasion, look.season, look.description].join(" ").toLowerCase();
+        const score = lookTokens.reduce((total, token) => total + (searchable.includes(token) ? 1 : 0), 0);
+        return { look, score };
+      }).filter(({ score }) => score > 0).sort((a, b) => b.score - a.score);
+      setMatchedLooks(rankedLooks.slice(0, 4).map(({ look }) => look));
       const products = await getShopTheLookProducts({
         data: {
           audience: space === "him" ? "him" : "her",
@@ -207,6 +224,7 @@ function CreateLookPage() {
     setRecipe("");
     setSaved(false);
     setMatchedProducts([]);
+    setMatchedLooks([]);
     setMatchError("");
     setLensAnalysis(null);
     if (fileInput.current) fileInput.current.value = "";
@@ -243,7 +261,7 @@ function CreateLookPage() {
               <span className="mt-1 text-xs text-muted-foreground">JPG, PNG or WEBP · up to 10 MB</span>
             </>}
           </button>
-          {outfitFile && <p className="mt-3 flex items-center gap-2 text-sm text-muted-foreground"><Check className="size-4 text-primary" />{outfitFile.name}<button type="button" aria-label="Remove inspiration image" onClick={() => { if (outfitPreview) URL.revokeObjectURL(outfitPreview); setOutfitFile(null); setOutfitPreview(""); setLensAnalysis(null); setMatchedProducts([]); setMatchError(""); if (fileInput.current) fileInput.current.value = ""; }} className="ml-auto rounded-full p-1 hover:bg-muted"><X className="size-4" /></button></p>}
+          {outfitFile && <p className="mt-3 flex items-center gap-2 text-sm text-muted-foreground"><Check className="size-4 text-primary" />{outfitFile.name}<button type="button" aria-label="Remove inspiration image" onClick={() => { if (outfitPreview) URL.revokeObjectURL(outfitPreview); setOutfitFile(null); setOutfitPreview(""); setLensAnalysis(null); setMatchedProducts([]); setMatchedLooks([]); setMatchError(""); if (fileInput.current) fileInput.current.value = ""; }} className="ml-auto rounded-full p-1 hover:bg-muted"><X className="size-4" /></button></p>}
           {outfitFile && <div className="mt-4 space-y-2"><Button type="button" onClick={findSimilarOutfits} disabled={matching} className="w-full rounded-full">{matching ? "Reading your outfit…" : "Find similar on OFFFEED"} <Sparkles className="ml-2 size-4" /></Button><p className="text-center text-xs text-muted-foreground">OFFFEED Lens analyses a compressed copy of your photo. It is not saved to your account.</p></div>}
           <div className="mt-5 rounded-2xl bg-muted/40 p-4">
             <p className="text-sm font-medium">The OFFFEED twist</p>
@@ -312,10 +330,23 @@ function CreateLookPage() {
           <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-muted-foreground">{lensAnalysis ? lensAnalysis.summary : "We’ll look through approved, published OFFFEED brand listings for pieces that fit your style choices and budget."}</p>
           {lensAnalysis && <div className="mx-auto mt-4 flex max-w-3xl flex-wrap justify-center gap-2">{lensAnalysis.items.map((item, index) => <span key={`${item.category}-${index}`} className="rounded-full border bg-card px-3 py-1.5 text-xs text-muted-foreground">{[item.color, item.category, item.pattern].filter(Boolean).join(" · ")}</span>)}</div>}
         </div>
-        {matching ? <p className="py-12 text-center text-sm text-muted-foreground">Finding your kind of pieces…</p>
-          : matchError ? <p role="status" className="mx-auto mt-6 max-w-xl rounded-2xl border p-4 text-center text-sm text-muted-foreground">{matchError}</p>
-          : matchedProducts.length > 0 ? <div className="mt-7 grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 sm:gap-x-6 lg:grid-cols-4">{matchedProducts.map((product) => <PublicProductCard key={product.id} product={product} />)}</div>
-          : <div className="mx-auto mt-7 max-w-xl rounded-2xl border border-dashed p-6 text-center"><p className="font-medium">Your Style DNA is ready to explore.</p><p className="mt-2 text-sm leading-6 text-muted-foreground">When approved independent brands list products that match your choices and budget, they’ll show up here. You can also browse all looks in Discover.</p><Link to="/discover" className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline">Explore Discover <ArrowRight className="size-4" /></Link></div>}
+        {matching ? <p className="py-12 text-center text-sm text-muted-foreground">Finding your kind of pieces and looks…</p>
+          : matchError && matchedProducts.length === 0 && matchedLooks.length === 0 ? <p role="status" className="mx-auto mt-6 max-w-xl rounded-2xl border p-4 text-center text-sm text-muted-foreground">{matchError}</p>
+          : <div className="mt-8 space-y-12">
+            <section aria-labelledby="lens-looks-heading">
+              <div className="flex flex-wrap items-end justify-between gap-3">
+                <div><p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Curated inspiration</p><h3 id="lens-looks-heading" className="mt-2 font-display text-3xl">Looks like your photo</h3></div>
+                <Link to="/explore" className="text-sm font-medium text-primary hover:underline">Explore all looks <ArrowRight className="ml-1 inline size-4" /></Link>
+              </div>
+              {matchedLooks.length > 0 ? <div className="mt-6 columns-1 gap-6 sm:columns-2 lg:columns-4">{matchedLooks.map((look, index) => <LookCard key={look.id} look={look} tall={index % 2 === 0} />)}</div>
+                : <p className="mt-5 rounded-2xl border border-dashed p-5 text-center text-sm text-muted-foreground">No close editorial look matches yet. Explore the full lookbook for more inspiration.</p>}
+            </section>
+            <section aria-labelledby="lens-products-heading">
+              <div className="flex flex-wrap items-end justify-between gap-3"><div><p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Shop independent brands</p><h3 id="lens-products-heading" className="mt-2 font-display text-3xl">Shop the pieces</h3></div><Link to="/discover" className="text-sm font-medium text-primary hover:underline">Browse products <ArrowRight className="ml-1 inline size-4" /></Link></div>
+              {matchedProducts.length > 0 ? <div className="mt-6 grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 sm:gap-x-6 lg:grid-cols-4">{matchedProducts.map((product) => <PublicProductCard key={product.id} product={product} />)}</div>
+                : <p className="mt-5 rounded-2xl border border-dashed p-5 text-center text-sm text-muted-foreground">No matching published products yet. More independent brands and pieces will make this edit richer.</p>}
+            </section>
+          </div>}
       </section>
 
       <div className="mt-8 flex justify-center">
