@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import type { Look } from "@/lib/offfeed-data";
 import { toggleLikedLook, readLikedLookIds } from "@/lib/look-collections";
+import { MoodboardSaveButton } from "@/components/moodboard-save-button";
 
 export function LookCard({ look, tall = false }: { look: Look; tall?: boolean }) {
   const [liked, setLiked] = useState(false);
@@ -39,6 +40,7 @@ export function LookCard({ look, tall = false }: { look: Look; tall?: boolean })
       <div className="flex items-start justify-between gap-3 px-1 pt-3">
         <div><p className="text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-primary">{look.aesthetic}</p><h3 className="mt-1 font-display text-lg">{look.title}</h3></div>
         <div className="flex items-center gap-1">
+          <MoodboardSaveButton item={{ id: look.id, type: "look", title: look.title, image: look.image, subtitle: look.aesthetic, href: `/look/${look.id}` }} />
           <Button variant="ghost" size="icon" aria-label={liked ? "Unlike look" : "Like look"} onClick={() => { toggleLikedLook(look); setLiked((value) => !value); }}><Heart className={liked ? "fill-current text-primary" : ""} /></Button>
           <Link to="/look/$lookId" params={{ lookId: look.id }} aria-label={`Save ${look.title} to cart`}><Button variant="ghost" size="icon" aria-label="Save to cart"><ShoppingBag /></Button></Link>
           <Button variant="ghost" size="icon" aria-label={`Share ${look.title}`} onClick={shareLook}><Share2 /></Button>
