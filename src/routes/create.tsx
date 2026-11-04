@@ -17,7 +17,7 @@ import { PublicProductCard } from "@/components/public-product-card";
 import { LookCard } from "@/components/look-card";
 import { himLooks, looks, type Look } from "@/lib/offfeed-data";
 import { getShopTheLookProducts, type ProductWithBrand } from "@/lib/public-brand.functions";
-import { analyzeOutfitImage, rankOutfitImageMatches, type OutfitImageAnalysis } from "@/lib/offfeed-lens.functions";
+import { analyzeOutfitImage, rankOutfitImageMatches, type OutfitImageAnalysis, type OutfitVisualMatch } from "@/lib/offfeed-lens.functions";
 import { useStyleSpace } from "@/lib/style-space";
 import { toast } from "sonner";
 
@@ -158,7 +158,7 @@ function CreateLookPage() {
       const lookMatches = lookCandidates.length
         ? await rankOutfitImageMatches({ data: { queryImageDataUrl: imageDataUrl, candidates: lookCandidates } })
         : [];
-      const productMatches = [];
+      const productMatches: OutfitVisualMatch[] = [];
       for (let index = 0; index < productCandidates.length; index += 12) {
         const batch = productCandidates.slice(index, index + 12);
         const batchMatches = await rankOutfitImageMatches({
