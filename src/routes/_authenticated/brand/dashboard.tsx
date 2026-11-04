@@ -79,13 +79,15 @@ const parseSizeChart = (value: string, unit: string) => {
 };
 
 const parseEditableSizeChart = (value: string) => {
-  const lines = value.split("\n").map((line) => line.split("|").map((cell) => cell.trim())).filter((cells) => cells.some(Boolean));
-  const columns = (lines[0]?.[0]?.toLowerCase() === "measurement" ? lines[0].slice(1) : ["XS", "S", "M", "L"]).map((cell) => cell || "");
-  const rows = (lines[0]?.[0]?.toLowerCase() === "measurement" ? lines.slice(1) : [["Bust (cm)", "81", "86", "91", "96"]]).map((cells) => ({
+  // Keep rows whose cells are intentionally empty (for example, a newly added row).
+  const lines = value.split("\n").filter((line) => line.trim().length > 0).map((line) => line.split("|").map((cell) => cell.trim()));
+  const hasHeader = lines[0]?.[0]?.toLowerCase() === "measurement";
+  const columns = (hasHeader ? lines[0].slice(1) : ["XS", "S", "M", "L"]).map((cell) => cell || "");
+  const rows = (hasHeader ? lines.slice(1) : [["Bust (cm)", "81", "86", "91", "96"]]).map((cells) => ({
     label: cells[0] ?? "",
     values: Array.from({ length: columns.length }, (_, index) => cells[index + 1] ?? ""),
   }));
-  return { columns: columns.length ? columns : ["XS", "S", "M", "L"], rows: rows.length ? rows : [{ label: "", values: columns.map(() => "") }] };
+  return { columns: columns.length ? columns : ["XS", "S", "M", "L"], rows: rows.length ? rows : [{ label: "", values: (columns.length ? columns : ["XS", "S", "M", "L"]).map(() => "") }] };
 };
 const serializeEditableSizeChart = (columns: string[], rows: Array<{ label: string; values: string[] }>) =>
   ["Measurement | " + columns.join(" | "), ...rows.map((row) => row.label + " | " + columns.map((_, index) => row.values[index] ?? "").join(" | "))].join("\n");
