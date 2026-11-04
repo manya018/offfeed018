@@ -129,6 +129,7 @@ function CreateLookPage() {
     setSaved(false);
     setMatchError("");
     setMatchedProducts([]);
+    setLensAnalysis(null);
     setMatching(true);
     const budgetRange = budget === "Under ₹1,000"
       ? { minPrice: undefined, maxPrice: 999.99 }
@@ -242,7 +243,7 @@ function CreateLookPage() {
               <span className="mt-1 text-xs text-muted-foreground">JPG, PNG or WEBP · up to 10 MB</span>
             </>}
           </button>
-          {outfitFile && <p className="mt-3 flex items-center gap-2 text-sm text-muted-foreground"><Check className="size-4 text-primary" />{outfitFile.name}<button type="button" aria-label="Remove inspiration image" onClick={() => { if (outfitPreview) URL.revokeObjectURL(outfitPreview); setOutfitFile(null); setOutfitPreview(""); if (fileInput.current) fileInput.current.value = ""; }} className="ml-auto rounded-full p-1 hover:bg-muted"><X className="size-4" /></button></p>}
+          {outfitFile && <p className="mt-3 flex items-center gap-2 text-sm text-muted-foreground"><Check className="size-4 text-primary" />{outfitFile.name}<button type="button" aria-label="Remove inspiration image" onClick={() => { if (outfitPreview) URL.revokeObjectURL(outfitPreview); setOutfitFile(null); setOutfitPreview(""); setLensAnalysis(null); setMatchedProducts([]); setMatchError(""); if (fileInput.current) fileInput.current.value = ""; }} className="ml-auto rounded-full p-1 hover:bg-muted"><X className="size-4" /></button></p>}
           {outfitFile && <div className="mt-4 space-y-2"><Button type="button" onClick={findSimilarOutfits} disabled={matching} className="w-full rounded-full">{matching ? "Reading your outfit…" : "Find similar on OFFFEED"} <Sparkles className="ml-2 size-4" /></Button><p className="text-center text-xs text-muted-foreground">OFFFEED Lens analyses a compressed copy of your photo. It is not saved to your account.</p></div>}
           <div className="mt-5 rounded-2xl bg-muted/40 p-4">
             <p className="text-sm font-medium">The OFFFEED twist</p>
