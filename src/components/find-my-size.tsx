@@ -49,12 +49,12 @@ function parseChartMeasurement(value: string): { min: number; max: number } | nu
 }
 
 function normalizeSizeLabel(value: string) {
-  const token = value.trim().toLowerCase().match(/^(double[\\s-]*extra[\\s-]*large|extra[\\s-]*small|extra[\\s-]*large|xxs|xxl|xs|xl|small|medium|large|s|m|l)\\b/)?.[0]?.replace(/[\\s-]/g, "");
+  const token = value.trim().toLowerCase().match(/^(double[\s-]*extra[\s-]*large|extra[\s-]*small|extra[\s-]*large|xxs|xxl|xs|xl|small|medium|large|s|m|l)\b/)?.[0]?.replace(/[\s-]/g, "");
   const aliases: Record<string, string> = {
     small: "s", medium: "m", large: "l", extrasmall: "xs", extralarge: "xl",
     doubleextralarge: "xxl",
   };
-  return token ? aliases[token] ?? token : value.trim().toLowerCase().replace(/\\s+/g, "");
+  return token ? aliases[token] ?? token : value.trim().toLowerCase().replace(/\s+/g, "");
 }
 
 function categoryWeight(metric: keyof Measurements, category: string) {
@@ -81,7 +81,7 @@ function recommendation(chart: SizeChart, measurements: Measurements, category: 
     .filter((item) => item.rangeBySize.some(Boolean));
   if (!metrics.length || !chart.columns.length) return null;
 
-  const normalizedAvailable = availableSizes.map((size) => size.trim().toLowerCase().replace(/\s+/g, ""));
+  const normalizedAvailable = availableSizes.map(normalizeSizeLabel);
   const candidates: SizeMatch[] = chart.columns.map((size, index) => {
     let weightedError = 0;
     let totalWeight = 0;
@@ -98,7 +98,7 @@ function recommendation(chart: SizeChart, measurements: Measurements, category: 
       totalWeight += weight;
       matched += 1;
     }
-    const normalizedSize = size.trim().toLowerCase().replace(/\s+/g, "");
+    const normalizedSize = normalizeSizeLabel(size);
     const available = normalizedAvailable.length === 0 || normalizedAvailable.includes(normalizedSize);
     return { size, score: totalWeight ? weightedError / totalWeight : Number.POSITIVE_INFINITY, matched, available };
   }).filter((item) => Number.isFinite(item.score) && item.matched > 0);
