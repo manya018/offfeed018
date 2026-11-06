@@ -206,7 +206,6 @@ export type Database = {
           product_url: string | null
           size_chart: Json | null
           sizes: string[]
-          size_chart: Json | null
           source: string
           status: string
           tags: string[]
@@ -230,7 +229,6 @@ export type Database = {
           product_url?: string | null
           size_chart?: Json | null
           sizes?: string[]
-          size_chart?: Json | null
           source?: string
           status?: string
           tags?: string[]
@@ -254,7 +252,6 @@ export type Database = {
           product_url?: string | null
           size_chart?: Json | null
           sizes?: string[]
-          size_chart?: Json | null
           source?: string
           status?: string
           tags?: string[]
@@ -264,44 +261,6 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "brand_products_brand_application_id_fkey"
-            columns: ["brand_application_id"]
-            isOneToOne: false
-            referencedRelation: "brand_applications"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      brand_size_guides: {
-        Row: {
-          id: string
-          brand_application_id: string
-          user_id: string
-          category: string
-          size_chart: Json
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          brand_application_id: string
-          user_id: string
-          category: string
-          size_chart: Json
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          brand_application_id?: string
-          user_id?: string
-          category?: string
-          size_chart?: Json
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "brand_size_guides_brand_application_id_fkey"
             columns: ["brand_application_id"]
             isOneToOne: false
             referencedRelation: "brand_applications"
