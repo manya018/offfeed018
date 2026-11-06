@@ -90,8 +90,15 @@ function recommendation(chart: SizeChart, measurements: Measurements, category: 
       const range = item.rangeBySize[index];
       if (!range) continue;
       const userValue = toChartUnit(Number(measurements[item.key]));
-      const distance = userValue < range.min ? range.min - userValue : userValue > range.max ? userValue - range.max : 0;
       const midpoint = (range.min + range.max) / 2;
+      const halfRange = (range.max - range.min) / 2;
+      const distance = range.min === range.max
+        ? Math.abs(userValue - midpoint)
+        : userValue < range.min
+          ? range.min - userValue + halfRange * 0.25
+          : userValue > range.max
+            ? userValue - range.max + halfRange * 0.25
+            : Math.abs(userValue - midpoint) * 0.25;
       const error = distance / Math.max(midpoint, 1);
       const weight = categoryWeight(item.key, category);
       weightedError += error * weight;
