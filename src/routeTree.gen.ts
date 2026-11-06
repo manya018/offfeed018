@@ -17,15 +17,17 @@ import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as CreateRouteImport } from './routes/create'
 import { Route as DemoBrandRouteImport } from './routes/demo-brand'
 import { Route as DiscoverRouteImport } from './routes/discover'
+import { Route as EditRouteImport } from './routes/edit'
 import { Route as ExploreRouteImport } from './routes/explore'
+import { Route as ForBrandsRouteImport } from './routes/for-brands'
+import { Route as MoodboardsRouteImport } from './routes/moodboards'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as WishlistRouteImport } from './routes/wishlist'
+import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as BrandBrandHandleRouteImport } from './routes/brand.$brandHandle'
 import { Route as ForBrandsApplyRouteImport } from './routes/for-brands.apply'
-import { Route as ForBrandsRouteImport } from './routes/for-brands'
 import { Route as LookLookIdRouteImport } from './routes/look.$lookId'
 import { Route as AuthenticatedBrandDashboardRouteImport } from './routes/_authenticated/brand/dashboard'
-import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -66,9 +68,24 @@ const DiscoverRoute = DiscoverRouteImport.update({
   path: '/discover',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EditRoute = EditRouteImport.update({
+  id: '/edit',
+  path: '/edit',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ExploreRoute = ExploreRouteImport.update({
   id: '/explore',
   path: '/explore',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ForBrandsRoute = ForBrandsRouteImport.update({
+  id: '/for-brands',
+  path: '/for-brands',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MoodboardsRoute = MoodboardsRouteImport.update({
+  id: '/moodboards',
+  path: '/moodboards',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProfileRoute = ProfileRouteImport.update({
@@ -81,20 +98,20 @@ const WishlistRoute = WishlistRouteImport.update({
   path: '/wishlist',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const BrandBrandHandleRoute = BrandBrandHandleRouteImport.update({
   id: '/brand/$brandHandle',
   path: '/brand/$brandHandle',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ForBrandsApplyRoute = ForBrandsApplyRouteImport.update({
-  id: '/for-brands/apply',
-  path: '/for-brands/apply',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ForBrandsRoute = ForBrandsRouteImport.update({
-  id: '/for-brands',
-  path: '/for-brands',
-  getParentRoute: () => rootRouteImport,
+  id: '/apply',
+  path: '/apply',
+  getParentRoute: () => ForBrandsRoute,
 } as any)
 const LookLookIdRoute = LookLookIdRouteImport.update({
   id: '/look/$lookId',
@@ -107,11 +124,6 @@ const AuthenticatedBrandDashboardRoute =
     path: '/brand/dashboard',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
-  id: '/admin',
-  path: '/admin',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -121,15 +133,17 @@ export interface FileRoutesByFullPath {
   '/create': typeof CreateRoute
   '/demo-brand': typeof DemoBrandRoute
   '/discover': typeof DiscoverRoute
+  '/edit': typeof EditRoute
   '/explore': typeof ExploreRoute
+  '/for-brands': typeof ForBrandsRouteWithChildren
+  '/moodboards': typeof MoodboardsRoute
   '/profile': typeof ProfileRoute
   '/wishlist': typeof WishlistRoute
+  '/admin': typeof AuthenticatedAdminRoute
   '/brand/$brandHandle': typeof BrandBrandHandleRoute
   '/for-brands/apply': typeof ForBrandsApplyRoute
-  '/for-brands': typeof ForBrandsRoute
   '/look/$lookId': typeof LookLookIdRoute
   '/brand/dashboard': typeof AuthenticatedBrandDashboardRoute
-  '/admin': typeof AuthenticatedAdminRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -139,12 +153,15 @@ export interface FileRoutesByTo {
   '/create': typeof CreateRoute
   '/demo-brand': typeof DemoBrandRoute
   '/discover': typeof DiscoverRoute
+  '/edit': typeof EditRoute
   '/explore': typeof ExploreRoute
+  '/for-brands': typeof ForBrandsRouteWithChildren
+  '/moodboards': typeof MoodboardsRoute
   '/profile': typeof ProfileRoute
   '/wishlist': typeof WishlistRoute
+  '/admin': typeof AuthenticatedAdminRoute
   '/brand/$brandHandle': typeof BrandBrandHandleRoute
   '/for-brands/apply': typeof ForBrandsApplyRoute
-  '/for-brands': typeof ForBrandsRoute
   '/look/$lookId': typeof LookLookIdRoute
   '/brand/dashboard': typeof AuthenticatedBrandDashboardRoute
 }
@@ -158,15 +175,17 @@ export interface FileRoutesById {
   '/create': typeof CreateRoute
   '/demo-brand': typeof DemoBrandRoute
   '/discover': typeof DiscoverRoute
+  '/edit': typeof EditRoute
   '/explore': typeof ExploreRoute
+  '/for-brands': typeof ForBrandsRouteWithChildren
+  '/moodboards': typeof MoodboardsRoute
   '/profile': typeof ProfileRoute
   '/wishlist': typeof WishlistRoute
+  '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/brand/$brandHandle': typeof BrandBrandHandleRoute
   '/for-brands/apply': typeof ForBrandsApplyRoute
-  '/for-brands': typeof ForBrandsRoute
   '/look/$lookId': typeof LookLookIdRoute
   '/_authenticated/brand/dashboard': typeof AuthenticatedBrandDashboardRoute
-  '/_authenticated/admin': typeof AuthenticatedAdminRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -178,15 +197,17 @@ export interface FileRouteTypes {
     | '/create'
     | '/demo-brand'
     | '/discover'
+    | '/edit'
     | '/explore'
+    | '/for-brands'
+    | '/moodboards'
     | '/profile'
     | '/wishlist'
+    | '/admin'
     | '/brand/$brandHandle'
     | '/for-brands/apply'
-    | '/for-brands'
     | '/look/$lookId'
     | '/brand/dashboard'
-    | '/admin'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -196,12 +217,15 @@ export interface FileRouteTypes {
     | '/create'
     | '/demo-brand'
     | '/discover'
+    | '/edit'
     | '/explore'
+    | '/for-brands'
+    | '/moodboards'
     | '/profile'
     | '/wishlist'
+    | '/admin'
     | '/brand/$brandHandle'
     | '/for-brands/apply'
-    | '/for-brands'
     | '/look/$lookId'
     | '/brand/dashboard'
   id:
@@ -214,15 +238,17 @@ export interface FileRouteTypes {
     | '/create'
     | '/demo-brand'
     | '/discover'
+    | '/edit'
     | '/explore'
+    | '/for-brands'
+    | '/moodboards'
     | '/profile'
     | '/wishlist'
+    | '/_authenticated/admin'
     | '/brand/$brandHandle'
     | '/for-brands/apply'
-    | '/for-brands'
     | '/look/$lookId'
     | '/_authenticated/brand/dashboard'
-    | '/_authenticated/admin'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -234,14 +260,14 @@ export interface RootRouteChildren {
   CreateRoute: typeof CreateRoute
   DemoBrandRoute: typeof DemoBrandRoute
   DiscoverRoute: typeof DiscoverRoute
+  EditRoute: typeof EditRoute
   ExploreRoute: typeof ExploreRoute
+  ForBrandsRoute: typeof ForBrandsRouteWithChildren
+  MoodboardsRoute: typeof MoodboardsRoute
   ProfileRoute: typeof ProfileRoute
   WishlistRoute: typeof WishlistRoute
   BrandBrandHandleRoute: typeof BrandBrandHandleRoute
-  ForBrandsApplyRoute: typeof ForBrandsApplyRoute
-  ForBrandsRoute: typeof ForBrandsRoute
   LookLookIdRoute: typeof LookLookIdRoute
-  AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -302,11 +328,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DiscoverRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/edit': {
+      id: '/edit'
+      path: '/edit'
+      fullPath: '/edit'
+      preLoaderRoute: typeof EditRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/explore': {
       id: '/explore'
       path: '/explore'
       fullPath: '/explore'
       preLoaderRoute: typeof ExploreRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/for-brands': {
+      id: '/for-brands'
+      path: '/for-brands'
+      fullPath: '/for-brands'
+      preLoaderRoute: typeof ForBrandsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/moodboards': {
+      id: '/moodboards'
+      path: '/moodboards'
+      fullPath: '/moodboards'
+      preLoaderRoute: typeof MoodboardsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/profile': {
@@ -323,6 +370,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof WishlistRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/admin': {
+      id: '/_authenticated/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AuthenticatedAdminRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/brand/$brandHandle': {
       id: '/brand/$brandHandle'
       path: '/brand/$brandHandle'
@@ -332,17 +386,10 @@ declare module '@tanstack/react-router' {
     }
     '/for-brands/apply': {
       id: '/for-brands/apply'
-      path: '/for-brands/apply'
+      path: '/apply'
       fullPath: '/for-brands/apply'
       preLoaderRoute: typeof ForBrandsApplyRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/for-brands': {
-      id: '/for-brands'
-      path: '/for-brands'
-      fullPath: '/for-brands'
-      preLoaderRoute: typeof ForBrandsRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof ForBrandsRoute
     }
     '/look/$lookId': {
       id: '/look/$lookId'
@@ -358,28 +405,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedBrandDashboardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/admin': {
-      id: '/_authenticated/admin'
-      path: '/admin'
-      fullPath: '/admin'
-      preLoaderRoute: typeof AuthenticatedAdminRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
   }
 }
 
 interface AuthenticatedRouteRouteChildren {
-  AuthenticatedBrandDashboardRoute: typeof AuthenticatedBrandDashboardRoute
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
+  AuthenticatedBrandDashboardRoute: typeof AuthenticatedBrandDashboardRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
-  AuthenticatedBrandDashboardRoute: AuthenticatedBrandDashboardRoute,
   AuthenticatedAdminRoute: AuthenticatedAdminRoute,
+  AuthenticatedBrandDashboardRoute: AuthenticatedBrandDashboardRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
+interface ForBrandsRouteChildren {
+  ForBrandsApplyRoute: typeof ForBrandsApplyRoute
+}
+
+const ForBrandsRouteChildren: ForBrandsRouteChildren = {
+  ForBrandsApplyRoute: ForBrandsApplyRoute,
+}
+
+const ForBrandsRouteWithChildren = ForBrandsRoute._addFileChildren(
+  ForBrandsRouteChildren,
+)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
@@ -390,12 +442,13 @@ const rootRouteChildren: RootRouteChildren = {
   CreateRoute: CreateRoute,
   DemoBrandRoute: DemoBrandRoute,
   DiscoverRoute: DiscoverRoute,
+  EditRoute: EditRoute,
   ExploreRoute: ExploreRoute,
+  ForBrandsRoute: ForBrandsRouteWithChildren,
+  MoodboardsRoute: MoodboardsRoute,
   ProfileRoute: ProfileRoute,
   WishlistRoute: WishlistRoute,
   BrandBrandHandleRoute: BrandBrandHandleRoute,
-  ForBrandsApplyRoute: ForBrandsApplyRoute,
-  ForBrandsRoute: ForBrandsRoute,
   LookLookIdRoute: LookLookIdRoute,
 }
 export const routeTree = rootRouteImport
