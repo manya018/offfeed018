@@ -48,6 +48,15 @@ function parseChartMeasurement(value: string): { min: number; max: number } | nu
   return { min: Math.min(first, second), max: Math.max(first, second) };
 }
 
+function normalizeSizeLabel(value: string) {
+  const token = value.trim().toLowerCase().match(/^(double[\\s-]*extra[\\s-]*large|extra[\\s-]*small|extra[\\s-]*large|xxs|xxl|xs|xl|small|medium|large|s|m|l)\\b/)?.[0]?.replace(/[\\s-]/g, "");
+  const aliases: Record<string, string> = {
+    small: "s", medium: "m", large: "l", extrasmall: "xs", extralarge: "xl",
+    doubleextralarge: "xxl",
+  };
+  return token ? aliases[token] ?? token : value.trim().toLowerCase().replace(/\\s+/g, "");
+}
+
 function categoryWeight(metric: keyof Measurements, category: string) {
   const value = category.toLowerCase();
   if (/bottom|trouser|pant|jean|skirt|short/.test(value)) {
