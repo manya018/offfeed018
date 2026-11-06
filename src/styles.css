@@ -396,7 +396,7 @@ main > section.mx-auto {
 }
 .site-header-nav a {
   white-space: nowrap;
-  font-size: clamp(0.78rem, 0.9vw, 0.95rem);
+  font-size: clamp(1rem, 1vw, 1.05rem) !important;
 }
 .site-header-actions {
   gap: clamp(0rem, 0.2vw, 0.25rem);
@@ -404,7 +404,7 @@ main > section.mx-auto {
 .site-header-cta {
   padding-left: clamp(0.65rem, 1vw, 1rem);
   padding-right: clamp(0.65rem, 1vw, 1rem);
-  font-size: clamp(0.7rem, 0.8vw, 0.875rem);
+  font-size: clamp(0.82rem, 0.9vw, 0.95rem) !important;
 }
 @media (min-width: 1024px) and (max-width: 1280px) {
   .site-header-logo { font-size: 1.25rem; letter-spacing: 0.1em; }
