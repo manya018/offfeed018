@@ -396,7 +396,7 @@ main > section.mx-auto {
 }
 .site-header-nav a {
   white-space: nowrap;
-  font-size: clamp(0.72rem, 0.85vw, 0.875rem);
+  font-size: clamp(0.78rem, 0.9vw, 0.95rem);
 }
 .site-header-actions {
   gap: clamp(0rem, 0.2vw, 0.25rem);
