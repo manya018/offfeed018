@@ -650,6 +650,16 @@ export type Database = {
         }
         Returns: string
       }
+      request_offfeed_return_with_evidence: {
+        Args: {
+          p_details?: string
+          p_evidence_url?: string
+          p_order_id: string
+          p_photo_paths?: Json
+          p_reason: string
+        }
+        Returns: string
+      }
       review_offfeed_return: {
         Args: { p_decision: string; p_response?: string; p_return_id: string }
         Returns: undefined
