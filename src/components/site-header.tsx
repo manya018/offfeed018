@@ -34,7 +34,7 @@ export function SiteHeader() {
       <div className="site-header-inner mx-auto flex h-20 w-full items-center justify-between px-5 lg:px-10">
         <Link to="/" className="site-header-logo shrink-0 font-display text-2xl font-semibold tracking-[0.14em]">OFFFEED</Link>
         <div className="site-header-spaces flex shrink-0 items-center rounded-full border border-border bg-card p-1" aria-label="Choose a collection">
-          {(["her", "him"] as const).map((option) => <Button key={option} size="sm" variant={space === option ? "default" : "ghost"} aria-pressed={space === option} onClick={() => setSpace(option)} className="h-8 min-w-10 rounded-full px-2.5">{option === "her" ? "Her" : "Him"}</Button>)}
+          {(["her", "him"] as const).map((option) => <Button key={option} asChild size="sm" variant={space === option ? "default" : "ghost"} className="h-8 min-w-10 rounded-full px-2.5"><Link to="/discover" onClick={() => setSpace(option)} aria-current={space === option ? "page" : undefined}>{option === "her" ? "Her" : "Him"}</Link></Button>)}
           <Button asChild size="sm" variant="ghost" className="h-8 min-w-10 rounded-full px-2.5"><Link to="/discover" search={{ category: "home" }}>Home</Link></Button>
         </div>
         <nav className="site-header-nav hidden min-w-0 items-center gap-8 lg:flex">
