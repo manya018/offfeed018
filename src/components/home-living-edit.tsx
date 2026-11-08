@@ -21,16 +21,16 @@ export function HomeLivingEdit({ products, loading }: { products: ProductWithBra
   const filtered = products.filter((product) => !activeCollection || activeCollection.match.test(product.category + " " + product.productName + " " + product.tags.join(" ")));
 
   return <main className="home-world min-h-screen pb-24">
-    <section className="relative isolate mx-3 mt-3 overflow-hidden rounded-[1.6rem] sm:mx-5 lg:mx-7">
-      <img src="https://images.unsplash.com/photo-1511895426328-dc8714191300?auto=format&fit=crop&w=2200&q=90" alt="A family sharing a warm moment together at home" className="absolute inset-0 -z-20 size-full object-cover"/>
-      <div className="absolute inset-0 -z-10 bg-gradient-to-r from-[#39271e]/75 via-[#493528]/35 to-[#493528]/5"/>
-      <div className="max-w-3xl px-7 py-20 text-[#fff8ed] sm:px-12 sm:py-28 lg:px-20 lg:py-36">
-        <p className="text-[10px] font-semibold uppercase tracking-[.3em] text-[#f1d6b4] sm:text-xs">OFFFEED · A LITTLE PLACE TO BELONG</p>
-        <h1 className="mt-5 font-display text-6xl font-medium leading-[.9] sm:text-7xl lg:text-8xl">Come on in.<br/><em className="font-normal text-[#f0cda5]">Make yourself at home.</em></h1>
-        <p className="mt-6 max-w-xl text-sm leading-7 text-[#fff5e8]/90 sm:text-base">For slow Sunday mornings, chai that turns into long conversations, family dinners that run late, and all the little things that make a house feel like yours.</p>
-        <p className="mt-8 font-display text-2xl italic text-[#f0d5b5]">A little mess. A lot of love. Always room for one more.</p>
-      </div>
-      <span className="absolute bottom-5 right-6 hidden font-display text-sm italic tracking-wide text-[#fff4e5]/80 sm:block">Ghar jaisa sukoon. Apno jaisi warmth.</span>
+    <section className="mx-3 mt-3 overflow-hidden rounded-[1.25rem] border border-[#e6d7c5] bg-[#f7efe3] shadow-sm sm:mx-5 lg:mx-7">
+      <a href="#home-collections" aria-label="Explore the HOME collection" className="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9b6b48] focus-visible:ring-offset-2">
+        <img
+          src="/images/Come%20on%20in_%20A%20Cozy%20Home%20Nook.png"
+          alt="OFFFEED HOME — Come on in. Make yourself at home. A warm, sunlit cosy nook with floral tableware, flowers, candles and home comforts."
+          fetchPriority="high"
+          decoding="async"
+          className="block h-auto w-full"
+        />
+      </a>
     </section>
 
     <section className="mx-auto max-w-[1500px] px-5 pt-12 lg:px-10">
@@ -57,7 +57,7 @@ export function HomeLivingEdit({ products, loading }: { products: ProductWithBra
       </div>
     </section>
 
-    <section className="mx-auto max-w-[1500px] px-5 pt-14 lg:px-10">
+    <section id="home-collections" className="mx-auto max-w-[1500px] px-5 pt-14 lg:px-10">
       <div className="mx-auto mb-9 max-w-2xl text-center"><p className="text-[10px] font-semibold uppercase tracking-[.25em] text-[#9a7658]">A home is made of moments</p><h2 className="mt-3 font-display text-4xl leading-tight text-[#4c392b] sm:text-5xl">For all the moments that feel like home.</h2><p className="mt-4 text-sm leading-7 text-[#806b59]">The favourite mug everyone reaches for. Fresh flowers on the table. A candle lit before guests arrive. Find thoughtful little things for the moments you want to keep.</p></div>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-3 lg:gap-5">{collections.map((item) => <button key={item.title} type="button" onClick={() => setSelected((current) => current === item.title ? "" : item.title)} aria-pressed={selected === item.title} className={`group relative overflow-hidden rounded-[1.2rem] text-left ring-offset-2 transition ${selected === item.title ? "ring-2 ring-[#9b6b48]" : ""}`}><img src={item.image} alt={item.title} loading="lazy" className="aspect-[5/4] w-full object-cover transition duration-700 group-hover:scale-105"/><span className="absolute inset-0 bg-gradient-to-t from-[#302319]/80 via-[#302319]/5 to-transparent"/><span className="absolute inset-x-0 bottom-0 p-4 sm:p-5"><span className="block font-display text-xl text-[#fff8ed] sm:text-2xl">{item.title}</span><span className="mt-1 block text-[11px] leading-5 text-[#fff3e4]/85 sm:text-xs">{item.detail}</span></span></button>)}</div>
       <div className="mt-8 flex flex-wrap items-center justify-between gap-3 border-y border-[#d9c5aa] py-4"><div><p className="text-[10px] font-semibold uppercase tracking-[.22em] text-[#9a7658]">The HOME edit</p><h2 className="mt-1 font-display text-3xl text-[#4c392b]">{selected || "Little things, lovely memories"}</h2></div><Button variant="outline" className="rounded-full border-[#b99a78] bg-[#fffaf1] text-[#71543b]" onClick={() => setSelected("")}>View everything</Button></div>
