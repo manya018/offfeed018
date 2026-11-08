@@ -70,10 +70,10 @@ function CreateLookPage() {
   const { space: requestedSpace } = Route.useSearch();
   const [outfitFile, setOutfitFile] = useState<File | null>(null);
   const [outfitPreview, setOutfitPreview] = useState("");
-  const [vibe, setVibe] = useState("Warm & cosy");
-  const [occasion, setOccasion] = useState("Living room");
+  const [vibe, setVibe] = useState("Indie");
+  const [occasion, setOccasion] = useState("Everyday");
   const [budget, setBudget] = useState("₹1,000–₹2,500");
-  const [palette, setPalette] = useState("Warm neutrals");
+  const [palette, setPalette] = useState("Earthy tones");
   const [details, setDetails] = useState("");
   const [recipe, setRecipe] = useState("");
   const [saved, setSaved] = useState(false);
@@ -86,7 +86,7 @@ function CreateLookPage() {
   const { space, setSpace } = useStyleSpace();
   const isHome = requestedSpace === "home" || space === "home";
   useEffect(() => { if (requestedSpace === "home") setSpace("home"); }, [requestedSpace, setSpace]);
-  useEffect(() => { if (isHome) { setVibe("Warm & cosy"); setOccasion("Living room"); setPalette("Warm neutrals"); } }, [isHome]);
+  useEffect(() => { if (isHome) { setVibe("Warm & cosy"); setOccasion("Living room"); setPalette("Warm neutrals"); } else { setVibe("Indie"); setOccasion("Everyday"); setPalette("Earthy tones"); } }, [isHome]);
   const fileInput = useRef<HTMLInputElement>(null);
 
   const acceptImage = (file?: File) => {
