@@ -144,7 +144,7 @@ export const getBrandWorkspace = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const { data: application, error } = await context.supabase
       .from("brand_applications")
-      .select("id, brand_name, status, audience, commission_rate, website_url, public_handle")
+      .select("id, brand_name, status, audience, audience_categories, commission_rate, website_url, public_handle")
       .eq("user_id", context.userId)
       .maybeSingle();
     if (error || !application) throw new Error("No brand application is connected to this account.");
