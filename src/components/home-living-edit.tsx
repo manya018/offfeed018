@@ -33,6 +33,30 @@ export function HomeLivingEdit({ products, loading }: { products: ProductWithBra
       <span className="absolute bottom-5 right-6 hidden font-display text-sm italic tracking-wide text-[#fff4e5]/80 sm:block">Ghar jaisa sukoon. Apno jaisi warmth.</span>
     </section>
 
+    <section className="mx-auto max-w-[1500px] px-5 pt-12 lg:px-10">
+      <div className="mb-6 text-center">
+        <p className="font-display text-2xl italic text-[#9b765b]">It’s the little things, isn’t it?</p>
+        <p className="mt-2 text-sm text-[#806b59]">The moments that make an ordinary day feel a little more special.</p>
+      </div>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
+        <article className="relative overflow-hidden rounded-[1.25rem]">
+          <img src="https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=900&q=85" alt="A slow morning with a warm cup of coffee" loading="lazy" className="h-56 w-full object-cover sm:h-64"/>
+          <div className="absolute inset-0 bg-gradient-to-t from-[#34251d]/65 via-transparent to-transparent"/>
+          <p className="absolute bottom-4 left-5 font-display text-2xl italic text-[#fff8ed]">Slow mornings</p>
+        </article>
+        <article className="relative overflow-hidden rounded-[1.25rem]">
+          <img src="https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=900&q=85" alt="A lovingly prepared meal ready to be shared" loading="lazy" className="h-56 w-full object-cover sm:h-64"/>
+          <div className="absolute inset-0 bg-gradient-to-t from-[#34251d]/65 via-transparent to-transparent"/>
+          <p className="absolute bottom-4 left-5 font-display text-2xl italic text-[#fff8ed]">One more at the table</p>
+        </article>
+        <article className="relative overflow-hidden rounded-[1.25rem]">
+          <img src="https://images.unsplash.com/photo-1490750967868-88aa4486c946?auto=format&fit=crop&w=900&q=85" alt="Fresh flowers brought home just because" loading="lazy" className="h-56 w-full object-cover sm:h-64"/>
+          <div className="absolute inset-0 bg-gradient-to-t from-[#34251d]/65 via-transparent to-transparent"/>
+          <p className="absolute bottom-4 left-5 font-display text-2xl italic text-[#fff8ed]">Flowers, just because</p>
+        </article>
+      </div>
+    </section>
+
     <section className="mx-auto max-w-[1500px] px-5 pt-14 lg:px-10">
       <div className="mx-auto mb-9 max-w-2xl text-center"><p className="text-[10px] font-semibold uppercase tracking-[.25em] text-[#9a7658]">A home is made of moments</p><h2 className="mt-3 font-display text-4xl leading-tight text-[#4c392b] sm:text-5xl">For all the moments that feel like home.</h2><p className="mt-4 text-sm leading-7 text-[#806b59]">The favourite mug everyone reaches for. Fresh flowers on the table. A candle lit before guests arrive. Find thoughtful little things for the moments you want to keep.</p></div>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-3 lg:gap-5">{collections.map((item) => <button key={item.title} type="button" onClick={() => setSelected((current) => current === item.title ? "" : item.title)} aria-pressed={selected === item.title} className={`group relative overflow-hidden rounded-[1.2rem] text-left ring-offset-2 transition ${selected === item.title ? "ring-2 ring-[#9b6b48]" : ""}`}><img src={item.image} alt={item.title} loading="lazy" className="aspect-[5/4] w-full object-cover transition duration-700 group-hover:scale-105"/><span className="absolute inset-0 bg-gradient-to-t from-[#302319]/80 via-[#302319]/5 to-transparent"/><span className="absolute inset-x-0 bottom-0 p-4 sm:p-5"><span className="block font-display text-xl text-[#fff8ed] sm:text-2xl">{item.title}</span><span className="mt-1 block text-[11px] leading-5 text-[#fff3e4]/85 sm:text-xs">{item.detail}</span></span></button>)}</div>
