@@ -205,7 +205,7 @@ function CreateLookPage() {
 
   const buildRecipe = async () => {
     const extra = details.trim() ? `\nSignature details: ${details.trim()}` : "";
-    const text = `{isHome ? "MY OFFFEED HOME DNA ✦" : "MY OFFFEED STYLE DNA ✦"}\nVibe: ${vibe}\nOccasion: ${occasion}\nColour story: ${palette}\nBudget: ${budget}${extra}\n\nFind it before your feed does. #OFFFEED`;
+    const text = `${isHome ? "MY OFFFEED HOME DNA ✦" : "MY OFFFEED STYLE DNA ✦"}\nVibe: ${vibe}\nOccasion: ${occasion}\nColour story: ${palette}\nBudget: ${budget}${extra}\n\n${isHome ? "Make room for what feels like you." : "Find it before your feed does."} #OFFFEED`;
     setRecipe(text);
     setSaved(false);
     setMatchError("");
