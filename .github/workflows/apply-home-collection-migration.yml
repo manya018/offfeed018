@@ -1,0 +1,42 @@
+name: Apply HOME collection audience migration
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  apply-home-audience:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+
+      - name: Apply HOME audience schema change
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          if [ -z "$SUPABASE_DB_URL" ]; then
+            echo "Missing repository secret: SUPABASE_DB_URL"
+            exit 1
+          fi
+          psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 <<'SQL'
+          BEGIN;
+          ALTER TABLE public.brand_applications
+            DROP CONSTRAINT IF EXISTS brand_applications_audience_check;
+          ALTER TABLE public.brand_applications
+            ADD CONSTRAINT brand_applications_audience_check
+            CHECK (cardinality(audience) > 0 AND audience <@ ARRAY['her', 'him', 'home']::text[]);
+          ALTER TABLE public.brand_products
+            DROP CONSTRAINT IF EXISTS brand_products_audience_check;
+          ALTER TABLE public.brand_products
+            ADD CONSTRAINT brand_products_audience_check
+            CHECK (cardinality(audience) > 0 AND audience <@ ARRAY['her', 'him', 'home']::text[]);
+          ALTER TABLE public.brand_applications
+            ALTER COLUMN audience_categories
+            SET DEFAULT '{"her": [], "him": [], "home": []}'::jsonb;
+          COMMIT;
+          SQL
