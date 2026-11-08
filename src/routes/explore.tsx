@@ -35,6 +35,9 @@ function ExplorePage() {
     { title: "Home Decor", line: "Little details that make a space feel like yours.", image: "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1000&q=85", match: /decor|vase|wall art|mirror|frame|sculpture|ornament|object/i },
     { title: "Kitchen & Dining", line: "Made for the meals and memories made together.", image: "https://images.unsplash.com/photo-1556911220-bff31c812dba?auto=format&fit=crop&w=1000&q=85", match: /kitchen|cookware|utensil|jar|storage|table linen|apron/i },
     { title: "Storage & Organisation", line: "A place for everything, with room for living.", image: "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=1000&q=85", match: /storage|organis|basket|box|organizer/i },
+    { title: "Bath & Wellness", line: "Little rituals for a slower start and softer finish.", image: "https://images.unsplash.com/photo-1620626011761-996317b8d101?auto=format&fit=crop&w=1000&q=85", match: /bath|wellness|towel|soap|self.?care|bathroom/i },
+    { title: "Lighting", line: "A warm little glow for every corner.", image: "https://images.unsplash.com/photo-1507473885765-e6ed057f782c?auto=format&fit=crop&w=1000&q=85", match: /light|lamp|lighting|lantern/i },
+    { title: "Plants & Planters", line: "A little green, a little life, a little joy.", image: "https://images.unsplash.com/photo-1485955900006-10f4d324d411?auto=format&fit=crop&w=1000&q=85", match: /plant|planter|pot|garden/i },
   ];
   const activeCategory = homeCategories.find((item) => item.title === selected);
   const homeProducts = useMemo(() => products.filter((product) => (!activeCategory || product.brand.homeCategories?.includes(activeCategory.title) === true) && (!activeCategory || activeCategory.match.test([product.category, product.productName, product.description, ...product.tags].join(" "))), [products, activeCategory]);
