@@ -9,7 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { getMyBrandApplication, submitBrandApplication } from "@/lib/brand-applications.functions";
 
-const brandCategories = ["Fashion", "Jewelry", "Beauty", "Accessories", "Independent designer", "Other"] as const;
+const brandCategories = ["Fashion", "Jewelry", "Beauty", "Accessories", "Home & Living", "Independent designer", "Other"] as const;
 const acceptedImageTypes = ["image/jpeg", "image/png", "image/webp"];
 const maxUploadBytes = 20 * 1024 * 1024;
 type UploadKind = "logo" | "cover" | "proof";
@@ -17,8 +17,9 @@ type UploadItem = { file: File; preview?: string };
 const subcategories = {
   her: ["Western Wear", "Indian Wear – GULABO", "Jewellery", "Accessories", "Bags"] as const,
   him: ["Western Wear", "Indian Wear – NAWAB", "Accessories", "Footwear"] as const,
+  home: ["Crockery & Tableware", "Bedding & Furnishings", "Candles & Fragrance", "Home Decor", "Kitchen & Dining", "Storage & Organisation", "Bath & Wellness", "Lighting", "Plants & Planters"] as const,
 };
-type Audience = "her" | "him";
+type Audience = "her" | "him" | "home";
 type ApplicationValues = {
   contactName: string;
   email: string;
@@ -32,7 +33,7 @@ type ApplicationValues = {
 };
 
 const defaultValues: ApplicationValues = {
-  contactName: "", email: "", brandName: "", category: "", description: "", website: "", socialHandle: "", audience: ["her"], audienceCategories: { her: [], him: [] },
+  contactName: "", email: "", brandName: "", category: "", description: "", website: "", socialHandle: "", audience: ["her"], audienceCategories: { her: [], him: [], home: [] },
 };
 
 const accountSchema = z.object({
@@ -46,15 +47,15 @@ const applicationFormSchema = z.object({
   email: z.string().trim().email("Enter a valid email address.").max(255),
   brandName: z.string().trim().min(2, "Please enter your brand name.").max(120),
   category: z.string().min(1, "Choose a category."),
-  audience: z.array(z.enum(["her", "him"])).min(1, "Choose at least one audience."),
-  audienceCategories: z.object({ her: z.array(z.string()).default([]), him: z.array(z.string()).default([]) }).superRefine((categories, ctx) => { for (const audience of ["her", "him"] as const) { if (categories[audience].some((item) => !(subcategories[audience] as readonly string[]).includes(item))) ctx.addIssue({ code: z.ZodIssueCode.custom, path: [audience], message: "Choose a valid category." }); } }),
+  audience: z.array(z.enum(["her", "him", "home"])).min(1, "Choose at least one collection."),
+  audienceCategories: z.object({ her: z.array(z.string()).default([]), him: z.array(z.string()).default([]), home: z.array(z.string()).default([]) }).superRefine((categories, ctx) => { for (const audience of ["her", "him", "home"] as const) { if (categories[audience].some((item) => !(subcategories[audience] as readonly string[]).includes(item))) ctx.addIssue({ code: z.ZodIssueCode.custom, path: [audience], message: "Choose a valid category." }); } }),
   description: z.string().trim().min(20, "Add at least 20 characters about your brand.").max(1000, "Keep your introduction under 1,000 characters."),
   website: z.string().trim().max(2048).refine((value) => value === "" || z.string().url().safeParse(value).success, "Enter a valid website address starting with https://"),
   socialHandle: z.string().trim().max(120, "Keep your social handle under 120 characters."),
 });
 const draftSchema = z.object({
   contactName: z.string().max(120), email: z.string().max(255), brandName: z.string().max(120),
-  category: z.string().max(80), description: z.string().max(1000), website: z.string().max(2048), socialHandle: z.string().max(120), audience: z.array(z.enum(["her", "him"])).min(1).max(2), audienceCategories: z.object({ her: z.array(z.string()).max(5), him: z.array(z.string()).max(4) }).optional().default({ her: [], him: [] }),
+  category: z.string().max(80), description: z.string().max(1000), website: z.string().max(2048), socialHandle: z.string().max(120), audience: z.array(z.enum(["her", "him", "home"])).min(1).max(3), audienceCategories: z.object({ her: z.array(z.string()).max(5), him: z.array(z.string()).max(4), home: z.array(z.string()).max(9) }).optional().default({ her: [], him: [], home: [] }),
 });
 
 export const Route = createFileRoute("/for-brands/apply")({
@@ -154,7 +155,7 @@ function BrandApplicationPage() {
     setErrors((current) => ({ ...current, audienceCategories: "" }));
   };
 
-  const toggleAudience = (audience: "her" | "him") => {
+  const toggleAudience = (audience: Audience) => {
     setValues((current) => {
       const next = current.audience.includes(audience)
         ? current.audience.filter((item) => item !== audience)
@@ -198,7 +199,7 @@ function BrandApplicationPage() {
         const parsed = applicationFormSchema.pick({ brandName: true, category: true, description: true, audience: true, audienceCategories: true }).safeParse(values);
       if (!parsed.success) for (const issue of parsed.error.issues) nextErrors[issue.path[0]?.toString() ?? "form"] = issue.message;
       for (const audience of values.audience) {
-        if (!values.audienceCategories[audience]?.length) nextErrors["audienceCategories"] = `Choose at least one category for ${audience === "her" ? "Her" : "Him"}.`;
+        if (!values.audienceCategories[audience]?.length) nextErrors["audienceCategories"] = `Choose at least one category for ${audience === "her" ? "Her" : audience === "him" ? "Him" : "Home"}.`;
       }
     }
     if (step === 3) {
@@ -389,7 +390,7 @@ function BrandApplicationPage() {
               <div className="grid gap-5 sm:grid-cols-2">
                 <Field label="Brand name" htmlFor="brand-name" error={errors["brandName"]}><Input id="brand-name" value={values.brandName} onChange={(event) => update("brandName", event.target.value)} placeholder="The name people know you by" className={fieldClass} maxLength={120} aria-invalid={Boolean(errors["brandName"])} /></Field>
                 <Field label="Category" htmlFor="brand-category" error={errors["category"]}><select id="brand-category" value={values.category} onChange={(event) => update("category", event.target.value)} className={`${fieldClass} w-full rounded-lg border px-4 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring`} aria-invalid={Boolean(errors["category"])}><option value="">Choose a category</option>{brandCategories.map((category) => <option key={category} value={category}>{category}</option>)}</select></Field>
-                <div className="sm:col-span-2"><p className="text-sm font-medium">Who is your collection for?</p><p className="mt-1 text-xs text-muted-foreground">Choose Her, Him, or both, then select the product categories for each.</p><div className="mt-3 flex flex-wrap gap-2">{([{ value: "her", label: "HER" }, { value: "him", label: "HIM" }, { value: "both", label: "BOTH" }] as const).map((option) => <Button key={option.value} type="button" size="sm" variant={option.value === "both" ? values.audience.length === 2 ? "default" : "outline" : values.audience.includes(option.value) ? "default" : "outline"} aria-pressed={option.value === "both" ? values.audience.length === 2 : values.audience.includes(option.value)} onClick={() => option.value === "both" ? setValues((current) => ({ ...current, audience: ["her", "him"] })) : toggleAudience(option.value)}>{(option.value === "both" ? values.audience.length === 2 : values.audience.includes(option.value)) && <Check className="size-4"/>}{option.label}</Button>)}</div>{errors["audience"] && <p role="alert" className="mt-1 text-xs text-destructive">{errors["audience"]}</p>}{values.audience.map((audience) => <div key={audience} className="mt-5 rounded-lg border border-border/70 p-4"><p className="text-sm font-medium">{audience === "her" ? "Her collection" : "His collection"}</p><p className="mt-1 text-xs text-muted-foreground">Select all that apply.</p><div className="mt-3 flex flex-wrap gap-2">{subcategories[audience].map((category) => { const selected = values.audienceCategories[audience].includes(category); return <button key={category} type="button" aria-pressed={selected} onClick={() => toggleSubcategory(audience, category)} className={`rounded-full border px-3 py-2 text-sm transition-colors ${selected ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card hover:border-primary/50"}`}>{selected && <Check className="mr-1 inline size-3.5" />}{category}</button>; })}</div></div>)}{errors["audienceCategories"] && <p role="alert" className="mt-2 text-xs text-destructive">{errors["audienceCategories"]}</p>}</div>
+                <div className="sm:col-span-2"><p className="text-sm font-medium">Who is your collection for?</p><p className="mt-1 text-xs text-muted-foreground">Choose Her, Him, Home, or any combination, then select the product categories for each.</p><div className="mt-3 flex flex-wrap gap-2">{([{ value: "her", label: "HER" }, { value: "him", label: "HIM" }, { value: "home", label: "HOME" }, { value: "both", label: "HER + HIM" }] as const).map((option) => <Button key={option.value} type="button" size="sm" variant={option.value === "both" ? values.audience.includes("her") && values.audience.includes("him") ? "default" : "outline" : values.audience.includes(option.value) ? "default" : "outline"} aria-pressed={option.value === "both" ? values.audience.includes("her") && values.audience.includes("him") : values.audience.includes(option.value)} onClick={() => option.value === "both" ? setValues((current) => ({ ...current, audience: [...new Set([...current.audience, "her", "him"])] })) : toggleAudience(option.value)}>{(option.value === "both" ? values.audience.includes("her") && values.audience.includes("him") : values.audience.includes(option.value)) && <Check className="size-4"/>}{option.label}</Button>)}</div>{errors["audience"] && <p role="alert" className="mt-1 text-xs text-destructive">{errors["audience"]}</p>}{values.audience.map((audience) => <div key={audience} className="mt-5 rounded-lg border border-border/70 p-4"><p className="text-sm font-medium">{audience === "her" ? "Her collection" : audience === "him" ? "His collection" : "HOME collection"}</p><p className="mt-1 text-xs text-muted-foreground">Select all that apply.</p><div className="mt-3 flex flex-wrap gap-2">{subcategories[audience].map((category) => { const selected = values.audienceCategories[audience].includes(category); return <button key={category} type="button" aria-pressed={selected} onClick={() => toggleSubcategory(audience, category)} className={`rounded-full border px-3 py-2 text-sm transition-colors ${selected ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card hover:border-primary/50"}`}>{selected && <Check className="mr-1 inline size-3.5" />}{category}</button>; })}</div></div>)}{errors["audienceCategories"] && <p role="alert" className="mt-2 text-xs text-destructive">{errors["audienceCategories"]}</p>}</div>
                 <div className="sm:col-span-2"><Field label="A short introduction" htmlFor="brand-description" error={errors["description"]}><Textarea id="brand-description" value={values.description} onChange={(event) => update("description", event.target.value)} placeholder="What inspires your work? Who is it for?" className="mt-2 min-h-36 resize-y rounded-lg border-border/80 bg-card px-4 py-3" maxLength={1000} aria-invalid={Boolean(errors["description"])} /><p className="mt-1 text-right text-xs text-muted-foreground">{values.description.length} / 1,000</p></Field></div>
               </div>
               <StepButtons onBack={() => setStep(1)} onNext={() => { if (validateStep()) setStep(3); }} />
