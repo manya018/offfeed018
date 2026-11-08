@@ -43,7 +43,7 @@ function OfffeedEditPage() {
   const { collection: collectionId } = Route.useSearch();
   const { space } = useStyleSpace();
   const isHim = space === "him";
-  const isHome = space === "home";
+  const isHome = collectionId === "home" || space === "home";
   const edits = isHome ? homeEdits : isHim ? himEdits : herEdits;
   const looksForSpace = isHim ? himLooks : looks;
   const active = edits.find((item) => item.id === collectionId);
