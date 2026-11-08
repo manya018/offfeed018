@@ -135,6 +135,33 @@ html[data-style-space="him"] {
   --shadow-soft: 0 18px 55px -28px oklch(0.3 0.035 65 / 0.3);
 }
 
+/* HOME living edit: warm paper, hearth brown, muted terracotta and olive. */
+html[data-edit="home"] {
+  --background: oklch(0.965 0.025 82);
+  --foreground: oklch(0.29 0.035 55);
+  --card: oklch(0.985 0.015 82);
+  --card-foreground: oklch(0.29 0.035 55);
+  --popover: oklch(0.985 0.015 82);
+  --popover-foreground: oklch(0.29 0.035 55);
+  --primary: oklch(0.48 0.09 43);
+  --primary-foreground: oklch(0.98 0.015 82);
+  --secondary: oklch(0.925 0.035 78);
+  --secondary-foreground: oklch(0.32 0.04 55);
+  --muted: oklch(0.925 0.03 78);
+  --muted-foreground: oklch(0.49 0.035 55);
+  --accent: oklch(0.88 0.055 75);
+  --accent-foreground: oklch(0.32 0.04 55);
+  --border: oklch(0.84 0.04 70);
+  --input: oklch(0.84 0.04 70);
+  --ring: oklch(0.48 0.09 43);
+  --shadow-soft: 0 18px 55px -28px oklch(0.34 0.045 48 / 0.32);
+}
+.home-world {
+  background: radial-gradient(circle at 12% 18%, oklch(0.94 0.04 76 / .65), transparent 28rem), linear-gradient(180deg, #f7f0e5 0%, #f4eadb 55%, #f8f3e9 100%);
+  color: #4c392b;
+}
+.home-world button:focus-visible { outline: 2px solid #9b6b48; outline-offset: 3px; }
+
 /* Indian Wear edit: heritage paper worlds, replacing the global blush wash on that page only */
 html[data-edit="indian-wear"] {
   --background: oklch(0.945 0.022 80);
