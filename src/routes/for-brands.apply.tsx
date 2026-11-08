@@ -55,7 +55,7 @@ const applicationFormSchema = z.object({
 });
 const draftSchema = z.object({
   contactName: z.string().max(120), email: z.string().max(255), brandName: z.string().max(120),
-  category: z.string().max(80), description: z.string().max(1000), website: z.string().max(2048), socialHandle: z.string().max(120), audience: z.array(z.enum(["her", "him", "home"])).min(1).max(3), audienceCategories: z.object({ her: z.array(z.string()).max(5), him: z.array(z.string()).max(4), home: z.array(z.string()).max(9) }).optional().default({ her: [], him: [], home: [] }),
+  category: z.string().max(80), description: z.string().max(1000), website: z.string().max(2048), socialHandle: z.string().max(120), audience: z.array(z.enum(["her", "him", "home"])).min(1).max(3), audienceCategories: z.object({ her: z.array(z.string()).max(5), him: z.array(z.string()).max(4), home: z.array(z.string()).max(9).optional().default([]) }).optional().default({ her: [], him: [], home: [] }),
 });
 
 export const Route = createFileRoute("/for-brands/apply")({
