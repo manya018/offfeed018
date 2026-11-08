@@ -25,7 +25,7 @@ export const Route = createFileRoute("/_authenticated/brand/dashboard")({
   component: BrandDashboard,
 });
 
-type ProductDepartment = "Clothing" | "Jewellery" | "Accessories" | "Footwear" | "Mixed look";
+type ProductDepartment = "Clothing" | "Jewellery" | "Accessories" | "Footwear" | "Home & Living" | "Mixed look";
 type DraftProduct = {
   listingType: "product" | "bundle";
   bundleItems: string;
@@ -39,7 +39,7 @@ type DraftProduct = {
   sizes: string;
   colors: string;
   tags: string;
-  audience: Array<"her" | "him">;
+  audience: Array<"her" | "him" | "home">;
 };
 
 type ImportedProduct = {
@@ -59,6 +59,7 @@ const blankProduct: DraftProduct = { listingType: "product", bundleItems: "", de
 const herOnlyCategories = new Set(["Dresses", "Skirts", "Blouses", "Sarees", "Lehengas", "Anarkalis", "Sharara Sets", "Dupattas", "Lingerie & Loungewear", "Heels", "Flats", "Clutches", "Tote Bags", "Hair Accessories", "Bangles", "Maang Tikkas", "Nose Pins"]);
 const himOnlyCategories = new Set(["T-shirts & Polos", "Sherwanis", "Nehru Jackets", "Bandhgalas", "Dhoti Pants", "Waistcoats", "Loafers", "Formal Shoes", "Backpacks", "Wallets"]);
 const categoryOptions: Record<ProductDepartment, string[]> = {
+  "Home & Living": ["Crockery & Tableware", "Mugs & Cups", "Dinner Sets", "Plates & Bowls", "Cutlery & Serving", "Bedding & Furnishings", "Bedsheets & Pillow Covers", "Blankets & Quilts", "Cushions & Throws", "Candles & Fragrance", "Home Decor", "Vases & Planters", "Wall Art & Mirrors", "Kitchen & Dining", "Cookware & Utensils", "Storage & Organisation", "Bath & Wellness", "Lighting", "Plants & Planters", "Other Home & Living"],
   Clothing: ["Tops", "T-shirts & Polos", "Shirts", "Blouses", "Dresses", "Skirts", "Jeans & Denim", "Trousers & Pants", "Shorts", "Co-ord Sets", "Jumpsuits", "Jackets & Outerwear", "Knitwear", "Sweatshirts & Hoodies", "Activewear", "Lingerie & Loungewear", "Sarees", "Lehengas", "Kurtas & Suits", "Anarkalis", "Sharara Sets", "Dupattas", "Indo-Western", "Ethnic Co-ords", "Sherwanis", "Nehru Jackets", "Bandhgalas", "Dhoti Pants", "Waistcoats", "Other Clothing"],
   Jewellery: ["Earrings", "Necklaces", "Rings", "Bracelets", "Anklets", "Jewellery Sets", "Bangles", "Maang Tikkas", "Nose Pins", "Brooches", "Other Jewellery"],
   Accessories: ["Bags", "Clutches", "Tote Bags", "Backpacks", "Belts", "Sunglasses", "Watches", "Hats & Caps", "Hair Accessories", "Scarves", "Wallets", "Other Accessories"],
@@ -319,7 +320,7 @@ function BrandDashboard() {
   const [importBusy, setImportBusy] = useState(false);
   const [imported, setImported] = useState<ImportedProduct[]>([]);
   const [selectedImports, setSelectedImports] = useState<string[]>([]);
-  const [importAudience, setImportAudience] = useState<Array<"her" | "him">>(["her"]);
+  const [importAudience, setImportAudience] = useState<Array<"her" | "him" | "home">>(["her"]);
   const [error, setError] = useState("");
   const [guideCategory, setGuideCategory] = useState("Clothing / Tops");
   const [guideText, setGuideText] = useState("Measurement | XS | S | M | L\nBust (cm) | 81 | 86 | 91 | 96");
@@ -376,7 +377,7 @@ function BrandDashboard() {
     setParcelWidthCm(String(shippingProfile?.parcel_width_cm ?? 20));
     setParcelHeightCm(String(shippingProfile?.parcel_height_cm ?? 5));
   }, [shippingProfile]);
-  const supportedAudience = useMemo(() => (application?.audience ?? ["her"]).filter((item): item is "her" | "him" => item === "her" || item === "him"), [application?.audience]);
+  const supportedAudience = useMemo(() => (application?.audience ?? ["her"]).filter((item): item is "her" | "him" | "home" => item === "her" || item === "him" || item === "home"), [application?.audience]);
   const products = workspace.data?.products ?? [];
   const sizeGuides = workspace.data?.sizeGuides ?? [];
   const guideDraft = parseEditableSizeChart(guideText);
@@ -446,9 +447,9 @@ function BrandDashboard() {
   };
 
   const updateDraft = (key: keyof DraftProduct, value: string) => setDraft((current) => ({ ...current, [key]: value }));
-  const toggleDraftAudience = (value: "her" | "him") => setDraft((current) => {
+  const toggleDraftAudience = (value: "her" | "him" | "home") => setDraft((current) => {
     const audience = current.audience.includes(value) ? current.audience.filter((item) => item !== value) : [...current.audience, value];
-    const allowedCategories = categoryOptions[current.department].filter((category) => audience.length === 2 || (audience[0] === "her" ? !himOnlyCategories.has(category) : !herOnlyCategories.has(category)));
+    const allowedCategories = categoryOptions[current.department].filter((category) => current.department === "Home & Living" || audience.includes("home") || audience.includes("her") && audience.includes("him") || (audience[0] === "her" ? !himOnlyCategories.has(category) : !herOnlyCategories.has(category)));
     return { ...current, audience, category: allowedCategories.includes(current.category) ? current.category : allowedCategories[0] ?? current.category };
   });
 
@@ -573,7 +574,7 @@ function BrandDashboard() {
   return <main className="min-h-[calc(100svh-5rem)] px-5 py-8 sm:px-8 sm:py-12">
     <div className="mx-auto max-w-6xl">
       <div className="flex flex-wrap items-end justify-between gap-5 border-b border-border/70 pb-7">
-        <div><p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">OFFFEED · BRAND STUDIO</p><h1 className="mt-3 font-display text-5xl">{application.brand_name}</h1><p className="mt-2 text-sm text-muted-foreground">A considered space for your products to find their people.</p><div className="mt-4 flex flex-wrap gap-2">{supportedAudience.map((item) => <Badge key={item} variant="secondary">{item === "her" ? "Her space" : "Him space"}</Badge>)}</div></div>
+        <div><p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">OFFFEED · BRAND STUDIO</p><h1 className="mt-3 font-display text-5xl">{application.brand_name}</h1><p className="mt-2 text-sm text-muted-foreground">A considered space for your products to find their people.</p><div className="mt-4 flex flex-wrap gap-2">{supportedAudience.map((item) => <Badge key={item} variant="secondary">{item === "her" ? "Her space" : item === "him" ? "Him space" : "HOME"}</Badge>)}</div></div>
         <div className="flex flex-wrap gap-2">{application.public_handle && <Button variant="ghost" asChild><a href={`/brand/${encodeURIComponent(application.public_handle)}`} target="_blank" rel="noreferrer"><ExternalLink/>Preview storefront</a></Button>}<Button variant="outline" onClick={() => { setDraft({ ...blankProduct, audience: supportedAudience.length ? supportedAudience : ["her"] }); setMode("manual"); }}><Plus/>Add product</Button><Button onClick={() => { setMode("import"); setImported([]); setError(""); }}><ArrowDownToLine/>Import from Shopify</Button></div>
       </div>
 
@@ -706,8 +707,8 @@ function BrandDashboard() {
               <div className="sm:col-span-2"><Label htmlFor="product-name">Product name</Label><Input id="product-name" value={draft.name} onChange={(event) => updateDraft("name", event.target.value)} maxLength={160} required className={fieldClass}/></div>
               <div className="sm:col-span-2"><Label htmlFor="product-description">Description</Label><Textarea id="product-description" value={draft.description} onChange={(event) => updateDraft("description", event.target.value)} maxLength={2000} minLength={10} required className="mt-2 min-h-28 rounded-lg border-border/80 bg-card px-3 py-3"/></div>
               {draft.listingType === "bundle" && <div className="sm:col-span-2"><Label htmlFor="bundle-items">Pieces included in this look</Label><Textarea id="bundle-items" value={draft.bundleItems} onChange={(event) => setDraft((current) => ({ ...current, bundleItems: event.target.value }))} placeholder="Blazer, trousers, shirt, belt — list included pieces separated by commas" required minLength={2} className="mt-2 min-h-24 rounded-lg border-border/80 bg-card px-3 py-3"/><p className="mt-2 text-xs text-muted-foreground">Be clear about exactly what the bundle price includes.</p></div>}
-              <div><Label htmlFor="product-department">Product department</Label><select id="product-department" value={draft.department} onChange={(event) => { const department = event.target.value as ProductDepartment; setDraft((current) => ({ ...current, department, category: categoryOptions[department][0], sizes: department === "Clothing" ? "XS, S, M, L, XL" : "" })); }} className={fieldClass}><option value="Clothing">Clothing</option><option value="Jewellery">Jewellery</option><option value="Accessories">Accessories & Bags</option><option value="Footwear">Footwear</option><option value="Mixed look">Mixed look / outfit bundle</option></select><p className="mt-2 text-xs text-muted-foreground">Choose the department for this listing. You can create other listings in other departments too.</p></div>
-              <div><Label htmlFor="product-category">Specific category</Label><select id="product-category" value={draft.category} onChange={(event) => setDraft((current) => ({ ...current, category: event.target.value, sizes: current.department === "Jewellery" && event.target.value === "Rings" ? current.sizes : current.department === "Clothing" ? current.sizes : "" }))} className={fieldClass} required>{categoryOptions[draft.department].filter((category) => draft.audience.length === 2 || (draft.audience[0] === "her" ? !himOnlyCategories.has(category) : !herOnlyCategories.has(category))).map((category) => <option key={category} value={category}>{category}</option>)}</select></div>
+              <div><Label htmlFor="product-department">Product department</Label><select id="product-department" value={draft.department} onChange={(event) => { const department = event.target.value as ProductDepartment; setDraft((current) => ({ ...current, department, category: categoryOptions[department][0], sizes: department === "Clothing" ? "XS, S, M, L, XL" : "" })); }} className={fieldClass}><option value="Clothing">Clothing</option><option value="Jewellery">Jewellery</option><option value="Accessories">Accessories & Bags</option><option value="Footwear">Footwear</option><option value="Home & Living">Home & Living</option><option value="Mixed look">Mixed look / outfit bundle</option></select><p className="mt-2 text-xs text-muted-foreground">Choose the department for this listing. You can create other listings in other departments too.</p></div>
+              <div><Label htmlFor="product-category">Specific category</Label><select id="product-category" value={draft.category} onChange={(event) => setDraft((current) => ({ ...current, category: event.target.value, sizes: current.department === "Jewellery" && event.target.value === "Rings" ? current.sizes : current.department === "Clothing" ? current.sizes : "" }))} className={fieldClass} required>{categoryOptions[draft.department].filter((category) => draft.department === "Home & Living" || draft.audience.includes("home") || draft.audience.includes("her") && draft.audience.includes("him") || (draft.audience[0] === "her" ? !himOnlyCategories.has(category) : !herOnlyCategories.has(category))).map((category) => <option key={category} value={category}>{category}</option>)}</select></div>
               <div><Label htmlFor="product-aesthetic">Style / aesthetic</Label><select id="product-aesthetic" value={draft.aesthetic} onChange={(event) => updateDraft("aesthetic", event.target.value)} className={fieldClass}>{aestheticOptions.map((aesthetic) => <option key={aesthetic} value={aesthetic}>{aesthetic}</option>)}</select><p className="mt-2 text-xs text-muted-foreground">Choose the vibe shoppers should associate with this listing. It will be saved as a product tag.</p></div>
               <div><Label htmlFor="product-price">Price (₹)</Label><Input id="product-price" type="number" min="1" step="0.01" value={draft.price} onChange={(event) => updateDraft("price", event.target.value)} required className={fieldClass}/><p className="mt-2 text-xs text-muted-foreground">At ₹{Number(draft.price || 0).toLocaleString("en-IN")}, you receive ₹{(Number(draft.price || 0) * (1 - commission)).toLocaleString("en-IN", { maximumFractionDigits: 2 })} after OFFFEED’s 18% fee.</p></div>
               <div><Label htmlFor="product-link">Product link <span className="font-normal text-muted-foreground">(optional)</span></Label><Input id="product-link" type="url" value={draft.productUrl} onChange={(event) => updateDraft("productUrl", event.target.value)} placeholder="https://yourbrand.com/product" className={fieldClass}/></div>
