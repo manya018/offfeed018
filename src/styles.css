@@ -441,3 +441,37 @@ main > section.mx-auto {
   .site-header-actions > button { width: 2.1rem; }
   .site-header-cta { width: auto !important; }
 }
+
+
+/* Header fit: keep the collection pills, navigation and action icons in separate lanes. */
+.site-header-inner {
+  display: flex;
+  align-items: center;
+  gap: clamp(0.4rem, 0.8vw, 0.9rem);
+}
+.site-header-logo { flex: 0 0 auto; }
+.site-header-spaces { flex: 0 0 auto; white-space: nowrap; }
+.site-header-nav {
+  flex: 1 1 0%;
+  min-width: 0;
+  justify-content: center;
+  gap: clamp(0.55rem, 0.85vw, 1rem);
+}
+.site-header-nav a { white-space: nowrap; }
+.site-header-actions { flex: 0 0 auto; white-space: nowrap; }
+@media (min-width: 1024px) and (max-width: 1535px) {
+  .site-header-inner { gap: 0.45rem; padding-left: 0.85rem; padding-right: 0.85rem; }
+  .site-header-logo { font-size: 1.2rem; letter-spacing: 0.08em; }
+  .site-header-nav { gap: 0.65rem; }
+  .site-header-nav a { font-size: 0.82rem !important; }
+  .site-header-spaces button { padding-left: 0.5rem; padding-right: 0.5rem; }
+  .site-header-actions { gap: 0; }
+  .site-header-actions > a,
+  .site-header-actions > button { width: 2rem; }
+  .site-header-cta { padding-left: 0.6rem; padding-right: 0.6rem; font-size: 0.78rem !important; }
+}
+@media (min-width: 1024px) and (max-width: 1279px) {
+  .site-header-nav a:nth-child(4),
+  .site-header-nav a:nth-child(6) { display: none; }
+  .site-header-cta { display: none !important; }
+}
