@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 
-export type StyleSpace = "her" | "him";
+export type StyleSpace = "her" | "him" | "home";
 
 type StyleSpaceContextValue = {
   space: StyleSpace;
@@ -15,7 +15,7 @@ export function StyleSpaceProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const saved = window.localStorage.getItem("offfeed-style-space");
-    if (saved === "her" || saved === "him") setSpaceState(saved);
+    if (saved === "her" || saved === "him" || saved === "home") setSpaceState(saved);
     setHydrated(true);
   }, []);
 
