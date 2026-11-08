@@ -25,6 +25,15 @@ const himEdits = [
   { id: "quiet-form", title: "Quiet Form", label: "THE AESTHETIC", description: "Thoughtful proportions, muted colour and modern pieces with staying power.", keywords: "quiet luxury minimalist tailoring neutral", image: himMoodImages[5 % himMoodImages.length], story: "A little restraint goes far." },
 ];
 
+const homeEdits = [
+  { id: "slow-sunday", title: "Slow Sunday Mornings", label: "THE RITUAL", description: "Chai in your favourite cup, sunlight on the table and nowhere you need to be just yet.", keywords: "home chai cups crockery tableware breakfast warm slow morning", image: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=1200&q=85", story: "Take the morning slowly." },
+  { id: "gather-around", title: "Gather Around", label: "THE TOGETHERNESS", description: "The dinner table that always has room for one more, with pieces made for sharing.", keywords: "home dining table crockery dinner set plates bowls serving family", image: "https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=1200&q=85", story: "There is always room for one more." },
+  { id: "little-comforts", title: "Little Comforts", label: "THE EVERYDAY", description: "Soft bedsheets, favourite cushions and the familiar things that make you exhale.", keywords: "home bedding bedsheets cushions throws quilt linen comfort", image: "https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=1200&q=85", story: "Come home to comfort." },
+  { id: "candlelight", title: "A Little Candlelight", label: "THE MOOD", description: "A warm glow, a familiar fragrance and an evening that feels like yours.", keywords: "home candles fragrance diffuser room scent warm ambience", image: "https://images.unsplash.com/photo-1603006905003-be475563bc59?auto=format&fit=crop&w=1200&q=85", story: "Make the everyday feel special." },
+  { id: "flowers-at-home", title: "Flowers, Just Because", label: "THE LITTLE JOYS", description: "Fresh blooms, favourite vases and small gestures that brighten the whole room.", keywords: "home decor flowers vase planters plants ceramic", image: "https://images.unsplash.com/photo-1490750967868-88aa4486c946?auto=format&fit=crop&w=1200&q=85", story: "A little joy for your corner." },
+  { id: "festive-together", title: "Made for Together", label: "THE CELEBRATION", description: "Thoughtful table details and warm finishing touches for the days everyone comes together.", keywords: "home festive dining kitchen decor table linen serving cookware", image: "https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=1200&q=85", story: "For the moments we keep." },
+];
+
 export const Route = createFileRoute("/edit")({
   validateSearch: (search: Record<string, unknown>) => typeof search.collection === "string" ? { collection: search.collection } : {},
   head: () => ({ meta: [{ title: "The OFFFEED EDIT — Weekly fashion stories" }, { name: "description", content: "A weekly editorial edit of aesthetics, occasions, trends and independent fashion labels." }] }),
@@ -34,7 +43,8 @@ function OfffeedEditPage() {
   const { collection: collectionId } = Route.useSearch();
   const { space } = useStyleSpace();
   const isHim = space === "him";
-  const edits = isHim ? himEdits : herEdits;
+  const isHome = space === "home";
+  const edits = isHome ? homeEdits : isHim ? himEdits : herEdits;
   const looksForSpace = isHim ? himLooks : looks;
   const active = edits.find((item) => item.id === collectionId);
   const [products, setProducts] = useState<ProductWithBrand[]>([]);
@@ -45,17 +55,17 @@ function OfffeedEditPage() {
     let alive = true;
     setLoading(true);
     setError(false);
-    getShopTheLookProducts({ data: { audience: isHim ? "him" : "her", aesthetic: active.keywords, resultLimit: 60, requireMatch: true } })
+    getShopTheLookProducts({ data: { audience: isHome ? "home" : isHim ? "him" : "her", aesthetic: active.keywords, resultLimit: 60, requireMatch: true } })
       .then((items) => { if (alive) setProducts(items); })
       .catch(() => { if (alive) { setProducts([]); setError(true); } })
       .finally(() => { if (alive) setLoading(false); });
     return () => { alive = false; };
-  }, [active?.id, active?.keywords, isHim]);
+  }, [active?.id, active?.keywords, isHim, isHome]);
   const relatedLooks = useMemo(() => {
-    if (!active) return [];
+    if (!active || isHome) return [];
     const terms = active.keywords.toLowerCase().split(/\s+/).filter((term) => term.length > 3);
     return looksForSpace.filter((look) => terms.some((term) => `${look.title} ${look.aesthetic} ${look.occasion} ${look.description}`.toLowerCase().includes(term))).slice(0, 4);
-  }, [active, looksForSpace]);
+  }, [active, looksForSpace, isHome]);
   return <main className="min-h-[70vh] bg-[#fbf8f4] pb-24 text-[#493a33]">
     <div className="mx-auto max-w-[1440px] px-5 py-10 lg:px-10 lg:py-14">
       <div className="flex flex-wrap items-center justify-between gap-3"><p className="text-[10px] font-semibold uppercase tracking-[.25em] text-[#a17e75]">OFFFEED · A weekly fashion journal</p><span className="rounded-full border border-[#e8d8ce] bg-white/70 px-3 py-1.5 text-[10px] uppercase tracking-[.18em] text-[#8d7166]">Issue 01 · The first edit</span></div>
