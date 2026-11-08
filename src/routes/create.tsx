@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ArrowRight,
   Check,
@@ -22,6 +22,9 @@ import { useStyleSpace } from "@/lib/style-space";
 import { toast } from "sonner";
 
 const vibes = ["Minimal", "Streetwear", "Soft romantic", "Old money", "Indie", "Y2K", "Boho", "Quiet luxury"];
+const homeVibes = ["Warm & cosy", "Earthy & natural", "Cottagecore", "Modern minimal", "Traditional Indian", "Soft romantic", "Colourful & playful", "Quiet luxury"];
+const homeRooms = ["Living room", "Bedroom", "Kitchen & dining", "Entryway", "Balcony", "Whole home"];
+const homePalettes = ["Warm neutrals", "Terracotta & cream", "Earthy greens", "Soft pastels", "Floral & vintage", "Rich festive colours"];
 const occasions = ["Everyday", "College", "Date night", "Party", "Festive", "Work", "Vacation"];
 const budgets = ["Under ₹1,000", "₹1,000–₹2,500", "₹2,500–₹5,000", "No limit"];
 const palettes = ["Neutrals", "Earthy tones", "Black & white", "Pastels", "Bold colours", "Denim blues"];
@@ -64,6 +67,7 @@ async function makeCandidateImageDataUrl(url: string): Promise<string> {
 }
 
 function CreateLookPage() {
+  const { space: requestedSpace } = Route.useSearch();
   const [outfitFile, setOutfitFile] = useState<File | null>(null);
   const [outfitPreview, setOutfitPreview] = useState("");
   const [vibe, setVibe] = useState("Indie");
@@ -79,7 +83,9 @@ function CreateLookPage() {
   const [matchedLooks, setMatchedLooks] = useState<Look[]>([]);
   const [matchedJewelleryReferences, setMatchedJewelleryReferences] = useState<JewelleryReference[]>([]);
   const [lensAnalysis, setLensAnalysis] = useState<OutfitImageAnalysis | null>(null);
-  const { space } = useStyleSpace();
+  const { space, setSpace } = useStyleSpace();
+  const isHome = requestedSpace === "home" || space === "home";
+  useEffect(() => { if (requestedSpace === "home") setSpace("home"); }, [requestedSpace, setSpace]);
   const fileInput = useRef<HTMLInputElement>(null);
 
   const acceptImage = (file?: File) => {
@@ -131,7 +137,7 @@ function CreateLookPage() {
       const lookPool = space === "him" ? himLooks : looks;
       const products = await getShopTheLookProducts({
         data: {
-          audience: space === "him" ? "him" : "her",
+          audience: isHome ? "home" : space === "him" ? "him" : "her",
           aesthetic: visualQuery,
           resultLimit: 60,
         },
@@ -198,7 +204,7 @@ function CreateLookPage() {
 
   const buildRecipe = async () => {
     const extra = details.trim() ? `\nSignature details: ${details.trim()}` : "";
-    const text = `MY OFFFEED STYLE DNA ✦\nVibe: ${vibe}\nOccasion: ${occasion}\nColour story: ${palette}\nBudget: ${budget}${extra}\n\nFind it before your feed does. #OFFFEED`;
+    const text = `{isHome ? "MY OFFFEED HOME DNA ✦" : "MY OFFFEED STYLE DNA ✦"}\nVibe: ${vibe}\nOccasion: ${occasion}\nColour story: ${palette}\nBudget: ${budget}${extra}\n\nFind it before your feed does. #OFFFEED`;
     setRecipe(text);
     setSaved(false);
     setMatchError("");
@@ -216,7 +222,7 @@ function CreateLookPage() {
     try {
       const products = await getShopTheLookProducts({
         data: {
-          audience: space === "him" ? "him" : "her",
+          audience: isHome ? "home" : space === "him" ? "him" : "her",
           aesthetic: [vibe, occasion, palette, details.trim()].filter(Boolean).join(" ").slice(0, 80),
           ...budgetRange,
           requireMatch: true,
@@ -250,7 +256,7 @@ function CreateLookPage() {
             palette,
             budget,
             details: details.trim(),
-            audience: space === "him" ? "him" : "her",
+            audience: isHome ? "home" : space === "him" ? "him" : "her",
           },
         },
         ...entries,
@@ -307,18 +313,18 @@ function CreateLookPage() {
     <main className="mx-auto max-w-6xl px-5 py-12 sm:py-16">
       <div className="mx-auto max-w-3xl text-center">
         <span className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-2 text-sm text-primary">
-          <Sparkles className="size-4" /> YOUR PERSONAL STYLE LAB
+          <Sparkles className="size-4" /> {isHome ? "YOUR HOME STYLE LAB" : "YOUR PERSONAL STYLE LAB"}
         </span>
         <h1 className="mt-6 font-display text-4xl leading-tight sm:text-6xl">
-          Create a look that feels like <em className="font-normal text-primary">you.</em>
+          {isHome ? <>Create a space that feels like <em className="font-normal text-primary">home.</em></> : <>Create a look that feels like <em className="font-normal text-primary">you.</em></>}
         </h1>
         <p className="mx-auto mt-4 max-w-2xl text-muted-foreground">
-          Upload an outfit for OFFFEED Lens to understand its pieces and find similar styles from independent brands, then build a Style DNA that feels like you.
+          {isHome ? "Choose your room, mood, colours and budget. We’ll bring together thoughtful finds from independent home brands to help make your space feel like yours." : "Upload an outfit for OFFFEED Lens to understand its pieces and find similar styles from independent brands, then build a Style DNA that feels like you."}
         </p>
       </div>
 
-      <div className="mt-10 grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
-        <section className="rounded-3xl border bg-card p-5 sm:p-6">
+      <div className={`mt-10 grid gap-6 ${isHome ? "mx-auto max-w-3xl" : "lg:grid-cols-[0.9fr_1.1fr]"}`}>
+        {!isHome && <section className="rounded-3xl border bg-card p-5 sm:p-6">
           <div className="flex items-start gap-3">
             <div className="rounded-2xl bg-primary/10 p-3 text-primary"><ImagePlus className="size-5" /></div>
             <div>
@@ -340,28 +346,28 @@ function CreateLookPage() {
             <p className="text-sm font-medium">The OFFFEED twist</p>
             <p className="mt-1 text-sm leading-6 text-muted-foreground">Your choices become a little Style DNA card — a mood, colour story, occasion and budget you can save or share with friends.</p>
           </div>
-        </section>
+        </section>}
 
         <section className="rounded-3xl border bg-card p-5 sm:p-6">
           <div className="flex items-start gap-3">
             <div className="rounded-2xl bg-primary/10 p-3 text-primary"><Heart className="size-5" /></div>
             <div>
-              <h2 className="font-display text-2xl">02. Define your Style DNA</h2>
-              <p className="mt-1 text-sm text-muted-foreground">Make the inspiration yours with a few quick choices.</p>
+              <h2 className="font-display text-2xl">{isHome ? "01. Imagine your space" : "02. Define your Style DNA"}</h2>
+              <p className="mt-1 text-sm text-muted-foreground">{isHome ? "A few little choices to help us find the feeling you want at home." : "Make the inspiration yours with a few quick choices."}</p>
             </div>
           </div>
           <div className="mt-6 space-y-6">
             <fieldset>
-              <legend className="mb-3 text-sm font-medium">Your vibe</legend>
-              <div className="flex flex-wrap gap-2">{vibes.map((item) => <button key={item} type="button" onClick={() => { setVibe(item); setRecipe(""); }} className={`rounded-full border px-3 py-2 text-sm transition ${vibe === item ? "border-primary bg-primary text-primary-foreground" : "border-border hover:border-primary/50"}`}>{item}</button>)}</div>
+              <legend className="mb-3 text-sm font-medium">{isHome ? "What should your home feel like?" : "Your vibe"}</legend>
+              <div className="flex flex-wrap gap-2">{(isHome ? homeVibes : vibes).map((item) => <button key={item} type="button" onClick={() => { setVibe(item); setRecipe(""); }} className={`rounded-full border px-3 py-2 text-sm transition ${vibe === item ? "border-primary bg-primary text-primary-foreground" : "border-border hover:border-primary/50"}`}>{item}</button>)}</div>
             </fieldset>
             <fieldset>
-              <legend className="mb-3 text-sm font-medium">Where are you wearing it?</legend>
-              <div className="flex flex-wrap gap-2">{occasions.map((item) => <button key={item} type="button" onClick={() => { setOccasion(item); setRecipe(""); }} className={`rounded-full border px-3 py-2 text-sm transition ${occasion === item ? "border-primary bg-primary text-primary-foreground" : "border-border hover:border-primary/50"}`}>{item}</button>)}</div>
+              <legend className="mb-3 text-sm font-medium">{isHome ? "Which space are we styling?" : "Where are you wearing it?"}</legend>
+              <div className="flex flex-wrap gap-2">{(isHome ? homeRooms : occasions).map((item) => <button key={item} type="button" onClick={() => { setOccasion(item); setRecipe(""); }} className={`rounded-full border px-3 py-2 text-sm transition ${occasion === item ? "border-primary bg-primary text-primary-foreground" : "border-border hover:border-primary/50"}`}>{item}</button>)}</div>
             </fieldset>
             <fieldset>
               <legend className="mb-3 text-sm font-medium">Colour story</legend>
-              <div className="flex flex-wrap gap-2">{palettes.map((item) => <button key={item} type="button" onClick={() => { setPalette(item); setRecipe(""); }} className={`rounded-full border px-3 py-2 text-sm transition ${palette === item ? "border-primary bg-primary text-primary-foreground" : "border-border hover:border-primary/50"}`}>{item}</button>)}</div>
+              <div className="flex flex-wrap gap-2">{(isHome ? homePalettes : palettes).map((item) => <button key={item} type="button" onClick={() => { setPalette(item); setRecipe(""); }} className={`rounded-full border px-3 py-2 text-sm transition ${palette === item ? "border-primary bg-primary text-primary-foreground" : "border-border hover:border-primary/50"}`}>{item}</button>)}</div>
             </fieldset>
             <fieldset>
               <legend className="mb-3 text-sm font-medium">Shopping budget</legend>
@@ -372,7 +378,7 @@ function CreateLookPage() {
               <input id="style-details" value={details} onChange={(event) => { setDetails(event.target.value); setRecipe(""); }} maxLength={120} placeholder="e.g. silver jewellery, oversized layers, vintage denim" className="w-full rounded-xl border bg-background px-4 py-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20" />
             </div>
           </div>
-          <Button size="lg" className="mt-7 min-h-12 w-full rounded-full" onClick={buildRecipe}><Sparkles className="mr-2 size-4" /> Build my Style DNA <ArrowRight className="ml-2 size-4" /></Button>
+          <Button size="lg" className="mt-7 min-h-12 w-full rounded-full" onClick={buildRecipe}><Sparkles className="mr-2 size-4" /> {isHome ? "Find my home edit" : "Build my Style DNA"} <ArrowRight className="ml-2 size-4" /></Button>
         </section>
       </div>
 
@@ -442,6 +448,7 @@ function CreateLookPage() {
 }
 
 export const Route = createFileRoute("/create")({
+  validateSearch: (search: Record<string, unknown>) => typeof search.space === "string" ? { space: search.space } : {},
   head: () => ({
     meta: [
       { title: "Create your Style DNA — OFFFEED" },
