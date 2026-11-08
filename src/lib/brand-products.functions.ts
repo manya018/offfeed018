@@ -4,7 +4,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 
-const audienceValues = ["her", "him"] as const;
+const audienceValues = ["her", "him", "home"] as const;
 const sizeChartSchema = z.object({ columns: z.array(z.string().trim().min(1).max(40)).min(1).max(30), rows: z.array(z.object({ label: z.string().trim().min(1).max(80), values: z.array(z.string().trim().max(40)).max(30) })).max(40), unit: z.string().trim().max(20).optional() }).nullable();
 const productSchema = z.object({
   name: z.string().trim().min(2).max(160),
