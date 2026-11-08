@@ -5,7 +5,7 @@ import type { Database } from "@/integrations/supabase/types";
 
 const profileInput = z.object({ brandHandle: z.string().trim().min(1).max(180) });
 const shopInput = z.object({
-  audience: z.enum(["her", "him"]),
+  audience: z.enum(["her", "him", "home"]),
   aesthetic: z.string().trim().min(1).max(80),
   categoryOnly: z.boolean().optional(),
   minPrice: z.number().nonnegative().optional(),
@@ -14,7 +14,7 @@ const shopInput = z.object({
   resultLimit: z.number().int().min(1).max(60).optional(),
 });
 
-type Audience = "her" | "him";
+type Audience = "her" | "him" | "home";
 
 type ProductSizeChart = { columns: string[]; rows: Array<{ label: string; values: string[] }>; unit?: string };
 
@@ -134,7 +134,7 @@ export const getPublicBrandProfile = createServerFn({ method: "GET" })
         description: brand.brand_description,
         website: brand.website_url,
         socialHandle: brand.social_handle,
-        audience: brand.audience.filter((item): item is Audience => item === "her" || item === "him"),
+        audience: brand.audience.filter((item): item is Audience => item === "her" || item === "him" || item === "home"),
         logoUrl: brandSigned.get(brand.logo_path) ?? null,
         coverUrl: brandSigned.get(brand.cover_path) ?? null,
         dispatchPinCode: safeShippingProfile?.origin_pin_code ?? null,
