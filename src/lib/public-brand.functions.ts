@@ -37,6 +37,7 @@ type ProductWithBrand = {
     name: string;
     handle: string;
     category: string;
+    homeCategories?: string[];
   };
 };
 
@@ -186,7 +187,7 @@ export const getShopTheLookProducts = createServerFn({ method: "GET" })
 
     const { data: brands, error: brandsError } = await supabase
       .from("brand_applications")
-      .select("id, public_handle, brand_name, category")
+      .select("id, public_handle, brand_name, category, audience_categories")
       .in("id", applicationIds)
       .eq("status", "approved");
     if (brandsError) throw new Error("Brand details for this edit could not be loaded.");
@@ -219,7 +220,7 @@ export const getShopTheLookProducts = createServerFn({ method: "GET" })
         tags: row.tags,
         audience: row.audience,
         createdAt: row.created_at,
-        brand: { name: brand.brand_name, handle: brand.public_handle, category: brand.category },
+        brand: { name: brand.brand_name, handle: brand.public_handle, category: brand.category, homeCategories: Array.isArray((brand.audience_categories as { home?: unknown } | null)?.home) ? ((brand.audience_categories as { home: unknown[] }).home.filter((item): item is string => typeof item === "string")) : [] },
       }];
     });
     const ranked = products
