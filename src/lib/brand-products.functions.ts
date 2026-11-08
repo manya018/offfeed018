@@ -415,7 +415,7 @@ export const saveImportedShopifyProducts = createServerFn({ method: "POST" })
         user_id: context.userId,
         product_name: product.name,
         description: product.description,
-        category: product.category,
+        category: data.audience.includes("home") ? "Home & Living / Other Home & Living" : product.category,
         price: product.price,
         product_url: productUrl.toString(),
         image_path: imagePath,
