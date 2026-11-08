@@ -39,7 +39,7 @@ export function SiteHeader() {
         <nav className="site-header-nav hidden min-w-0 items-center gap-8 lg:flex">
           {links.map((link) => <Link key={link.label} to={link.to} className="text-sm text-muted-foreground transition-colors hover:text-foreground" activeProps={{ className: "text-foreground" }}>{link.label}</Link>)}
           <Link to="/discover" search={{ category: "jewellery" }} className="text-sm text-muted-foreground transition-colors hover:text-foreground">Jewellery</Link>
-          <Link to="/discover" search={{ category: "accessories" }} className="text-sm text-muted-foreground transition-colors hover:text-foreground">Accessories</Link>
+          <Link to="/discover" search={{ category: "accessories" }} className="text-sm text-muted-foreground transition-colors hover:text-foreground">Accessories</Link><Link to="/discover" search={{ category: "home" }} className="text-sm text-muted-foreground transition-colors hover:text-foreground">HOME</Link>
         </nav>
         <div className="site-header-actions flex shrink-0 items-center gap-1.5">
           <Button variant="ghost" size="icon" aria-label="Search" className="hidden sm:inline-flex" asChild><Link to="/discover"><Search /></Link></Button>
@@ -56,7 +56,7 @@ export function SiteHeader() {
         <div className="grid grid-cols-2 gap-2">{links.map((link) => <Link key={link.label} to={link.to} className="rounded-xl border border-[#eadbd2] bg-white/75 px-4 py-3 text-sm text-[#5f493f] transition hover:bg-white" onClick={() => setOpen(false)}>{link.label}<span className="float-right text-[#b88a8b]">↗</span></Link>)}</div>
         <div className="mt-3 grid grid-cols-2 gap-2">
           <Link to="/discover" search={{ category: "jewellery" }} className="rounded-xl bg-[#f2e1df] px-4 py-3 text-sm text-[#76534f]" onClick={() => setOpen(false)}>Jewellery edit ↗</Link>
-          <Link to="/discover" search={{ category: "accessories" }} className="rounded-xl bg-[#e8eee4] px-4 py-3 text-sm text-[#536a56]" onClick={() => setOpen(false)}>Accessories edit ↗</Link>
+          <Link to="/discover" search={{ category: "accessories" }} className="rounded-xl bg-[#e8eee4] px-4 py-3 text-sm text-[#536a56]" onClick={() => setOpen(false)}>Accessories edit ↗</Link><Link to="/discover" search={{ category: "home" }} className="col-span-2 rounded-xl border border-[#d9c3a7] bg-[#f2e7d6] px-4 py-3 text-sm text-[#76563d]" onClick={() => setOpen(false)}>HOME · Living edit ↗</Link>
         </div>
         <Link to="/checkout" className="mt-3 block rounded-xl border border-[#d9c8bd] bg-white px-4 py-3 text-sm text-[#5f493f]" onClick={() => setOpen(false)}>Shopping bag / Checkout</Link>
       </nav>}
