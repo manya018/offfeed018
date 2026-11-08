@@ -46,6 +46,7 @@ function styleBudgetRange(budget?: string) {
 }
 import { IndianWearEdit } from "@/components/indian-wear-edit";
 import { OfffeedNote } from "@/components/offfeed-note";
+import { HomeLivingEdit } from "@/components/home-living-edit";
 import gulaboBanner from "@/assets/indian-wear/Gulabo_The_Desi_Girl_Edit.webp";
 import nawabBanner from "@/assets/indian-wear/Nawab_The_Desi_Gentleman_Edit.webp";
 
@@ -106,14 +107,14 @@ function DiscoverPage() {
   useEffect(() => { setLikedReferenceItems(readLikedLookIds()); }, []);
   const toggleReferenceLike = (id: string) => { const next = !likedReferenceItems.includes(id); setLikedReferenceItems((current) => next ? [...current, id] : current.filter((value) => value !== id)); void setWishlistItem("look", id, next); toast.success(next ? "Added to wishlist" : "Removed from wishlist"); };
   const shareReference = async (item: { title: string; src: string }) => { const url = new URL(`/discover?category=${category ?? "jewellery"}`, window.location.origin).toString(); try { if (navigator.share) await navigator.share({ title: `${item.title} — OFFFEED`, text: `Found this style on OFFFEED`, url }); else { await navigator.clipboard.writeText(url); toast.success("Link copied to share"); } } catch (error) { if (error instanceof Error && error.name === "AbortError") return; try { await navigator.clipboard.writeText(url); toast.success("Link copied to share"); } catch { toast.error("Could not share this item."); } } };
-  useEffect(() => { if (category !== "indian-wear") return; document.documentElement.dataset.edit = "indian-wear"; return () => { delete document.documentElement.dataset.edit; }; }, [category]);
+  useEffect(() => { if (category !== "indian-wear" && category !== "home") return; document.documentElement.dataset.edit = category; return () => { delete document.documentElement.dataset.edit; }; }, [category]);
   useEffect(() => { setFilter("All"); setQuery(""); setVisible(6); setSelectedClothingCategory(""); }, [space]);
   useEffect(() => {
     let active = true;
-    const isClothingFeed = category !== "jewellery" && category !== "accessories";
+    const isClothingFeed = category !== "jewellery" && category !== "accessories" && category !== "home";
     setCategoryLoading(true);
     setCategoryError(false);
-    getShopTheLookProducts({ data: { audience: space, aesthetic: isClothingFeed ? "clothing" : category!, categoryOnly: true } })
+    getShopTheLookProducts({ data: { audience: category === "home" ? "home" : space, aesthetic: category === "home" ? "home" : isClothingFeed ? "clothing" : category!, categoryOnly: true } })
       .then((products) => { if (active) { const clothingProducts = products.filter((product) => /tops|t-shirt|polo|shirt|blouse|dress|skirt|denim|jean|trouser|pant|short|co.?ord|jumpsuit|jacket|outerwear|knitwear|hoodie|sweatshirt|activewear|lingerie|loungewear|saree|lehenga|kurta|suit|anarkali|sharara|dupatta|indo.?western|sherwani|nehru|bandhgala|dhoti|waistcoat|sneaker|heel|flat|sandal|boot|loafer|footwear|clothing|complete look|mixed look/i.test(product.category)); setCategoryProducts(category === "indian-wear" ? products.filter((product) => /indian|ethnic|desi|kurta|saree|lehenga|sherwani|dhoti|salwar|anarkali|nehru|indo.?western|sharara|bandhgala|waistcoat|dupatta/.test((product.category + " " + product.tags.join(" ")).toLowerCase())) : isClothingFeed ? clothingProducts : products); } })
       .catch(() => { if (active) { setCategoryProducts([]); setCategoryError(true); } })
       .finally(() => { if (active) setCategoryLoading(false); });
@@ -169,6 +170,8 @@ function DiscoverPage() {
     }
     return results;
   }, [collection, filter, query, activeStyleDNA]);
+
+  if (category === "home") return <HomeLivingEdit products={categoryProducts} loading={categoryLoading} />;
 
   if (category === "jewellery" || category === "accessories" || category === "indian-wear") {
     const indianWear = category === "indian-wear";
@@ -349,6 +352,13 @@ function DiscoverPage() {
               loading="lazy"
               className="block h-auto w-full transition-transform duration-700 group-hover:scale-[1.015]"
             />
+          </button>
+          <button type="button" aria-label="Explore HOME — the living edit" onClick={() => { window.location.href = "/discover?category=home"; }} className="group relative col-span-2 block w-full overflow-hidden rounded-[1.15rem] border border-[#d8c2a5] bg-[#f3e8d8] text-left shadow-[0_7px_18px_-13px_rgba(75,48,30,.35)] transition duration-300 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#a66c45] focus-visible:ring-offset-2 lg:col-span-1">
+            <div className="relative aspect-[16/10] overflow-hidden">
+              <img src="https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=900&q=85" alt="A sunlit, welcoming home with warm natural textures" loading="lazy" className="size-full object-cover transition-transform duration-700 group-hover:scale-105"/>
+              <div className="absolute inset-0 bg-gradient-to-t from-[#3f2d20]/75 via-[#3f2d20]/10 to-transparent"/>
+              <div className="absolute inset-x-0 bottom-0 p-4 text-[#fff8ec]"><p className="text-[9px] font-semibold uppercase tracking-[.22em] text-[#f1d8b7]">A place to belong</p><p className="mt-1 font-display text-2xl leading-none">HOME</p><p className="mt-1 text-[10px] text-[#fff4e5]/90">The warmth of your own little world ↗</p></div>
+            </div>
           </button>
           <div className="rounded-lg bg-white/65 lg:bg-transparent">
             <button type="button" aria-expanded={accessoriesMenuOpen} onClick={() => setAccessoriesMenuOpen((open) => !open)} className="flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-left text-sm font-semibold text-[#59463e] hover:bg-white"><span>Accessories</span><span className="text-[#71836d]">{accessoriesMenuOpen ? "−" : "+"}</span></button>
