@@ -70,10 +70,10 @@ function CreateLookPage() {
   const { space: requestedSpace } = Route.useSearch();
   const [outfitFile, setOutfitFile] = useState<File | null>(null);
   const [outfitPreview, setOutfitPreview] = useState("");
-  const [vibe, setVibe] = useState("Indie");
-  const [occasion, setOccasion] = useState("Everyday");
+  const [vibe, setVibe] = useState("Warm & cosy");
+  const [occasion, setOccasion] = useState("Living room");
   const [budget, setBudget] = useState("₹1,000–₹2,500");
-  const [palette, setPalette] = useState("Earthy tones");
+  const [palette, setPalette] = useState("Warm neutrals");
   const [details, setDetails] = useState("");
   const [recipe, setRecipe] = useState("");
   const [saved, setSaved] = useState(false);
@@ -86,6 +86,7 @@ function CreateLookPage() {
   const { space, setSpace } = useStyleSpace();
   const isHome = requestedSpace === "home" || space === "home";
   useEffect(() => { if (requestedSpace === "home") setSpace("home"); }, [requestedSpace, setSpace]);
+  useEffect(() => { if (isHome) { setVibe("Warm & cosy"); setOccasion("Living room"); setPalette("Warm neutrals"); } }, [isHome]);
   const fileInput = useRef<HTMLInputElement>(null);
 
   const acceptImage = (file?: File) => {
@@ -366,7 +367,7 @@ function CreateLookPage() {
               <div className="flex flex-wrap gap-2">{(isHome ? homeRooms : occasions).map((item) => <button key={item} type="button" onClick={() => { setOccasion(item); setRecipe(""); }} className={`rounded-full border px-3 py-2 text-sm transition ${occasion === item ? "border-primary bg-primary text-primary-foreground" : "border-border hover:border-primary/50"}`}>{item}</button>)}</div>
             </fieldset>
             <fieldset>
-              <legend className="mb-3 text-sm font-medium">Colour story</legend>
+              <legend className="mb-3 text-sm font-medium">{isHome ? "Your home colour story" : "Colour story"}</legend>
               <div className="flex flex-wrap gap-2">{(isHome ? homePalettes : palettes).map((item) => <button key={item} type="button" onClick={() => { setPalette(item); setRecipe(""); }} className={`rounded-full border px-3 py-2 text-sm transition ${palette === item ? "border-primary bg-primary text-primary-foreground" : "border-border hover:border-primary/50"}`}>{item}</button>)}</div>
             </fieldset>
             <fieldset>
