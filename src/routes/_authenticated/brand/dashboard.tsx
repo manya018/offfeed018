@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { createBrandProduct, getBrandWorkspace, importShopifyCatalog, saveBrandShippingProfile, saveBrandSizeGuide, saveImportedShopifyProducts, updateBrandOrderTracking, updateBrandProductSizeChart, updateBrandProductStatus } from "@/lib/brand-products.functions";
 import { submitDispatchEvidence, getDisputeViewerData, rerunReturnAnalysis, type DisputeViewerData, type ForensicReport } from "@/lib/dispute-evidence.functions";
-import { submitSpotlightCampaign, getMySpotlightCampaigns } from "@/lib/spotlight.functions";
+import { submitSpotlightCampaign, getMySpotlightCampaigns, getMySpotlightPerformance } from "@/lib/spotlight.functions";
 
 
 export const Route = createFileRoute("/_authenticated/brand/dashboard")({
@@ -603,7 +603,7 @@ function BrandDashboard() {
         <Stat label="Your share" value={`${Math.round((1 - commission) * 100)}%`} icon={PackagePlus}/>
       </div>
 
-      <BrandSpotlightSection products={products} audiences={supportedAudience} />
+      <SpotlightPricingSection />\n      <SpotlightPerformanceSection />\n      <BrandSpotlightSection products={products} audiences={supportedAudience} />
 
       <section className="border-b border-border/70 py-7" aria-labelledby="brand-size-guides-heading">
         <div className="max-w-3xl"><p className="text-xs font-semibold uppercase tracking-[0.15em] text-primary">REUSABLE SIZE GUIDES</p><h2 id="brand-size-guides-heading" className="mt-2 font-display text-3xl">Set it once. Use it across products.</h2><p className="mt-2 text-sm leading-6 text-muted-foreground">Create one default chart for each category. New products and existing products without a custom chart will use it automatically. Product-specific overrides stay separate.</p></div>
@@ -933,5 +933,45 @@ function BrandSpotlightSection({ products, audiences }: {
       <h3 className="font-display text-xl">Your Spotlight applications</h3>
       {loading ? <p className="mt-3 text-sm text-muted-foreground">Loading applications…</p> : campaigns.length ? <div className="mt-3 divide-y divide-border/70 border-y border-border/70">{campaigns.map((campaign) => <div key={campaign.id} className="py-4"><div className="flex flex-wrap items-center justify-between gap-2"><p className="text-sm font-medium">{campaign.audience.toUpperCase()} · {campaign.duration_days} days</p><Badge variant="secondary">{campaign.status.replaceAll("_", " ")}</Badge></div><p className="mt-1 text-xs text-muted-foreground">Payment: {campaign.payment_status} · {Number(campaign.campaign_price) > 0 ? `₹${Number(campaign.campaign_price).toLocaleString("en-IN")}` : "Price to be confirmed by OFFFEED"}</p>{campaign.admin_note && <p className="mt-2 text-xs text-muted-foreground">{campaign.admin_note}</p>}</div>)}</div> : <p className="mt-3 text-sm text-muted-foreground">You haven't submitted a Spotlight application yet.</p>}
     </div>
+  </section>;
+}
+
+
+function SpotlightPricingSection() {
+  const packages = [{ days: 7, label: "1-week Spotlight", price: 1499 }, { days: 14, label: "2-week Spotlight", price: 2499 }, { days: 28, label: "4-week Spotlight", price: 3999 }];
+  return <section className="border-b border-border/70 py-7" aria-labelledby="spotlight-pricing-heading">
+    <div className="max-w-3xl"><p className="text-xs font-semibold uppercase tracking-[0.15em] text-primary">THE OFFFEED EDIT · SPOTLIGHT</p><h2 id="spotlight-pricing-heading" className="mt-2 font-display text-3xl">How Spotlight works</h2><p className="mt-2 text-sm leading-6 text-muted-foreground">Give your brand a dedicated feature with multiple products from your collection. Choose a campaign length, submit your products and OFFFEED will review your application before confirming payment and scheduling.</p></div>
+    <div className="mt-5 max-w-3xl overflow-hidden rounded-xl border border-border/80">
+      <div className="grid grid-cols-[1fr_auto] gap-3 border-b border-border/70 bg-muted/30 px-4 py-3 text-sm font-semibold"><span>Package</span><span>Suggested introductory price</span></div>
+      {packages.map((item) => <div key={item.days} className="grid grid-cols-[1fr_auto] gap-3 border-b border-border/60 px-4 py-4 last:border-0"><span className="text-sm">{item.label}</span><span className="text-sm font-medium">₹{item.price.toLocaleString("en-IN")}</span></div>)}
+    </div>
+    <p className="mt-3 max-w-3xl text-xs leading-5 text-muted-foreground">These are proposed introductory test prices, not a final rate card. OFFFEED will confirm the applicable price when reviewing your application. No payment is taken when you apply.</p>
+    <div className="mt-5 max-w-3xl rounded-xl border border-border/80 bg-muted/20 p-4 sm:p-5"><p className="text-sm font-medium text-muted-foreground">Illustrative monthly sponsored revenue</p><p className="mt-2 font-display text-4xl text-emerald-700">₹39,990</p><p className="mt-1 text-xs text-muted-foreground">10 brands × ₹3,999 for a four-week campaign</p></div>
+    <p className="mt-3 max-w-3xl text-sm leading-6 text-muted-foreground">Spotlight is additional revenue alongside OFFFEED's existing marketplace commission model. Organic Curated Edit placement remains independent and cannot be purchased.</p>
+  </section>;
+}
+
+function SpotlightPerformanceSection() {
+  const performance = useQuery({ queryKey: ["my-spotlight-performance"], queryFn: () => getMySpotlightPerformance(), retry: 1 });
+  const [selected, setSelected] = useState("");
+  const [week, setWeek] = useState("all");
+  const reports = performance.data ?? [];
+  const activeId = reports.some((item: any) => item.id === selected) ? selected : reports[0]?.id ?? "";
+  const campaign = reports.find((item: any) => item.id === activeId);
+  const weekly = campaign?.weeklyReports ?? [];
+  const selectedWeek = week === "all" ? null : weekly.find((item: any) => String(item.week) === week);
+  const metrics = selectedWeek ?? campaign;
+  return <section className="border-b border-border/70 py-7" aria-labelledby="spotlight-performance-heading">
+    <div className="max-w-4xl"><p className="text-xs font-semibold uppercase tracking-[0.15em] text-primary">CAMPAIGN INSIGHTS</p><h2 id="spotlight-performance-heading" className="mt-2 font-display text-3xl">Your Spotlight performance</h2><p className="mt-2 text-sm leading-6 text-muted-foreground">See how shoppers discovered and engaged with the products in your paid feature.</p></div>
+    {performance.isLoading ? <p className="mt-5 text-sm text-muted-foreground">Loading your campaign report…</p> :
+     performance.isError ? <p className="mt-5 rounded-lg border border-dashed border-border p-5 text-sm text-muted-foreground">Performance data couldn't be loaded right now. Please refresh the page.</p> :
+     !reports.length ? <div className="mt-5 rounded-xl border border-dashed border-border p-6 text-sm text-muted-foreground">Your campaign report will appear here once you have a Spotlight application and campaign activity. Views, clicks and saves are measured from real OFFFEED interactions; purchases are matched to orders for the campaign products during the campaign dates.</div> :
+     <div className="mt-5 max-w-4xl rounded-2xl border border-border/80 p-4 sm:p-6">
+       <div className="flex flex-wrap items-center justify-between gap-3"><div><h3 className="font-display text-xl">EDIT Spotlight — Campaign report</h3><p className="mt-1 text-xs text-muted-foreground">Live OFFFEED analytics · No sample numbers</p></div><Badge variant="secondary">{campaign?.status ?? "Campaign"}</Badge></div>
+       <div className="mt-4 grid gap-3 sm:grid-cols-2"><div><Label htmlFor="spotlight-report-campaign">Campaign</Label><select id="spotlight-report-campaign" value={activeId} onChange={(e) => {setSelected(e.target.value);setWeek("all");}} className={fieldClass}>{reports.map((item: any) => <option key={item.id} value={item.id}>{item.audience.toUpperCase()} · {item.durationDays}-week{item.durationDays === 7 ? "" : "s"} · {item.status}</option>)}</select></div><div><Label htmlFor="spotlight-report-week">Reporting period</Label><select id="spotlight-report-week" value={week} onChange={(e) => setWeek(e.target.value)} className={fieldClass}><option value="all">Campaign to date</option>{weekly.map((item: any) => <option key={item.week} value={String(item.week)}>Week {item.week}</option>)}</select></div></div>
+       <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">{[{label:"Product views",value:metrics?.views ?? 0},{label:"Product clicks",value:metrics?.clicks ?? 0},{label:"Saves",value:metrics?.saves ?? 0},{label:"Attributed purchases",value:metrics?.purchases ?? 0}].map((metric) => <div key={metric.label} className="rounded-xl bg-muted/30 p-4"><p className="font-display text-3xl tabular-nums">{Number(metric.value).toLocaleString("en-IN")}</p><p className="mt-2 text-xs leading-5 text-muted-foreground">{metric.label}</p></div>)}</div>
+       <div className="mt-4"><p className="text-xs font-medium text-muted-foreground">Products included</p><p className="mt-1 text-sm">{campaign?.productNames?.join(" · ") || "Selected campaign products"}</p></div>
+       <p className="mt-4 text-xs leading-5 text-muted-foreground">Views, clicks and saves count unique visitor-product interactions per reporting period. Attributed purchases count non-cancelled orders for selected products placed during the campaign dates. They are campaign-period sales, not proof that a click caused the purchase.</p>
+     </div>}
   </section>;
 }
