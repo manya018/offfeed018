@@ -40,7 +40,15 @@ function ExplorePage() {
     { title: "Plants & Planters", line: "A little green, a little life, a little joy.", image: "https://images.unsplash.com/photo-1485955900006-10f4d324d411?auto=format&fit=crop&w=1000&q=85", match: /plant|planter|pot|garden/i },
   ];
   const activeCategory = homeCategories.find((item) => item.title === selected);
-  const homeProducts = useMemo(() => products.filter((product) => (!activeCategory || product.brand.homeCategories?.includes(activeCategory.title) === true) && (!activeCategory || activeCategory.match.test([product.category, product.productName, product.description, ...product.tags].join(" "))), [products, activeCategory]);
+  const homeProducts = useMemo(
+    () => products.filter((product) => {
+      if (!activeCategory) return true;
+      const belongsToBrandCollection = product.brand.homeCategories?.includes(activeCategory.title) === true;
+      const productText = [product.category, product.productName, product.description, ...product.tags].join(" ");
+      return belongsToBrandCollection && activeCategory.match.test(productText);
+    }),
+    [products, activeCategory],
+  );
   if (isHome) return <main className="min-h-screen bg-[#fbf5eb] pb-24 text-[#4c392b]">
     <section className="mx-auto max-w-[1440px] px-5 py-14 lg:px-10">
       <p className="text-[10px] font-semibold uppercase tracking-[.25em] text-[#9a7658]">OFFFEED · HOME</p>
