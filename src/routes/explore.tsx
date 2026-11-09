@@ -19,10 +19,10 @@ export const Route = createFileRoute("/explore")({
 });
 
 const livingStories = [
-  { title: "Slow mornings", line: "Coffee, soft light and nowhere else to be.", image: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=1200&q=85" },
-  { title: "Gather around", line: "A table that always has room for one more.", image: "https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=1200&q=85" },
-  { title: "Flowers, just because", line: "Small gestures that make a space feel yours.", image: "https://images.unsplash.com/photo-1490750967868-88aa4486c946?auto=format&fit=crop&w=1200&q=85" },
-  { title: "A softer evening", line: "Warm lamps, familiar corners and a little pause.", image: "https://images.unsplash.com/photo-1631049307264-da0ec9d70304?auto=format&fit=crop&w=1200&q=85" },
+  { title: "Slow mornings", line: "Coffee, soft light and nowhere else to be.", image: "/images/living/bedding-furnishings.jpeg" },
+  { title: "Gather around", line: "A table that always has room for one more.", image: "/images/living/crockery-tableware.jpeg" },
+  { title: "Flowers, just because", line: "Small gestures that make a space feel yours.", image: "/images/living/plants-planters.jpeg" },
+  { title: "A softer evening", line: "Warm lamps, familiar corners and a little pause.", image: "/images/living/lighting.jpeg" },
 ];
 
 const livingCategories = [
