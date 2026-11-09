@@ -19,7 +19,7 @@ export function SiteHeader() {
   const [open, setOpen] = useState(false);
   const [bagCount, setBagCount] = useState(0);
   const { space, setSpace } = useStyleSpace();
-  const currentSearch = useRouterState({ select: (state) => state.location.search as { category?: string } });
+  const currentSearch = useRouterState({ select: (state) => state.location.search as { category?: string; view?: string } });
   const isHomeCollection = currentSearch.category === "home" || space === "home";
   useEffect(() => {
     const syncBag = () => setBagCount(readOfffeedCart().reduce((sum, item) => sum + item.quantity, 0));
@@ -48,7 +48,7 @@ export function SiteHeader() {
           </Button>
         </div>
         <nav className="site-header-nav hidden min-w-0 items-center gap-8 lg:flex">
-          {links.map((link) => link.label === "Home" ? <Link key={link.label} to={isHomeCollection ? "/discover" : "/"} search={isHomeCollection ? { category: "home" } : undefined} onClick={() => { if (isHomeCollection) setSpace("home"); }} className="text-sm text-muted-foreground transition-colors hover:text-foreground" activeProps={{ className: "text-foreground" }}>Home</Link> : <Link key={link.label} to={link.to} search={link.label === "Discover" && isHomeCollection ? { category: "home" } : link.label === "The EDIT" && isHomeCollection ? { collection: "home" } : link.label === "Explore" && isHomeCollection ? { space: "home" } : link.label === "Create" && isHomeCollection ? { space: "home" } : undefined} onClick={() => { if (link.label === "Discover" || link.label === "The EDIT" || link.label === "Explore" || link.label === "Create") setSpace(isHomeCollection ? "home" : space === "home" ? "her" : space); }} className="text-sm text-muted-foreground transition-colors hover:text-foreground" activeProps={{ className: "text-foreground" }}>{link.label}</Link>)}
+          {links.map((link) => link.label === "Home" ? <Link key={link.label} to={isHomeCollection ? "/discover" : "/"} search={isHomeCollection ? { category: "home" } : undefined} onClick={() => { if (isHomeCollection) setSpace("home"); }} className="text-sm text-muted-foreground transition-colors hover:text-foreground" activeProps={{ className: "text-foreground" }}>Home</Link> : <Link key={link.label} to={link.to} search={link.label === "Discover" && isHomeCollection ? { category: "home", view: "discover" } : link.label === "The EDIT" && isHomeCollection ? { collection: "home" } : link.label === "Explore" && isHomeCollection ? { space: "home" } : link.label === "Create" && isHomeCollection ? { space: "home" } : undefined} onClick={() => { if (link.label === "Discover" || link.label === "The EDIT" || link.label === "Explore" || link.label === "Create") setSpace(isHomeCollection ? "home" : space === "home" ? "her" : space); }} className="text-sm text-muted-foreground transition-colors hover:text-foreground" activeProps={{ className: "text-foreground" }}>{link.label}</Link>)}
           {!isHomeCollection && <><Link to="/discover" search={{ category: "jewellery" }} className="text-sm text-muted-foreground transition-colors hover:text-foreground">Jewellery</Link><Link to="/discover" search={{ category: "accessories" }} className="text-sm text-muted-foreground transition-colors hover:text-foreground">Accessories</Link></>}
         </nav>
         <div className="site-header-actions flex shrink-0 items-center gap-1.5">
