@@ -383,11 +383,11 @@ function DiscoverPage() {
         <div>
           <p className="mb-5 text-[10px] font-semibold uppercase tracking-[.25em] text-[#98776d] sm:text-xs">The independent style index · OFFFEED</p>
           <h1 className="max-w-2xl font-display text-5xl font-medium leading-[.98] tracking-[-.045em] text-[#49382f] sm:text-7xl">{isHim ? <>Find your <em className="font-normal text-[#71836d]">own style.</em></> : <>Find your next <em className="font-normal text-[#bd8790]">obsession.</em></>}</h1>
-          <p className="mt-5 max-w-xl text-sm leading-7 text-[#78645a] sm:text-base">{isHim ? "Discover independent labels, unexpected combinations and pieces that feel like you." : "A considered edit of independent labels, unexpected looks and little details worth discovering."}</p>
+          <p className="mt-5 max-w-xl text-sm leading-7 text-[#78645a] sm:text-base">{isHim ? "Shop products, compare independent labels and find pieces that feel like you." : "Browse products by category, discover independent labels and find the pieces you have been looking for."}</p><p className="mt-3 text-xs font-medium tracking-wide text-[#98776d]">DISCOVER = SHOP PRODUCTS & BRANDS</p>
           <div className="relative mt-7 max-w-xl"><Search className="absolute left-5 top-1/2 size-5 -translate-y-1/2 text-[#987e72]"/><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={isHim ? "Search styles, looks and labels…" : "Search looks, moods, styles and more…"} className="h-14 w-full rounded-full border border-[#e4c9c6] bg-white/90 pl-14 pr-5 text-sm text-[#49382f] shadow-sm outline-none placeholder:text-[#a18c82] focus:border-[#bd8790]"/></div>
           <div className="mt-6 flex flex-wrap gap-2">
             <Button variant="outline" className="rounded-full border-[#d8b8b5] bg-[#fffaf7]/80 px-5 text-[#76534f] hover:bg-white" onClick={() => { window.location.href = "/discover?category=jewellery"; }}>Jewellery ↗</Button>
-            <Button variant="outline" className="rounded-full border-[#c8d2c2] bg-[#f8fbf5]/90 px-5 text-[#536a56] hover:bg-white" onClick={() => { window.location.href = "/discover?category=accessories"; }}>Accessories ↗</Button>
+            <Button variant="outline" className="rounded-full border-[#c8d2c2] bg-[#f8fbf5]/90 px-5 text-[#536a56] hover:bg-white" onClick={() => { window.location.href = "/discover?category=accessories"; }}>Accessories ↗</Button><Button variant="outline" className="rounded-full border-[#e3d4c9] bg-white/80 px-5 text-[#76534f] hover:bg-white" onClick={() => { window.location.href = "/explore"; }}>Looking for inspiration? Explore ↗</Button>
           </div>
         </div>
         <div className="relative mx-auto grid w-full max-w-[520px] grid-cols-[1.08fr_.92fr] items-center gap-3 lg:gap-4">
