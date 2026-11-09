@@ -4,14 +4,14 @@ import type { ProductWithBrand } from "@/lib/public-brand.functions";
 import { Button } from "@/components/ui/button";
 
 const collections = [
-  { title: "Crockery & Tableware", detail: "Mugs, cups, dinner sets, plates, bowls and serving pieces.", image: "/images/living/crockery%20and%20tableware.jpeg", match: /crockery|tableware|mug|cup|dinner|plate|bowl|cutlery|serve|tray|ceramic|glassware/i },
-  { title: "Bedding & Furnishings", detail: "Bedsheets, quilts, cushions, throws and soft little comforts.", image: "/images/living/bedding%20%26%20furnishing.jpeg", match: /bedding|bedsheet|linen|quilt|blanket|cushion|pillow|throw|furnishing/i },
-  { title: "Candles & Fragrance", detail: "Scented candles, diffusers, room sprays and incense.", image: "/images/living/candles%20%26%20fragrance.jpeg", match: /candle|fragrance|diffuser|room spray|incense|scent/i },
-  { title: "Home Decor", detail: "Vases, wall art, mirrors, frames and objects with a story.", image: "/images/living/home%20decor.jpeg", match: /decor|vase|wall art|mirror|frame|sculpture|ornament|object/i },
-  { title: "Storage & Organisation", detail: "Baskets, organisers and thoughtful everyday storage.", image: "/images/living/storage%20%26%20organization.jpeg", match: /storage|organis|basket|box|organizer/i },
-  { title: "Bath & Wellness", detail: "Bath linens, self-care accessories and quiet rituals.", image: "/images/living/bath%20%26%20wellness.jpeg", match: /bath|wellness|towel|soap|self.?care|bathroom/i },
+  { title: "Crockery & Tableware", detail: "Mugs, cups, dinner sets, plates, bowls and serving pieces.", image: "/images/living/crockery-tableware.jpeg", match: /crockery|tableware|mug|cup|dinner|plate|bowl|cutlery|serve|tray|ceramic|glassware/i },
+  { title: "Bedding & Furnishings", detail: "Bedsheets, quilts, cushions, throws and soft little comforts.", image: "/images/living/bedding-furnishings.jpeg", match: /bedding|bedsheet|linen|quilt|blanket|cushion|pillow|throw|furnishing/i },
+  { title: "Candles & Fragrance", detail: "Scented candles, diffusers, room sprays and incense.", image: "/images/living/candles-fragrance.jpeg", match: /candle|fragrance|diffuser|room spray|incense|scent/i },
+  { title: "Home Decor", detail: "Vases, wall art, mirrors, frames and objects with a story.", image: "/images/living/home-decor.jpeg", match: /decor|vase|wall art|mirror|frame|sculpture|ornament|object/i },
+  { title: "Storage & Organisation", detail: "Baskets, organisers and thoughtful everyday storage.", image: "/images/living/storage-organization.jpeg", match: /storage|organis|basket|box|organizer/i },
+  { title: "Bath & Wellness", detail: "Bath linens, self-care accessories and quiet rituals.", image: "/images/living/bath-wellness.jpeg", match: /bath|wellness|towel|soap|self.?care|bathroom/i },
   { title: "Lighting", detail: "Table lamps, ambient lights and warm little glows.", image: "/images/living/lighting.jpeg", match: /light|lamp|lighting|lantern/i },
-  { title: "Plants & Planters", detail: "Greens, planters and small reminders to slow down.", image: "/images/living/plants%20%26%20planters.jpeg", match: /plant|planter|pot|garden/i },
+  { title: "Plants & Planters", detail: "Greens, planters and small reminders to slow down.", image: "/images/living/plants-planters.jpeg", match: /plant|planter|pot|garden/i },
 ];
 
 export function HomeLivingEdit({ products, loading }: { products: ProductWithBrand[]; loading: boolean }) {
