@@ -55,17 +55,17 @@ export function HomeLivingEdit({ products, loading }: { products: ProductWithBra
       </div>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
         <article className="relative overflow-hidden rounded-[1.25rem]">
-          <img src="https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=900&q=85" alt="A slow morning with a warm cup of coffee" loading="lazy" className="h-56 w-full object-cover sm:h-64"/>
+          <img src="/images/living/bedding-furnishings.jpeg" alt="A slow morning with a warm cup of coffee" loading="lazy" className="h-56 w-full object-cover sm:h-64"/>
           <div className="absolute inset-0 bg-gradient-to-t from-[#34251d]/65 via-transparent to-transparent"/>
           <p className="absolute bottom-4 left-5 font-display text-2xl italic text-[#fff8ed]">Slow mornings</p>
         </article>
         <article className="relative overflow-hidden rounded-[1.25rem]">
-          <img src="https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=900&q=85" alt="A lovingly prepared meal ready to be shared" loading="lazy" className="h-56 w-full object-cover sm:h-64"/>
+          <img src="/images/living/crockery-tableware.jpeg" alt="A lovingly prepared meal ready to be shared" loading="lazy" className="h-56 w-full object-cover sm:h-64"/>
           <div className="absolute inset-0 bg-gradient-to-t from-[#34251d]/65 via-transparent to-transparent"/>
           <p className="absolute bottom-4 left-5 font-display text-2xl italic text-[#fff8ed]">One more at the table</p>
         </article>
         <article className="relative overflow-hidden rounded-[1.25rem]">
-          <img src="https://images.unsplash.com/photo-1490750967868-88aa4486c946?auto=format&fit=crop&w=900&q=85" alt="Fresh flowers brought home just because" loading="lazy" className="h-56 w-full object-cover sm:h-64"/>
+          <img src="/images/living/plants-planters.jpeg" alt="Fresh flowers brought home just because" loading="lazy" className="h-56 w-full object-cover sm:h-64"/>
           <div className="absolute inset-0 bg-gradient-to-t from-[#34251d]/65 via-transparent to-transparent"/>
           <p className="absolute bottom-4 left-5 font-display text-2xl italic text-[#fff8ed]">Flowers, just because</p>
         </article>
