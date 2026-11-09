@@ -178,45 +178,80 @@ export const getMySpotlightPerformance = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const db = supabaseAdmin as any;
-    const { data: campaigns, error } = await db.from("spotlight_campaigns")
-      .select("id, audience, duration_days, status, payment_status, starts_at, ends_at, created_at, spotlight_campaign_products(product_id, brand_products(product_name))")
+
+    const { data: campaigns, error: campaignError } = await db.from("spotlight_campaigns")
+      .select("id, audience, duration_days, status, payment_status, starts_at, ends_at, created_at")
       .eq("user_id", context.userId).order("created_at", { ascending: false }).limit(50);
-    if (error) throw new Error("Spotlight performance could not be loaded.");
-    const ids = (campaigns ?? []).map((item: any) => item.id);
-    if (!ids.length) return [];
-    const { data: eventsData, error: eventError } = await db.from("spotlight_analytics_events")
-      .select("campaign_id, product_id, event_type, visitor_id, created_at").in("campaign_id", ids);
-    // Keep the report available if the analytics migration has not yet been applied.
-    const analyticsReady = !eventError;
-    const events = eventsData ?? [];
-    const productIds = [...new Set((campaigns ?? []).flatMap((item: any) => (item.spotlight_campaign_products ?? []).map((p: any) => p.product_id)))];
-    const { data: orders, error: orderError } = productIds.length
-      ? await db.from("brand_orders").select("product_id, quantity, created_at, status").in("product_id", productIds).eq("brand_user_id", context.userId).neq("status", "cancelled")
+    if (campaignError) throw new Error("Your Spotlight campaigns could not be loaded.");
+
+    if (!campaigns?.length) return [];
+
+    const ids = campaigns.map((item: any) => item.id);
+    const { data: selectedProducts, error: selectedError } = await db.from("spotlight_campaign_products")
+      .select("campaign_id, product_id, position").in("campaign_id", ids).order("position");
+    if (selectedError) throw new Error("Your Spotlight campaign products could not be loaded.");
+
+    const productIds = [...new Set((selectedProducts ?? []).map((item: any) => item.product_id))];
+    const { data: productRows } = productIds.length
+      ? await db.from("brand_products").select("id, product_name").in("id", productIds)
       : { data: [], error: null };
-    if (orderError) throw new Error("Attributed order data could not be loaded.");
-    return (campaigns ?? []).map((campaign: any) => {
-      const productIdsForCampaign = new Set((campaign.spotlight_campaign_products ?? []).map((p: any) => p.product_id));
-      const campaignEvents = (events ?? []).filter((event: any) => event.campaign_id === campaign.id);
-      const count = (type: string) => new Set(campaignEvents.filter((e: any) => e.event_type === type).map((e: any) => e.visitor_id + ":" + e.product_id)).size;
+    const productNames = new Map((productRows ?? []).map((item: any) => [item.id, item.product_name]));
+
+    // Optional engagement table: the report still loads with zeros until its migration is applied.
+    const { data: eventRows, error: eventError } = await db.from("spotlight_analytics_events")
+      .select("campaign_id, product_id, event_type, visitor_id, created_at").in("campaign_id", ids);
+    const analyticsReady = !eventError;
+    const events = eventRows ?? [];
+
+    // Orders are matched to the selected campaign products and campaign dates.
+    const { data: orderRows, error: orderError } = productIds.length
+      ? await db.from("brand_orders").select("product_id, quantity, created_at, status")
+          .eq("brand_user_id", context.userId).in("product_id", productIds).neq("status", "cancelled")
+      : { data: [], error: null };
+    const orders = orderError ? [] : (orderRows ?? []);
+
+    return campaigns.map((campaign: any) => {
+      const campaignProducts = (selectedProducts ?? []).filter((item: any) => item.campaign_id === campaign.id);
+      const campaignProductIds = new Set(campaignProducts.map((item: any) => item.product_id));
+      const campaignEvents = events.filter((event: any) => event.campaign_id === campaign.id);
       const start = campaign.starts_at ? new Date(campaign.starts_at).getTime() : Infinity;
       const end = campaign.ends_at ? new Date(campaign.ends_at).getTime() : -Infinity;
-      const purchases = (orders ?? []).filter((order: any) => productIdsForCampaign.has(order.product_id) && new Date(order.created_at).getTime() >= start && new Date(order.created_at).getTime() <= end);
+      const inCampaign = (date: string) => {
+        const value = new Date(date).getTime();
+        return value >= start && value <= end;
+      };
+      const uniqueCount = (rows: any[], type: string) => new Set(
+        rows.filter((event: any) => event.event_type === type)
+          .map((event: any) => event.visitor_id + ":" + event.product_id)
+      ).size;
+      const purchases = orders.filter((order: any) => campaignProductIds.has(order.product_id) && inCampaign(order.created_at));
       const weeklyReports = campaign.starts_at ? Array.from({ length: campaign.duration_days / 7 }, (_, index) => {
         const weekStart = start + index * 7 * 86400000;
         const weekEnd = Math.min(weekStart + 7 * 86400000, end);
-        const inWeek = (event: any) => new Date(event.created_at).getTime() >= weekStart && new Date(event.created_at).getTime() < weekEnd;
-        const weekEvents = campaignEvents.filter(inWeek);
-        const unique = (type: string) => new Set(weekEvents.filter((event: any) => event.event_type === type).map((event: any) => event.visitor_id + ":" + event.product_id)).size;
-        const weekOrders = purchases.filter((order: any) => new Date(order.created_at).getTime() >= weekStart && new Date(order.created_at).getTime() < weekEnd);
-        return { week: index + 1, views: unique("view"), clicks: unique("click"), saves: unique("save"), purchases: weekOrders.reduce((sum: number, order: any) => sum + Number(order.quantity || 0), 0) };
+        const inWeek = (date: string) => {
+          const value = new Date(date).getTime();
+          return value >= weekStart && value < weekEnd;
+        };
+        const weekEvents = campaignEvents.filter((event: any) => inWeek(event.created_at));
+        const weekOrders = purchases.filter((order: any) => inWeek(order.created_at));
+        return {
+          week: index + 1,
+          views: uniqueCount(weekEvents, "view"),
+          clicks: uniqueCount(weekEvents, "click"),
+          saves: uniqueCount(weekEvents, "save"),
+          purchases: weekOrders.reduce((sum: number, order: any) => sum + Number(order.quantity || 0), 0),
+        };
       }) : [];
       return {
         id: campaign.id, audience: campaign.audience, durationDays: campaign.duration_days,
-        status: campaign.status, paymentStatus: campaign.payment_status, startsAt: campaign.starts_at, endsAt: campaign.ends_at,
-        productNames: (campaign.spotlight_campaign_products ?? []).map((p: any) => p.brand_products?.product_name).filter(Boolean),
-        views: count("view"), clicks: count("click"), saves: count("save"),
+        status: campaign.status, paymentStatus: campaign.payment_status,
+        startsAt: campaign.starts_at, endsAt: campaign.ends_at,
+        productNames: campaignProducts.map((item: any) => productNames.get(item.product_id)).filter(Boolean),
+        views: uniqueCount(campaignEvents, "view"),
+        clicks: uniqueCount(campaignEvents, "click"),
+        saves: uniqueCount(campaignEvents, "save"),
         purchases: purchases.reduce((sum: number, order: any) => sum + Number(order.quantity || 0), 0),
-        weeklyReports,
+        weeklyReports, analyticsReady, purchaseDataReady: !orderError,
       };
     });
   });
