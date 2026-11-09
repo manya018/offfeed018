@@ -353,11 +353,11 @@ function DiscoverPage() {
               className="block h-auto w-full transition-transform duration-700 group-hover:scale-[1.015]"
             />
           </button>
-          <button type="button" aria-label="Explore HOME — the living edit" onClick={() => { window.location.href = "/discover?category=home"; }} className="group relative col-span-2 block w-full overflow-hidden rounded-[1.15rem] border border-[#d8c2a5] bg-[#f3e8d8] text-left shadow-[0_7px_18px_-13px_rgba(75,48,30,.35)] transition duration-300 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#a66c45] focus-visible:ring-offset-2 lg:col-span-1">
+          <button type="button" aria-label="Explore LIVING — the living edit" onClick={() => { window.location.href = "/discover?category=home"; }} className="group relative col-span-2 block w-full overflow-hidden rounded-[1.15rem] border border-[#d8c2a5] bg-[#f3e8d8] text-left shadow-[0_7px_18px_-13px_rgba(75,48,30,.35)] transition duration-300 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#a66c45] focus-visible:ring-offset-2 lg:col-span-1">
             <div className="relative aspect-[16/10] overflow-hidden">
               <img src="https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=900&q=85" alt="A sunlit, welcoming home with warm natural textures" loading="lazy" className="size-full object-cover transition-transform duration-700 group-hover:scale-105"/>
               <div className="absolute inset-0 bg-gradient-to-t from-[#3f2d20]/75 via-[#3f2d20]/10 to-transparent"/>
-              <div className="absolute inset-x-0 bottom-0 p-4 text-[#fff8ec]"><p className="text-[9px] font-semibold uppercase tracking-[.22em] text-[#f1d8b7]">A place to belong</p><p className="mt-1 font-display text-2xl leading-none">HOME</p><p className="mt-1 text-[10px] text-[#fff4e5]/90">The warmth of your own little world ↗</p></div>
+              <div className="absolute inset-x-0 bottom-0 p-4 text-[#fff8ec]"><p className="text-[9px] font-semibold uppercase tracking-[.22em] text-[#f1d8b7]">A place to belong</p><p className="mt-1 font-display text-2xl leading-none">LIVING</p><p className="mt-1 text-[10px] text-[#fff4e5]/90">The warmth of your own little world ↗</p></div>
             </div>
           </button>
           <div className="rounded-lg bg-white/65 lg:bg-transparent">
