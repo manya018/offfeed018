@@ -6,6 +6,7 @@ import { getShopTheLookProducts, type ProductWithBrand } from "@/lib/public-bran
 import { useStyleSpace } from "@/lib/style-space";
 
 type EditAudience = "her" | "him" | "home";
+type EditTab = "curated" | "spotlight";
 
 function getWeekKey(date: Date) {
   const utc = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
@@ -45,6 +46,7 @@ function OfffeedEditPage() {
   const audience: EditAudience = space === "him" ? "him" : space === "home" ? "home" : "her";
   const isHome = audience === "home";
   const isHim = audience === "him";
+  const [activeTab, setActiveTab] = useState<EditTab>("curated");
   const [products, setProducts] = useState<ProductWithBrand[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -76,7 +78,7 @@ function OfffeedEditPage() {
         <section className="relative overflow-hidden rounded-[1.6rem] border border-[#eadbd2] bg-[linear-gradient(110deg,#f2e3df_0%,#fbf6ef_54%,#e9eee5_100%)] px-6 py-12 sm:px-12 sm:py-16">
           <div className="relative z-10 max-w-3xl">
             <div className="inline-flex items-center gap-2 rounded-full border border-white/80 bg-white/65 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[.2em] text-[#9a7770]">
-              <Sparkles className="size-3.5" /> Curated for you · {audienceLabel}
+              <Sparkles className="size-3.5" /> The OFFFEED EDIT · {audienceLabel}
             </div>
             <h1 className="mt-6 font-display text-5xl leading-[.98] tracking-[-.045em] sm:text-7xl">
               The OFFFEED <em className="font-normal text-[#b77e83]">{isHome ? "LIVING EDIT." : isHim ? "HIM EDIT." : "HER EDIT."}</em>
@@ -88,13 +90,47 @@ function OfffeedEditPage() {
           </div>
         </section>
 
+        <div className="mt-8 grid grid-cols-2 gap-2 rounded-2xl border border-[#eadbd2] bg-white/70 p-2 sm:mt-10">
+          <button
+            type="button"
+            onClick={() => setActiveTab("curated")}
+            aria-pressed={activeTab === "curated"}
+            className={`rounded-xl px-4 py-4 text-left transition-colors sm:px-6 ${activeTab === "curated" ? "bg-[#493a33] text-white shadow-sm" : "text-[#6f5b52] hover:bg-[#f5eee8]"}`}
+          >
+            <span className="block font-display text-xl sm:text-2xl">The Curated Edit</span>
+            <span className={`mt-1 block text-[10px] uppercase tracking-[.14em] ${activeTab === "curated" ? "text-white/75" : "text-[#9a7770]"}`}>Seven finds, refreshed weekly</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("spotlight")}
+            aria-pressed={activeTab === "spotlight"}
+            className={`rounded-xl px-4 py-4 text-left transition-colors sm:px-6 ${activeTab === "spotlight" ? "bg-[#493a33] text-white shadow-sm" : "text-[#6f5b52] hover:bg-[#f5eee8]"}`}
+          >
+            <span className="block font-display text-xl sm:text-2xl">The Spotlight Edit</span>
+            <span className={`mt-1 block text-[10px] uppercase tracking-[.14em] ${activeTab === "spotlight" ? "text-white/75" : "text-[#9a7770]"}`}>Discover brands in focus</span>
+          </button>
+        </div>
+
+        {activeTab === "spotlight" ? (
+          <section className="mt-8 overflow-hidden rounded-[1.6rem] border border-[#eadbd2] bg-[linear-gradient(115deg,#eee4dc_0%,#f8f2eb_52%,#e7e9df_100%)] px-6 py-12 text-center sm:mt-10 sm:px-12 sm:py-16">
+            <p className="text-[10px] font-semibold uppercase tracking-[.23em] text-[#9a7770]">A closer look</p>
+            <h2 className="mx-auto mt-3 max-w-2xl font-display text-3xl leading-tight sm:text-5xl">Meet the brands making their mark.</h2>
+            <p className="mx-auto mt-4 max-w-xl text-sm leading-7 text-[#78645a] sm:text-base">
+              Explore a brand through a considered selection of different pieces from its collection, brought together in one feature.
+            </p>
+            <div className="mx-auto mt-8 max-w-xl rounded-xl border border-white/80 bg-white/55 px-5 py-5">
+              <p className="font-display text-xl text-[#493a33]">New brand features are on the way.</p>
+              <p className="mt-2 text-xs leading-6 text-[#87756c]">We're preparing the first Spotlight features for {audienceLabel}. Check back soon to discover the collections we bring into focus.</p>
+            </div>
+          </section>
+        ) : (
         <section className="mt-12 sm:mt-16">
           <div className="mb-7 flex flex-wrap items-end justify-between gap-3">
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-[.23em] text-[#a17e75]">The weekly selection</p>
-              <h2 className="mt-2 font-display text-3xl sm:text-4xl">Seven finds. Seven independent brands.</h2>
+              <h2 className="mt-2 font-display text-3xl sm:text-4xl">{activeTab === "curated" ? "Seven finds. Seven independent brands." : "Discover the brands in focus."}</h2>
             </div>
-            <p className="max-w-sm text-sm leading-6 text-[#87756c]">A fresh shortlist of standout products from across OFFFEED.</p>
+            <p className="max-w-sm text-sm leading-6 text-[#87756c]">{activeTab === "curated" ? "A fresh shortlist of standout products from across OFFFEED." : "Explore collections and standout pieces from brands featured by OFFFEED."}</p>
           </div>
 
           {loading ? (
@@ -119,6 +155,7 @@ function OfffeedEditPage() {
             <p className="rounded-xl border border-dashed border-[#dfd1c7] bg-white/60 px-5 py-12 text-center text-sm text-[#87756c]">The weekly edit is being curated. Standout products from approved independent brands will appear here as they are published.</p>
           )}
         </section>
+        )}
       </div>
     </main>
   );
