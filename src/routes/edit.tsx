@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { CalendarDays, Sparkles } from "lucide-react";
 import { PublicProductCard } from "@/components/public-product-card";
 import { getShopTheLookProducts, type ProductWithBrand } from "@/lib/public-brand.functions";
+import { getActiveSpotlightCampaigns } from "@/lib/spotlight.functions";
 import { useStyleSpace } from "@/lib/style-space";
 
 type EditAudience = "her" | "him" | "home";
@@ -48,6 +49,9 @@ function OfffeedEditPage() {
   const isHim = audience === "him";
   const [activeTab, setActiveTab] = useState<EditTab>("curated");
   const [products, setProducts] = useState<ProductWithBrand[]>([]);
+  const [spotlightCampaigns, setSpotlightCampaigns] = useState<any[]>([]);
+  const [spotlightLoading, setSpotlightLoading] = useState(false);
+  const [spotlightError, setSpotlightError] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const weekKey = getWeekKey(new Date());
@@ -65,6 +69,18 @@ function OfffeedEditPage() {
   }, [audience, isHome, isHim]);
 
   const weeklyProducts = useMemo(() => getWeeklySelection(products, weekKey), [products, weekKey]);
+
+  useEffect(() => {
+    if (activeTab !== "spotlight") return;
+    let alive = true;
+    setSpotlightLoading(true);
+    setSpotlightError(false);
+    getActiveSpotlightCampaigns({ data: { audience } })
+      .then((items) => { if (alive) setSpotlightCampaigns(items); })
+      .catch(() => { if (alive) setSpotlightError(true); })
+      .finally(() => { if (alive) setSpotlightLoading(false); });
+    return () => { alive = false; };
+  }, [activeTab, audience]);
   const audienceLabel = isHome ? "LIVING" : isHim ? "HIM" : "HER";
   const intro = isHome
     ? "Thoughtful pieces for the spaces, rituals and little moments that make a home yours."
@@ -112,16 +128,28 @@ function OfffeedEditPage() {
         </div>
 
         {activeTab === "spotlight" ? (
-          <section className="mt-8 overflow-hidden rounded-[1.6rem] border border-[#eadbd2] bg-[linear-gradient(115deg,#eee4dc_0%,#f8f2eb_52%,#e7e9df_100%)] px-6 py-12 text-center sm:mt-10 sm:px-12 sm:py-16">
-            <p className="text-[10px] font-semibold uppercase tracking-[.23em] text-[#9a7770]">A closer look</p>
-            <h2 className="mx-auto mt-3 max-w-2xl font-display text-3xl leading-tight sm:text-5xl">Meet the brands making their mark.</h2>
-            <p className="mx-auto mt-4 max-w-xl text-sm leading-7 text-[#78645a] sm:text-base">
-              Explore a brand through a considered selection of different pieces from its collection, brought together in one feature.
-            </p>
-            <div className="mx-auto mt-8 max-w-xl rounded-xl border border-white/80 bg-white/55 px-5 py-5">
-              <p className="font-display text-xl text-[#493a33]">New brand features are on the way.</p>
-              <p className="mt-2 text-xs leading-6 text-[#87756c]">We're preparing the first Spotlight features for {audienceLabel}. Check back soon to discover the collections we bring into focus.</p>
+          <section className="mt-8 sm:mt-10">
+            <div className="mb-7 rounded-[1.6rem] border border-[#eadbd2] bg-[linear-gradient(115deg,#eee4dc_0%,#f8f2eb_52%,#e7e9df_100%)] px-6 py-10 text-center sm:px-12 sm:py-12">
+              <p className="text-[10px] font-semibold uppercase tracking-[.23em] text-[#9a7770]">A closer look</p>
+              <h2 className="mx-auto mt-3 max-w-2xl font-display text-3xl leading-tight sm:text-5xl">Meet the brands making their mark.</h2>
+              <p className="mx-auto mt-4 max-w-xl text-sm leading-7 text-[#78645a] sm:text-base">Explore a brand through a considered selection of different pieces from its collection, brought together in one feature.</p>
             </div>
+            {spotlightLoading ? <p className="py-16 text-center text-sm text-[#87756c]">Finding the brands in focus…</p> :
+             spotlightError ? <p className="rounded-xl border border-dashed border-[#dfd1c7] bg-white/60 px-5 py-12 text-center text-sm text-[#87756c]">Spotlight features couldn't load right now. Please try again.</p> :
+             spotlightCampaigns.length ? spotlightCampaigns.map((campaign) => (
+               <article key={campaign.id} className="mb-12 rounded-2xl border border-[#eadbd2] bg-white/60 p-5 sm:p-7">
+                 <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
+                   <div><p className="text-[10px] font-semibold uppercase tracking-[.2em] text-[#a17e75]">SPOTLIGHT BRAND</p><h3 className="mt-1 font-display text-2xl sm:text-3xl">{campaign.brandName}</h3></div>
+                   <a href={`/brand/${encodeURIComponent(campaign.brandHandle)}`} className="text-xs font-semibold uppercase tracking-[.14em] text-[#9a7770] hover:underline">Explore brand ↗</a>
+                 </div>
+                 <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">
+                   {campaign.products.map((product: ProductWithBrand) => <div key={product.id} className="relative">
+                     <span className="absolute left-2 top-2 z-10 rounded-full border border-white/80 bg-white/90 px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[.16em] text-[#765b52] shadow-sm">Sponsored feature</span>
+                     <PublicProductCard product={product}/>
+                   </div>)}
+                 </div>
+               </article>
+             )) : <p className="rounded-xl border border-dashed border-[#dfd1c7] bg-white/60 px-5 py-12 text-center text-sm text-[#87756c]">The next Spotlight features are being prepared for {audienceLabel}. Check back soon.</p>}
           </section>
         ) : (
         <section className="mt-12 sm:mt-16">
