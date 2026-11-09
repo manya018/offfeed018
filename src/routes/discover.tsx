@@ -46,12 +46,12 @@ function styleBudgetRange(budget?: string) {
 }
 import { IndianWearEdit } from "@/components/indian-wear-edit";
 import { OfffeedNote } from "@/components/offfeed-note";
-import { HomeLivingEdit } from "@/components/home-living-edit";
+import { HomeLivingEdit, HomeLivingDiscover } from "@/components/home-living-edit";
 import gulaboBanner from "@/assets/indian-wear/Gulabo_The_Desi_Girl_Edit.webp";
 import nawabBanner from "@/assets/indian-wear/Nawab_The_Desi_Gentleman_Edit.webp";
 
 export const Route = createFileRoute("/discover")({
-  validateSearch: (search: Record<string, unknown>) => typeof search.category === "string" ? { category: search.category } : {},
+  validateSearch: (search: Record<string, unknown>) => ({ ...(typeof search.category === "string" ? { category: search.category } : {}), ...(typeof search.view === "string" ? { view: search.view } : {}) }),
   head: () => ({ meta: [
     { title: "Discover your next obsession — OFFFEED" },
     { name: "description", content: "Search fashion styles, moods, occasions and unique outfits curated beyond the algorithm." },
@@ -68,7 +68,7 @@ const himClothingCategories = ["T-shirts & Polos", "Shirts", "Jeans & Denim", "T
 const accessoryCategories = ["Bags", "Sunglasses", "Watches", "Belts", "Hair Accessories"];
 
 function DiscoverPage() {
-  const { category } = Route.useSearch();
+  const { category, view } = Route.useSearch();
   const { space } = useStyleSpace();
   const isHim = space === "him";
   const collection = isHim ? himLooks : looks;
@@ -171,7 +171,7 @@ function DiscoverPage() {
     return results;
   }, [collection, filter, query, activeStyleDNA]);
 
-  if (category === "home") return <HomeLivingEdit products={categoryProducts} loading={categoryLoading} />;
+  if (category === "home") return view === "discover" ? <HomeLivingDiscover products={categoryProducts} loading={categoryLoading} /> : <HomeLivingEdit products={categoryProducts} loading={categoryLoading} />;
 
   if (category === "jewellery" || category === "accessories" || category === "indian-wear") {
     const indianWear = category === "indian-wear";
