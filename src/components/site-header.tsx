@@ -35,9 +35,17 @@ export function SiteHeader() {
     <header className="sticky top-0 z-50 border-b border-border/70 bg-background/90 backdrop-blur-xl">
       <div className="site-header-inner mx-auto flex h-20 w-full items-center justify-between px-5 lg:px-10">
         <Link to="/" className="site-header-logo shrink-0 font-display text-2xl font-semibold tracking-[0.14em]">OFFFEED</Link>
-        <div className="site-header-spaces flex shrink-0 items-center rounded-full border border-border bg-card p-1" aria-label="Choose a collection">
-          {(["her", "him"] as const).map((option) => <Button key={option} asChild size="sm" variant={!isHomeCollection && space === option ? "default" : "ghost"} className="h-8 min-w-10 rounded-full px-2.5"><Link to="/discover" onClick={() => setSpace(option)} aria-pressed={!isHomeCollection && space === option}>{option === "her" ? "Her" : "Him"}</Link></Button>)}
-          <Button asChild size="sm" variant={isHomeCollection ? "default" : "ghost"} className="h-8 min-w-10 rounded-full px-2.5"><Link to="/discover" search={{ category: "home" }} onClick={() => setSpace("home")} aria-pressed={isHomeCollection}>Living</Link></Button>
+        <div className="site-header-spaces flex shrink-0 items-center gap-2" aria-label="Choose a collection">
+          <div className="flex flex-col items-center justify-center rounded-full border border-border bg-card px-3 py-1">
+            {(["her", "him"] as const).map((option) => (
+              <Button key={option} asChild size="sm" variant="ghost" className={`h-6 min-w-12 rounded-full px-2 text-[13px] font-semibold uppercase leading-none ${!isHomeCollection && space === option ? "text-foreground" : "text-muted-foreground"}`}>
+                <Link to="/discover" onClick={() => setSpace(option)} aria-pressed={!isHomeCollection && space === option}>{option === "her" ? "HER" : "HIM"}</Link>
+              </Button>
+            ))}
+          </div>
+          <Button asChild size="sm" variant={isHomeCollection ? "default" : "ghost"} className={`h-[52px] min-w-[104px] rounded-full px-5 text-sm font-semibold uppercase tracking-wide ${isHomeCollection ? "" : "border border-border bg-card text-muted-foreground hover:bg-accent"}`}>
+            <Link to="/discover" search={{ category: "home" }} onClick={() => setSpace("home")} aria-pressed={isHomeCollection}>LIVING</Link>
+          </Button>
         </div>
         <nav className="site-header-nav hidden min-w-0 items-center gap-8 lg:flex">
           {links.map((link) => link.label === "Home" ? <Link key={link.label} to={isHomeCollection ? "/discover" : "/"} search={isHomeCollection ? { category: "home" } : undefined} onClick={() => { if (isHomeCollection) setSpace("home"); }} className="text-sm text-muted-foreground transition-colors hover:text-foreground" activeProps={{ className: "text-foreground" }}>Home</Link> : <Link key={link.label} to={link.to} search={link.label === "Discover" && isHomeCollection ? { category: "home" } : link.label === "The EDIT" && isHomeCollection ? { collection: "home" } : link.label === "Explore" && isHomeCollection ? { space: "home" } : link.label === "Create" && isHomeCollection ? { space: "home" } : undefined} onClick={() => { if (link.label === "Discover" || link.label === "The EDIT" || link.label === "Explore" || link.label === "Create") setSpace(isHomeCollection ? "home" : space === "home" ? "her" : space); }} className="text-sm text-muted-foreground transition-colors hover:text-foreground" activeProps={{ className: "text-foreground" }}>{link.label}</Link>)}
