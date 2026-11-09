@@ -13,7 +13,10 @@ import { recordSpotlightEvent } from "@/lib/spotlight.functions";
 export function PublicProductCard({ product, spotlightCampaignId }: { product: ProductWithBrand; spotlightCampaignId?: string }) {
   const [added, setAdded] = useState(false);
   const [liked, setLiked] = useState(false);
-  const [showSizeGuide, setShowSizeGuide] = useState(false);\n  const [visitorId] = useState(() => { try { const key = "offfeed-analytics-visitor"; let id = localStorage.getItem(key); if (!id) { id = crypto.randomUUID(); localStorage.setItem(key, id); } return id; } catch { return crypto.randomUUID(); } });\n\n  useEffect(() => { if (spotlightCampaignId) void recordSpotlightEvent({ data: { campaignId: spotlightCampaignId, productId: product.id, eventType: "view", visitorId } }); }, [spotlightCampaignId, product.id, visitorId]);
+  const [showSizeGuide, setShowSizeGuide] = useState(false);
+  const [visitorId] = useState(() => { try { const key = "offfeed-analytics-visitor"; let id = localStorage.getItem(key); if (!id) { id = crypto.randomUUID(); localStorage.setItem(key, id); } return id; } catch { return crypto.randomUUID(); } });
+
+  useEffect(() => { if (spotlightCampaignId) void recordSpotlightEvent({ data: { campaignId: spotlightCampaignId, productId: product.id, eventType: "view", visitorId } }); }, [spotlightCampaignId, product.id, visitorId]);
 
   useEffect(() => {
     try {
@@ -26,6 +29,7 @@ export function PublicProductCard({ product, spotlightCampaignId }: { product: P
       const nextLiked = !readLikedProductIds().includes(product.id);
       setLiked(nextLiked);
       void setWishlistItem("product", product.id, nextLiked);
+      if (nextLiked && spotlightCampaignId) void recordSpotlightEvent({ data: { campaignId: spotlightCampaignId, productId: product.id, eventType: "save", visitorId } });
       toast.success(nextLiked ? "Added to wishlist" : "Removed from wishlist");
     } catch { toast.error("Could not update wishlist on this device."); }
   }
