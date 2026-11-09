@@ -945,7 +945,6 @@ function SpotlightPricingSection() {
       <div className="grid grid-cols-[1fr_auto] gap-3 border-b border-border/70 bg-muted/30 px-4 py-3 text-sm font-semibold"><span>Package</span><span>Price</span></div>
       {packages.map((item) => <div key={item.days} className="grid grid-cols-[1fr_auto] gap-3 border-b border-border/60 px-4 py-4 last:border-0"><span className="text-sm">{item.label}</span><span className="text-sm font-medium">₹{item.price.toLocaleString("en-IN")}</span></div>)}
     </div>
-    <p className="mt-3 max-w-3xl text-sm leading-6 text-muted-foreground">Spotlight is additional revenue alongside OFFFEED's existing marketplace commission model. Organic Curated Edit placement remains independent and cannot be purchased.</p>
   </section>;
 }
 
