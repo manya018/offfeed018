@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { createBrandProduct, getBrandWorkspace, importShopifyCatalog, saveBrandShippingProfile, saveBrandSizeGuide, saveImportedShopifyProducts, updateBrandOrderTracking, updateBrandProductSizeChart, updateBrandProductStatus } from "@/lib/brand-products.functions";
 import { submitDispatchEvidence, getDisputeViewerData, rerunReturnAnalysis, type DisputeViewerData, type ForensicReport } from "@/lib/dispute-evidence.functions";
+import { submitSpotlightCampaign, getMySpotlightCampaigns } from "@/lib/spotlight.functions";
 
 
 export const Route = createFileRoute("/_authenticated/brand/dashboard")({
@@ -602,6 +603,8 @@ function BrandDashboard() {
         <Stat label="Your share" value={`${Math.round((1 - commission) * 100)}%`} icon={PackagePlus}/>
       </div>
 
+      <BrandSpotlightSection products={products} audiences={supportedAudience} />
+
       <section className="border-b border-border/70 py-7" aria-labelledby="brand-size-guides-heading">
         <div className="max-w-3xl"><p className="text-xs font-semibold uppercase tracking-[0.15em] text-primary">REUSABLE SIZE GUIDES</p><h2 id="brand-size-guides-heading" className="mt-2 font-display text-3xl">Set it once. Use it across products.</h2><p className="mt-2 text-sm leading-6 text-muted-foreground">Create one default chart for each category. New products and existing products without a custom chart will use it automatically. Product-specific overrides stay separate.</p></div>
         <form onSubmit={(event) => void saveCategoryGuide(event)} className="mt-5 max-w-3xl rounded-xl border border-border/80 p-4 sm:p-5">
@@ -879,4 +882,56 @@ function ReturnDisputeViewer({ orderId, open, onToggle }: { orderId: string; ope
 function Stat({ label, value, icon: Icon }: { label: string; value: string; icon: typeof Shirt }) {
 
   return <div className="flex items-center gap-3"><span className="grid size-10 place-items-center rounded-full bg-secondary text-primary"><Icon className="size-4"/></span><span><span className="block text-xs text-muted-foreground">{label}</span><span className="mt-1 block text-xl font-medium">{value}</span></span></div>;
+}
+
+function BrandSpotlightSection({ products, audiences }: {
+  products: Array<{ id: string; product_name: string; price: number; status: string; audience: string[] }>;
+  audiences: Array<"her" | "him" | "home">;
+}) {
+  const [selectedAudience, setSelectedAudience] = useState<"her" | "him" | "home">(audiences[0] ?? "her");
+  const [durationDays, setDurationDays] = useState<7 | 14 | 28>(28);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [campaigns, setCampaigns] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const available = products.filter((product) => product.status === "published" && product.audience.includes(selectedAudience));
+  const refresh = async () => {
+    setLoading(true);
+    try { setCampaigns(await getMySpotlightCampaigns()); }
+    catch (error) { toast.error(error instanceof Error ? error.message : "Spotlight applications couldn't be loaded."); }
+    finally { setLoading(false); }
+  };
+  useEffect(() => { void refresh(); }, []);
+  useEffect(() => { setSelectedIds([]); }, [selectedAudience]);
+  const submit = async () => {
+    if (selectedIds.length < 2) { toast.error("Choose at least two different published products."); return; }
+    setSaving(true);
+    try {
+      await submitSpotlightCampaign({ data: { audience: selectedAudience, durationDays, productIds: selectedIds } });
+      toast.success("Your Spotlight application has been submitted for review.");
+      setSelectedIds([]);
+      await refresh();
+    } catch (error) { toast.error(error instanceof Error ? error.message : "Spotlight application couldn't be submitted."); }
+    finally { setSaving(false); }
+  };
+  return <section className="border-b border-border/70 py-7" aria-labelledby="brand-spotlight-heading">
+    <div className="max-w-3xl">
+      <p className="text-xs font-semibold uppercase tracking-[0.15em] text-primary">BRAND VISIBILITY</p>
+      <h2 id="brand-spotlight-heading" className="mt-2 font-display text-3xl">Apply for The Spotlight Edit</h2>
+      <p className="mt-2 text-sm leading-6 text-muted-foreground">Feature multiple products from your collection in HER, HIM or LIVING. Choose a campaign duration and submit your products for OFFFEED review. Your feature goes live only after approval and payment confirmation.</p>
+    </div>
+    <div className="mt-5 grid max-w-3xl gap-4 rounded-xl border border-border/80 p-4 sm:grid-cols-2 sm:p-5">
+      <div><Label htmlFor="spotlight-audience">Audience</Label><select id="spotlight-audience" value={selectedAudience} onChange={(event) => setSelectedAudience(event.target.value as "her" | "him" | "home")} className={fieldClass}>{audiences.map((item) => <option key={item} value={item}>{item === "her" ? "HER" : item === "him" ? "HIM" : "LIVING"}</option>)}</select></div>
+      <div><Label htmlFor="spotlight-duration">Campaign duration</Label><select id="spotlight-duration" value={durationDays} onChange={(event) => setDurationDays(Number(event.target.value) as 7 | 14 | 28)} className={fieldClass}><option value={7}>1 week</option><option value={14}>2 weeks</option><option value={28}>4 weeks</option></select></div>
+      <div className="sm:col-span-2">
+        <div className="flex flex-wrap items-center justify-between gap-2"><Label>Select products (minimum 2)</Label><span className="text-xs text-muted-foreground">{selectedIds.length} selected</span></div>
+        {available.length ? <div className="mt-3 grid gap-2 sm:grid-cols-2">{available.map((product) => <label key={product.id} className="flex cursor-pointer items-center gap-3 rounded-lg border border-border/70 p-3 text-sm"><input type="checkbox" checked={selectedIds.includes(product.id)} onChange={() => setSelectedIds((current) => current.includes(product.id) ? current.filter((id) => id !== product.id) : [...current, product.id])} className="size-4 accent-primary"/><span className="min-w-0 flex-1"><span className="block truncate font-medium">{product.product_name}</span><span className="text-xs text-muted-foreground">₹{Number(product.price).toLocaleString("en-IN")}</span></span></label>)}</div> : <p className="mt-3 rounded-lg border border-dashed border-border/70 p-4 text-sm text-muted-foreground">No published products are available in this audience yet. Publish and receive approval for at least two products first.</p>}
+      </div>
+      <div className="sm:col-span-2"><Button type="button" disabled={saving || selectedIds.length < 2} onClick={() => void submit()}>{saving ? <LoaderCircle className="animate-spin"/> : <Sparkles/>}Submit Spotlight application</Button><p className="mt-2 text-xs leading-5 text-muted-foreground">OFFFEED will review your selection and confirm the campaign price and payment instructions. No charge is taken by this application form.</p></div>
+    </div>
+    <div className="mt-6 max-w-3xl">
+      <h3 className="font-display text-xl">Your Spotlight applications</h3>
+      {loading ? <p className="mt-3 text-sm text-muted-foreground">Loading applications…</p> : campaigns.length ? <div className="mt-3 divide-y divide-border/70 border-y border-border/70">{campaigns.map((campaign) => <div key={campaign.id} className="py-4"><div className="flex flex-wrap items-center justify-between gap-2"><p className="text-sm font-medium">{campaign.audience.toUpperCase()} · {campaign.duration_days} days</p><Badge variant="secondary">{campaign.status.replaceAll("_", " ")}</Badge></div><p className="mt-1 text-xs text-muted-foreground">Payment: {campaign.payment_status} · {Number(campaign.campaign_price) > 0 ? `₹${Number(campaign.campaign_price).toLocaleString("en-IN")}` : "Price to be confirmed by OFFFEED"}</p>{campaign.admin_note && <p className="mt-2 text-xs text-muted-foreground">{campaign.admin_note}</p>}</div>)}</div> : <p className="mt-3 text-sm text-muted-foreground">You haven't submitted a Spotlight application yet.</p>}
+    </div>
+  </section>;
 }
