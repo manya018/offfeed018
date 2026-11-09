@@ -82,3 +82,42 @@ export function HomeLivingEdit({ products, loading }: { products: ProductWithBra
     <section className="mx-3 mt-16 overflow-hidden rounded-[1.5rem] bg-[#e9deca] px-6 py-12 text-center sm:mx-5 sm:px-12"><p className="font-display text-3xl italic text-[#72543c] sm:text-4xl">“The best moments happen when we’re all together.”</p><p className="mt-4 text-[10px] font-semibold uppercase tracking-[.24em] text-[#92765a]">For the people, rituals and little joys you call home</p></section>
   </main>;
 }
+
+
+export function HomeLivingDiscover({ products, loading }: { products: ProductWithBrand[]; loading: boolean }) {
+  const [selected, setSelected] = useState("");
+  const [menuOpen, setMenuOpen] = useState(true);
+  const activeCollection = collections.find((item) => item.title === selected);
+  const filtered = products.filter((product) => !activeCollection || (product.brand.homeCategories?.includes(activeCollection.title) === true && activeCollection.match.test([product.category, product.productName, product.description, ...product.tags].join(" "))));
+  return <main className="min-h-screen bg-[#fbf8f2] px-4 pb-24 pt-8 text-[#4c392b] sm:px-6 lg:px-10">
+    <div className="mx-auto max-w-[1440px]">
+      <header className="mx-auto mb-9 max-w-3xl text-center">
+        <p className="text-[10px] font-semibold uppercase tracking-[.25em] text-[#9a7658]">OFFFEED · The living directory</p>
+        <h1 className="mt-3 font-display text-5xl sm:text-6xl">Discover <em className="font-normal text-[#a77955]">LIVING.</em></h1>
+        <p className="mx-auto mt-4 max-w-xl text-sm leading-7 text-[#806b59]">Thoughtful finds for the spaces, rituals and little moments that make a place feel like home.</p>
+      </header>
+      <section className="mx-auto max-w-5xl overflow-hidden rounded-2xl border border-[#e6d7c5] bg-[#f7f2ed] shadow-sm">
+        <div className="flex items-center justify-between border-b border-[#e8ddd5] px-4 py-3 sm:px-5">
+          <div><p className="text-[10px] font-semibold uppercase tracking-[.2em] text-[#9a7658]">Shop by category</p><p className="mt-0.5 font-display text-lg text-[#4c392b]">Find your corner of home</p></div>
+          <button type="button" onClick={() => setSelected("")} className="rounded-full bg-white px-3 py-2 text-xs font-medium text-[#76563d] shadow-sm hover:bg-[#fffaf1]">View all</button>
+        </div>
+        <div className="p-3 sm:p-4">
+          <button type="button" aria-expanded={menuOpen} onClick={() => setMenuOpen((open) => !open)} className="flex w-full items-center justify-between rounded-xl bg-white/80 px-4 py-3 text-left text-sm font-semibold text-[#59463e] transition hover:bg-white"><span>All LIVING categories <span className="ml-1 text-xs font-normal text-[#9a7658]">({collections.length})</span></span><span className="text-[#9a7658]">{menuOpen ? "−" : "+"}</span></button>
+          {menuOpen && <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-3">
+            {collections.map((item) => <button key={item.title} type="button" onClick={() => setSelected((current) => current === item.title ? "" : item.title)} aria-pressed={selected === item.title} className={`group overflow-hidden rounded-xl border text-left transition ${selected === item.title ? "border-[#9b6b48] ring-2 ring-[#9b6b48]/30" : "border-[#e6d7c5] hover:border-[#b99a78]"}`}>
+              <img src={item.image} alt={item.title} loading="lazy" className="aspect-[16/9] w-full object-cover"/>
+              <span className={`block px-3 py-3 text-xs font-semibold ${selected === item.title ? "bg-[#9b6b48] text-white" : "bg-white text-[#59463e]"}`}>{item.title}</span>
+            </button>)}
+          </div>}
+        </div>
+      </section>
+      <section className="mx-auto mt-10 max-w-[1440px]">
+        <div className="flex flex-wrap items-end justify-between gap-3 border-b border-[#d9c5aa] pb-4">
+          <div><p className="text-[10px] font-semibold uppercase tracking-[.22em] text-[#9a7658]">The LIVING edit</p><h2 className="mt-1 font-display text-3xl">{selected || "All thoughtful finds"}</h2></div>
+          {selected && <button type="button" onClick={() => setSelected("")} className="text-xs font-medium text-[#8a6548] underline underline-offset-4">Clear category</button>}
+        </div>
+        {loading ? <p className="py-14 text-center text-sm text-[#806b59]">Finding lovely things for your home…</p> : filtered.length ? <div className="mt-7 grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">{filtered.map((product) => <PublicProductCard key={product.id} product={product}/>)}</div> : <div className="mt-7 border-y border-dashed border-[#d9c5aa] py-14 text-center"><h3 className="font-display text-3xl text-[#4c392b]">Lovely things are on their way.</h3><p className="mx-auto mt-3 max-w-xl text-sm leading-7 text-[#806b59]">{products.length ? `No published products found in ${selected}. Try another category or view all.` : "As approved LIVING brands publish products, they will appear here."}</p></div>}
+      </section>
+    </div>
+  </main>;
+}
