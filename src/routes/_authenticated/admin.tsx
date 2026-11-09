@@ -1,12 +1,13 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Activity, ArrowUpRight, Bell, Boxes, Check, ChevronRight, CircleAlert, ClipboardList, ImagePlus, LayoutDashboard, LoaderCircle, Package, RefreshCw, Search, Settings, ShieldCheck, Store, Truck, Users, Wallet, X } from "lucide-react";
+import { Activity, ArrowUpRight, Bell, Boxes, Check, ChevronRight, CircleAlert, ClipboardList, ImagePlus, LayoutDashboard, LoaderCircle, Package, RefreshCw, Search, Settings, ShieldCheck, Store, Truck, Users, Wallet, X, Sparkles } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { verifyAdminAccess, getAdminOverview, getAdminBrands, getAdminProducts, updateAdminBrandStatus } from "@/lib/admin.functions";
+import { getOwnerSpotlightCampaigns, updateOwnerSpotlightCampaign } from "@/lib/spotlight.functions";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   beforeLoad: async () => {
@@ -24,6 +25,7 @@ const navItems = [
   { id: "overview", label: "Overview", icon: LayoutDashboard },
   { id: "brands", label: "Brands", icon: Store, count: true },
   { id: "products", label: "Products & Looks", icon: Boxes },
+  { id: "spotlight", label: "Spotlight Campaigns", icon: Sparkles },
   { id: "orders", label: "Orders", icon: Package },
   { id: "customers", label: "Customers", icon: Users },
   { id: "trust", label: "OFFFEED TRUST", icon: ShieldCheck },
@@ -143,7 +145,7 @@ function OwnerAdminDashboard() {
                 </div>}
               </div>
             </section> : null}
-            {section === "products" ? <section>
+            {section === "spotlight" ? <SpotlightAdminSection /> : null}\n            {section === "products" ? <section>
               <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
                 <div>
                   <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#a28e84]">Marketplace catalogue</p>
@@ -189,7 +191,7 @@ function OwnerAdminDashboard() {
               </div>
               <p className="mt-3 text-[11px] text-[#a08e84]">Showing the latest 500 listings at most. No listing status or brand data is changed from this screen.</p>
             </section> : null}
-            {section !== "overview" && section !== "brands" && section !== "products" ? <section className="rounded-2xl border border-[#e8dfd6] bg-[#fbf9f5] p-8 md:p-12">
+            {section !== "overview" && section !== "brands" && section !== "products" && section !== "spotlight" ? <section className="rounded-2xl border border-[#e8dfd6] bg-[#fbf9f5] p-8 md:p-12">
               <div className="mx-auto max-w-lg text-center">
                 <div className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-[#efe4de] text-[#76534b]">{activeNav ? <ActiveSectionIcon className="size-6"/> : <ClipboardList className="size-6"/>}</div>
                 <p className="mt-5 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#a28e84]">Owner HQ module</p>
@@ -230,5 +232,50 @@ function OverviewSection({ overview, brands, onOpenBrands }: { overview: { data:
       </div>
       <div className="rounded-2xl border border-[#e8dfd6] bg-[#f0e8e1] p-6"><div className="flex items-center gap-2 text-[#76534b]"><ShieldCheck className="size-5"/><span className="text-xs font-semibold uppercase tracking-[0.16em]">Owner controls</span></div><h2 className="mt-4 font-serif text-2xl text-[#493a34]">Your marketplace. Your decisions.</h2><p className="mt-2 text-sm leading-6 text-[#806e64]">Review brands, monitor activity and manage OFFFEED operations from one private workspace.</p><div className="mt-5 rounded-xl border border-[#dfd0c6] bg-[#fbf9f5]/70 p-3"><p className="text-[10px] uppercase tracking-widest text-[#a08e84]">Signed-in owner</p><p className="mt-1 break-all text-sm font-medium text-[#76534b]">manyagupta018@gmail.com</p></div></div>
     </div>
+  </section>;
+}
+
+
+function SpotlightAdminSection() {
+  const queryClient = useQueryClient();
+  const campaigns = useQuery({ queryKey: ["owner-spotlight-campaigns"], queryFn: () => getOwnerSpotlightCampaigns(), retry: 1 });
+  const [drafts, setDrafts] = useState<Record<string, { status: "approved" | "active" | "rejected" | "completed"; paymentStatus: "pending" | "paid" | "refunded" | "waived"; price: string; startsAt: string; paymentReference: string; note: string }>>({});
+  const update = useMutation({
+    mutationFn: (input: { campaignId: string; status: "approved" | "active" | "rejected" | "completed"; paymentStatus: "pending" | "paid" | "refunded" | "waived"; campaignPrice: number; startsAt?: string; paymentReference: string; adminNote: string }) => updateOwnerSpotlightCampaign({ data: { ...input, ...(input.startsAt ? { startsAt: new Date(input.startsAt).toISOString() } : {}) } }),
+    onSuccess: () => { toast.success("Spotlight campaign updated."); void queryClient.invalidateQueries({ queryKey: ["owner-spotlight-campaigns"] }); },
+    onError: (error) => toast.error(error instanceof Error ? error.message : "Campaign update failed."),
+  });
+  const getDraft = (campaign: any) => drafts[campaign.id] ?? {
+    status: campaign.status === "submitted" ? "approved" : campaign.status,
+    paymentStatus: campaign.payment_status,
+    price: String(campaign.campaign_price ?? 0),
+    startsAt: campaign.starts_at ? new Date(campaign.starts_at).toISOString().slice(0, 16) : "",
+    paymentReference: campaign.payment_reference ?? "",
+    note: campaign.admin_note ?? "",
+  };
+  const patch = (id: string, values: Partial<ReturnType<typeof getDraft>>) => setDrafts((current) => ({ ...current, [id]: { ...getDraft((campaigns.data ?? []).find((item: any) => item.id === id)), ...values } }));
+  return <section>
+    <div className="mb-6"><p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#a28e84]">Campaign operations</p><h1 className="mt-1 font-serif text-3xl text-[#493a34]">Spotlight campaigns</h1><p className="mt-2 text-sm text-[#887a72]">Review brand selections, set campaign pricing, record payment confirmation and schedule approved features.</p></div>
+    {campaigns.isLoading ? <div className="rounded-2xl border border-[#e8dfd6] bg-[#fbf9f5] p-10 text-sm text-[#887a72]">Loading Spotlight applications…</div> :
+     campaigns.isError ? <div className="rounded-2xl border border-red-200 bg-red-50 p-5 text-sm text-red-800">{campaigns.error instanceof Error ? campaigns.error.message : "Could not load campaigns."}<Button variant="outline" size="sm" className="ml-3" onClick={() => void campaigns.refetch()}>Retry</Button></div> :
+     !campaigns.data?.length ? <div className="rounded-2xl border border-dashed border-[#e8dfd6] bg-[#fbf9f5] p-12 text-center text-sm text-[#887a72]">No Spotlight applications have been submitted yet.</div> :
+     <div className="grid gap-5">{campaigns.data.map((campaign: any) => {
+       const draft = getDraft(campaign);
+       const brand = campaign.brand_applications;
+       const selected = [...(campaign.spotlight_campaign_products ?? [])].sort((a: any,b: any) => a.position-b.position);
+       return <article key={campaign.id} className="rounded-2xl border border-[#e8dfd6] bg-[#fbf9f5] p-5 sm:p-6">
+         <div className="flex flex-wrap items-start justify-between gap-3"><div><p className="text-[10px] font-semibold uppercase tracking-[.16em] text-[#a28e84]">{campaign.audience.toUpperCase()} · {campaign.duration_days}-DAY CAMPAIGN</p><h2 className="mt-1 font-serif text-2xl text-[#493a34]">{brand?.brand_name ?? "Brand"}</h2><p className="mt-1 text-xs text-[#887a72]">{brand?.email} · Applied {new Date(campaign.created_at).toLocaleDateString("en-IN")}</p></div><Badge variant="outline" className="capitalize">{campaign.status} · {campaign.payment_status}</Badge></div>
+         <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">{selected.map((item: any) => <div key={item.product_id} className="rounded-lg border border-[#eee6df] bg-white/70 p-3"><p className="text-sm font-medium text-[#57463e]">{item.brand_products?.product_name ?? "Product unavailable"}</p><p className="mt-1 text-xs text-[#887a72]">₹{Number(item.brand_products?.price ?? 0).toLocaleString("en-IN")} · {item.brand_products?.status ?? "unknown"}{item.brand_products?.brand_approved ? " · approved" : " · awaiting approval"}</p></div>)}</div>
+         <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+           <label className="text-xs font-medium text-[#766b64]">Campaign status<select value={draft.status} onChange={(e) => patch(campaign.id,{status:e.target.value as any})} className="mt-2 h-10 w-full rounded-md border border-[#e4d9d0] bg-white px-3 text-sm"><option value="approved">Approved</option><option value="active">Active</option><option value="rejected">Rejected</option><option value="completed">Completed</option></select></label>
+           <label className="text-xs font-medium text-[#766b64]">Payment status<select value={draft.paymentStatus} onChange={(e) => patch(campaign.id,{paymentStatus:e.target.value as any})} className="mt-2 h-10 w-full rounded-md border border-[#e4d9d0] bg-white px-3 text-sm"><option value="pending">Pending</option><option value="paid">Paid — verified</option><option value="waived">Waived</option><option value="refunded">Refunded</option></select></label>
+           <label className="text-xs font-medium text-[#766b64]">Campaign price (₹)<Input type="number" min="0" step="0.01" value={draft.price} onChange={(e) => patch(campaign.id,{price:e.target.value})} className="mt-2 border-[#e4d9d0] bg-white"/></label>
+           <label className="text-xs font-medium text-[#766b64]">Start date & time<Input type="datetime-local" value={draft.startsAt} onChange={(e) => patch(campaign.id,{startsAt:e.target.value})} className="mt-2 border-[#e4d9d0] bg-white"/></label>
+           <label className="text-xs font-medium text-[#766b64]">Payment reference<Input value={draft.paymentReference} onChange={(e) => patch(campaign.id,{paymentReference:e.target.value})} placeholder="Transaction / receipt reference" className="mt-2 border-[#e4d9d0] bg-white"/></label>
+           <label className="text-xs font-medium text-[#766b64] sm:col-span-2 lg:col-span-1">Internal note<Input value={draft.note} onChange={(e) => patch(campaign.id,{note:e.target.value})} placeholder="Notes for this campaign" className="mt-2 border-[#e4d9d0] bg-white"/></label>
+         </div>
+         <div className="mt-4 flex flex-wrap items-center justify-between gap-3"><p className="max-w-xl text-xs leading-5 text-[#887a72]">To activate: mark payment as Paid or Waived and set a start date. Products rotate weekly during the campaign.</p><Button disabled={update.isPending} onClick={() => update.mutate({campaignId:campaign.id,status:draft.status,paymentStatus:draft.paymentStatus,campaignPrice:Number(draft.price),startsAt:draft.startsAt || undefined,paymentReference:draft.paymentReference,adminNote:draft.note})}>{update.isPending ? <LoaderCircle className="size-4 animate-spin"/> : <Check className="size-4"/>}Save campaign</Button></div>
+       </article>;
+     })}</div>}
   </section>;
 }
