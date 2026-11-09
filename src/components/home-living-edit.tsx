@@ -49,26 +49,33 @@ export function HomeLivingEdit({ products, loading }: { products: ProductWithBra
     </section>
 
     <section className="mx-auto max-w-[1500px] px-5 pt-12 lg:px-10">
-      <div className="mb-6 text-center">
-        <p className="font-display text-2xl italic text-[#9b765b]">It’s the little things, isn’t it?</p>
-        <p className="mt-2 text-sm text-[#806b59]">The moments that make an ordinary day feel a little more special.</p>
+      <div className="mb-7">
+        <p className="text-[10px] font-semibold uppercase tracking-[.23em] text-[#9a7658]">THE OFFFEED EDIT</p>
+        <h2 className="mt-2 font-display text-4xl text-[#4c392b]">Little moments, lovely spaces.</h2>
+        <p className="mt-3 max-w-2xl text-sm leading-7 text-[#806b59]">A collection of small rituals, thoughtful details and the things that make a place feel like yours.</p>
       </div>
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
-        <article className="relative overflow-hidden rounded-[1.25rem]">
-          <img src="/images/living/bedding-furnishings.jpeg" alt="A slow morning with a warm cup of coffee" loading="lazy" className="h-56 w-full object-cover sm:h-64"/>
-          <div className="absolute inset-0 bg-gradient-to-t from-[#34251d]/65 via-transparent to-transparent"/>
-          <p className="absolute bottom-4 left-5 font-display text-2xl italic text-[#fff8ed]">Slow mornings</p>
-        </article>
-        <article className="relative overflow-hidden rounded-[1.25rem]">
-          <img src="/images/living/crockery-tableware.jpeg" alt="A lovingly prepared meal ready to be shared" loading="lazy" className="h-56 w-full object-cover sm:h-64"/>
-          <div className="absolute inset-0 bg-gradient-to-t from-[#34251d]/65 via-transparent to-transparent"/>
-          <p className="absolute bottom-4 left-5 font-display text-2xl italic text-[#fff8ed]">One more at the table</p>
-        </article>
-        <article className="relative overflow-hidden rounded-[1.25rem]">
-          <img src="/images/living/plants-planters.jpeg" alt="Fresh flowers brought home just because" loading="lazy" className="h-56 w-full object-cover sm:h-64"/>
-          <div className="absolute inset-0 bg-gradient-to-t from-[#34251d]/65 via-transparent to-transparent"/>
-          <p className="absolute bottom-4 left-5 font-display text-2xl italic text-[#fff8ed]">Flowers, just because</p>
-        </article>
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        {[
+          { title: "Slow Sunday Mornings", description: "Chai in your favourite cup, sunlight on the table and nowhere you need to be just yet.", image: "/images/living/crockery-tableware.jpeg", alt: "Coffee and tea cups arranged for a slow, sunlit morning", category: "Crockery & Tableware" },
+          { title: "Gather Around", description: "The dinner table that always has room for one more, with pieces made for sharing.", image: "/images/living/crockery-tableware.jpeg", alt: "A warmly styled dining table with ceramic tableware and flowers", category: "Crockery & Tableware" },
+          { title: "Little Comforts", description: "Soft bedsheets, favourite cushions and the familiar things that make you exhale.", image: "/images/living/bedding-furnishings.jpeg", alt: "A soft, sunlit bedroom with layered bedding and cushions", category: "Bedding & Furnishings" },
+          { title: "A Little Candlelight", description: "A gentle glow, a favourite corner and evenings that take their time.", image: "/images/living/candles-fragrance.jpeg", alt: "A glowing candle in a cosy evening corner", category: "Candles & Fragrance" },
+          { title: "Flowers, Just Because", description: "Fresh blooms in a favourite vase, simply because they make the day better.", image: "/images/living/plants-planters.jpeg", alt: "Fresh flowers arranged in a ceramic vase in warm daylight", category: "Plants & Planters" },
+          { title: "Made for Together", description: "A welcoming space, familiar pieces and room for the people who matter.", image: "/images/living/home-decor.jpeg", alt: "A warm, inviting living room with thoughtfully chosen home decor", category: "Home Decor" },
+        ].map((story, index) => (
+          <a key={story.title} href="/discover?category=home&view=discover" className="group overflow-hidden rounded-[1.2rem] border border-[#e8d9cc] bg-white shadow-[0_14px_38px_-28px_rgba(63,42,25,.45)] transition duration-500 hover:-translate-y-1 hover:shadow-[0_22px_48px_-28px_rgba(63,42,25,.55)]">
+            <div className="relative overflow-hidden">
+              <img src={story.image} alt={story.alt} loading="lazy" className="aspect-[1.12/1] w-full object-cover transition duration-700 group-hover:scale-[1.04]"/>
+              <span className="absolute bottom-4 right-4 grid size-12 place-items-center rounded-full bg-white/95 text-xl text-[#765b4d] shadow-sm transition group-hover:translate-x-1">↗</span>
+            </div>
+            <div className="p-5 sm:p-6">
+              <p className="text-[10px] font-medium uppercase tracking-[.2em] text-[#a17e70]">THE OFFFEED EDIT · 0{index + 1}</p>
+              <h3 className="mt-3 font-display text-[1.75rem] leading-tight text-[#49382f]">{story.title}</h3>
+              <p className="mt-3 min-h-[3.5rem] text-sm leading-7 text-[#806b59]">{story.description}</p>
+              <span className="mt-4 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[.18em] text-[#a16f68]">Explore the story <span aria-hidden="true">↗</span></span>
+            </div>
+          </a>
+        ))}
       </div>
     </section>
 
