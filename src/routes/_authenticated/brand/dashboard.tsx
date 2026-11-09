@@ -603,7 +603,9 @@ function BrandDashboard() {
         <Stat label="Your share" value={`${Math.round((1 - commission) * 100)}%`} icon={PackagePlus}/>
       </div>
 
-      <SpotlightPricingSection />\n      <SpotlightPerformanceSection />\n      <BrandSpotlightSection products={products} audiences={supportedAudience} />
+      <SpotlightPricingSection />
+      <SpotlightPerformanceSection />
+      <BrandSpotlightSection products={products} audiences={supportedAudience} />
 
       <section className="border-b border-border/70 py-7" aria-labelledby="brand-size-guides-heading">
         <div className="max-w-3xl"><p className="text-xs font-semibold uppercase tracking-[0.15em] text-primary">REUSABLE SIZE GUIDES</p><h2 id="brand-size-guides-heading" className="mt-2 font-display text-3xl">Set it once. Use it across products.</h2><p className="mt-2 text-sm leading-6 text-muted-foreground">Create one default chart for each category. New products and existing products without a custom chart will use it automatically. Product-specific overrides stay separate.</p></div>
