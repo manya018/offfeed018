@@ -199,12 +199,22 @@ export const getMySpotlightPerformance = createServerFn({ method: "GET" })
       const start = campaign.starts_at ? new Date(campaign.starts_at).getTime() : Infinity;
       const end = campaign.ends_at ? new Date(campaign.ends_at).getTime() : -Infinity;
       const purchases = (orders ?? []).filter((order: any) => productIdsForCampaign.has(order.product_id) && new Date(order.created_at).getTime() >= start && new Date(order.created_at).getTime() <= end);
+      const weeklyReports = Array.from({ length: campaign.duration_days / 7 }, (_, index) => {
+        const weekStart = start + index * 7 * 86400000;
+        const weekEnd = Math.min(weekStart + 7 * 86400000, end);
+        const inWeek = (event: any) => new Date(event.created_at).getTime() >= weekStart && new Date(event.created_at).getTime() < weekEnd;
+        const weekEvents = campaignEvents.filter(inWeek);
+        const unique = (type: string) => new Set(weekEvents.filter((event: any) => event.event_type === type).map((event: any) => event.visitor_id + ":" + event.product_id)).size;
+        const weekOrders = purchases.filter((order: any) => new Date(order.created_at).getTime() >= weekStart && new Date(order.created_at).getTime() < weekEnd);
+        return { week: index + 1, views: unique("view"), clicks: unique("click"), saves: unique("save"), purchases: weekOrders.reduce((sum: number, order: any) => sum + Number(order.quantity || 0), 0) };
+      });
       return {
         id: campaign.id, audience: campaign.audience, durationDays: campaign.duration_days,
         status: campaign.status, paymentStatus: campaign.payment_status, startsAt: campaign.starts_at, endsAt: campaign.ends_at,
         productNames: (campaign.spotlight_campaign_products ?? []).map((p: any) => p.brand_products?.product_name).filter(Boolean),
         views: count("view"), clicks: count("click"), saves: count("save"),
         purchases: purchases.reduce((sum: number, order: any) => sum + Number(order.quantity || 0), 0),
+        weeklyReports,
       };
     });
   });
