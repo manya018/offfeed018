@@ -26,14 +26,14 @@ const livingStories = [
 ];
 
 const livingCategories = [
-  { title: "Crockery & Tableware", image: "/images/living/crockery%20and%20tableware.jpeg" },
-  { title: "Bedding & Furnishings", image: "/images/living/bedding%20%26%20furnishing.jpeg" },
-  { title: "Candles & Fragrance", image: "/images/living/candles%20%26%20fragrance.jpeg" },
-  { title: "Home Decor", image: "/images/living/home%20decor.jpeg" },
-  { title: "Storage & Organisation", image: "/images/living/storage%20%26%20organization.jpeg" },
-  { title: "Bath & Wellness", image: "/images/living/bath%20%26%20wellness.jpeg" },
+  { title: "Crockery & Tableware", image: "/images/living/crockery-tableware.jpeg" },
+  { title: "Bedding & Furnishings", image: "/images/living/bedding-furnishings.jpeg" },
+  { title: "Candles & Fragrance", image: "/images/living/candles-fragrance.jpeg" },
+  { title: "Home Decor", image: "/images/living/home-decor.jpeg" },
+  { title: "Storage & Organisation", image: "/images/living/storage-organization.jpeg" },
+  { title: "Bath & Wellness", image: "/images/living/bath-wellness.jpeg" },
   { title: "Lighting", image: "/images/living/lighting.jpeg" },
-  { title: "Plants & Planters", image: "/images/living/plants%20%26%20planters.jpeg" },
+  { title: "Plants & Planters", image: "/images/living/plants-planters.jpeg" },
 ];
 
 function ExplorePage() {
