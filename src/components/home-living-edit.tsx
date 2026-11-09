@@ -103,10 +103,12 @@ export function HomeLivingDiscover({ products, loading }: { products: ProductWit
         </div>
         <div className="p-3 sm:p-4">
           <button type="button" aria-expanded={menuOpen} onClick={() => setMenuOpen((open) => !open)} className="flex w-full items-center justify-between rounded-xl bg-white/80 px-4 py-3 text-left text-sm font-semibold text-[#59463e] transition hover:bg-white"><span>All LIVING categories <span className="ml-1 text-xs font-normal text-[#9a7658]">({collections.length})</span></span><span className="text-[#9a7658]">{menuOpen ? "−" : "+"}</span></button>
-          {menuOpen && <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-3">
-            {collections.map((item) => <button key={item.title} type="button" onClick={() => setSelected((current) => current === item.title ? "" : item.title)} aria-pressed={selected === item.title} className={`group overflow-hidden rounded-xl border text-left transition ${selected === item.title ? "border-[#9b6b48] ring-2 ring-[#9b6b48]/30" : "border-[#e6d7c5] hover:border-[#b99a78]"}`}>
-              <img src={item.image} alt={item.title} loading="lazy" className="aspect-[16/9] w-full object-cover"/>
-              <span className={`block px-3 py-3 text-xs font-semibold ${selected === item.title ? "bg-[#9b6b48] text-white" : "bg-white text-[#59463e]"}`}>{item.title}</span>
+          {menuOpen && <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:gap-5">
+            {collections.map((item, index) => <button key={item.title} type="button" onClick={() => setSelected((current) => current === item.title ? "" : item.title)} aria-pressed={selected === item.title} className={`group relative isolate overflow-hidden rounded-[1.2rem] border border-[#e7d9c7] bg-[#e9dfd1] text-left shadow-[0_14px_35px_-27px_rgba(63,42,25,.55)] transition duration-500 hover:-translate-y-1 ${selected === item.title ? "ring-2 ring-[#9b6b48]" : ""}`}>
+              <img src={item.image} alt={item.title + " — LIVING collection"} loading="lazy" className={`w-full object-cover transition duration-1000 group-hover:scale-105 ${index === 0 || index === 4 || index === 2 || index === 7 ? "aspect-[4/5]" : "aspect-[5/4]"}`}/>
+              <span className="absolute inset-0 bg-gradient-to-t from-[#241a13]/85 via-[#34251d]/10 to-transparent"/>
+              <span className="absolute left-3 top-3 rounded-full border border-white/45 bg-[#fffaf1]/15 px-2.5 py-1 text-[8px] font-semibold uppercase tracking-[.18em] text-white backdrop-blur-md">LIVING · 0{index + 1}</span>
+              <span className="absolute inset-x-0 bottom-0 p-3 sm:p-4"><span className="block font-display text-xl leading-tight text-[#fff8ed] sm:text-2xl">{item.title}</span><span className="mt-2 block text-[9px] font-semibold uppercase tracking-[.18em] text-[#f3d9b5]">Explore collection ↗</span></span>
             </button>)}
           </div>}
         </div>
