@@ -23,4 +23,4 @@ jobs:
             echo "Missing repository secret: SUPABASE_DB_URL"
             exit 1
           fi
-          psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -f supabase/migrations/20261109000000_add_spotlight_campaigns.sql
+          psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -f supabase/migrations/20261109000000_add_spotlight_campaigns.sql\n          psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -f supabase/migrations/20261109010000_add_spotlight_analytics.sql
