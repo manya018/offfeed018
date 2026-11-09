@@ -147,3 +147,64 @@ export const getActiveSpotlightCampaigns = createServerFn({ method: "GET" })
       })),
     }));
   });
+
+
+export const recordSpotlightEvent = createServerFn({ method: "POST" })
+  .inputValidator((input) => z.object({
+    campaignId: z.string().uuid(), productId: z.string().uuid(),
+    eventType: z.enum(["view", "click", "save"]),
+    visitorId: z.string().min(8).max(100),
+  }).parse(input))
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const db = supabaseAdmin as any;
+    const now = new Date().toISOString();
+    const { data: campaign, error } = await db.from("spotlight_campaigns")
+      .select("id").eq("id", data.campaignId).eq("status", "active").eq("payment_status", "paid")
+      .lte("starts_at", now).gt("ends_at", now).maybeSingle();
+    if (error || !campaign) return { recorded: false };
+    const { data: selected } = await db.from("spotlight_campaign_products").select("product_id")
+      .eq("campaign_id", data.campaignId).eq("product_id", data.productId).maybeSingle();
+    if (!selected) return { recorded: false };
+    await db.from("spotlight_analytics_events").upsert({
+      campaign_id: data.campaignId, product_id: data.productId, event_type: data.eventType,
+      visitor_id: data.visitorId,
+    }, { onConflict: "campaign_id,product_id,event_type,visitor_id,date_trunc" }).then(() => {});
+    return { recorded: true };
+  });
+
+export const getMySpotlightPerformance = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const db = supabaseAdmin as any;
+    const { data: campaigns, error } = await db.from("spotlight_campaigns")
+      .select("id, audience, duration_days, status, payment_status, starts_at, ends_at, created_at, spotlight_campaign_products(product_id, brand_products(product_name))")
+      .eq("user_id", context.userId).order("created_at", { ascending: false }).limit(50);
+    if (error) throw new Error("Spotlight performance could not be loaded.");
+    const ids = (campaigns ?? []).map((item: any) => item.id);
+    if (!ids.length) return [];
+    const { data: events, error: eventError } = await db.from("spotlight_analytics_events")
+      .select("campaign_id, product_id, event_type, visitor_id, created_at").in("campaign_id", ids);
+    if (eventError) throw new Error("Spotlight engagement data could not be loaded.");
+    const productIds = [...new Set((campaigns ?? []).flatMap((item: any) => (item.spotlight_campaign_products ?? []).map((p: any) => p.product_id)))];
+    const { data: orders, error: orderError } = productIds.length
+      ? await db.from("brand_orders").select("product_id, quantity, created_at, status").in("product_id", productIds).eq("brand_user_id", context.userId).neq("status", "cancelled")
+      : { data: [], error: null };
+    if (orderError) throw new Error("Attributed order data could not be loaded.");
+    return (campaigns ?? []).map((campaign: any) => {
+      const productIdsForCampaign = new Set((campaign.spotlight_campaign_products ?? []).map((p: any) => p.product_id));
+      const campaignEvents = (events ?? []).filter((event: any) => event.campaign_id === campaign.id);
+      const count = (type: string) => new Set(campaignEvents.filter((e: any) => e.event_type === type).map((e: any) => e.visitor_id + ":" + e.product_id)).size;
+      const start = campaign.starts_at ? new Date(campaign.starts_at).getTime() : Infinity;
+      const end = campaign.ends_at ? new Date(campaign.ends_at).getTime() : -Infinity;
+      const purchases = (orders ?? []).filter((order: any) => productIdsForCampaign.has(order.product_id) && new Date(order.created_at).getTime() >= start && new Date(order.created_at).getTime() <= end);
+      return {
+        id: campaign.id, audience: campaign.audience, durationDays: campaign.duration_days,
+        status: campaign.status, paymentStatus: campaign.payment_status, startsAt: campaign.starts_at, endsAt: campaign.ends_at,
+        productNames: (campaign.spotlight_campaign_products ?? []).map((p: any) => p.brand_products?.product_name).filter(Boolean),
+        views: count("view"), clicks: count("click"), saves: count("save"),
+        purchases: purchases.reduce((sum: number, order: any) => sum + Number(order.quantity || 0), 0),
+      };
+    });
+  });
