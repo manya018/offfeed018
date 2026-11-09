@@ -205,7 +205,7 @@ function CreateLookPage() {
 
   const buildRecipe = async () => {
     const extra = details.trim() ? `\nSignature details: ${details.trim()}` : "";
-    const text = `${isHome ? "MY OFFFEED HOME DNA ✦" : "MY OFFFEED STYLE DNA ✦"}\nVibe: ${vibe}\nOccasion: ${occasion}\nColour story: ${palette}\nBudget: ${budget}${extra}\n\n${isHome ? "Make room for what feels like you." : "Find it before your feed does."} #OFFFEED`;
+    const text = `${isHome ? "MY OFFFEED LIVING DNA ✦" : "MY OFFFEED STYLE DNA ✦"}\nVibe: ${vibe}\nOccasion: ${occasion}\nColour story: ${palette}\nBudget: ${budget}${extra}\n\n${isHome ? "Make room for what feels like you." : "Find it before your feed does."} #OFFFEED`;
     setRecipe(text);
     setSaved(false);
     setMatchError("");
@@ -314,7 +314,7 @@ function CreateLookPage() {
     <main className="mx-auto max-w-6xl px-5 py-12 sm:py-16">
       <div className="mx-auto max-w-3xl text-center">
         <span className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-2 text-sm text-primary">
-          <Sparkles className="size-4" /> {isHome ? "YOUR HOME STYLE LAB" : "YOUR PERSONAL STYLE LAB"}
+          <Sparkles className="size-4" /> {isHome ? "YOUR LIVING STYLE LAB" : "YOUR PERSONAL STYLE LAB"}
         </span>
         <h1 className="mt-6 font-display text-4xl leading-tight sm:text-6xl">
           {isHome ? <>Create a space that feels like <em className="font-normal text-primary">home.</em></> : <>Create a look that feels like <em className="font-normal text-primary">you.</em></>}
@@ -379,7 +379,7 @@ function CreateLookPage() {
               <input id="style-details" value={details} onChange={(event) => { setDetails(event.target.value); setRecipe(""); }} maxLength={120} placeholder="e.g. silver jewellery, oversized layers, vintage denim" className="w-full rounded-xl border bg-background px-4 py-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20" />
             </div>
           </div>
-          <Button size="lg" className="mt-7 min-h-12 w-full rounded-full" onClick={buildRecipe}><Sparkles className="mr-2 size-4" /> {isHome ? "Find my home edit" : "Build my Style DNA"} <ArrowRight className="ml-2 size-4" /></Button>
+          <Button size="lg" className="mt-7 min-h-12 w-full rounded-full" onClick={buildRecipe}><Sparkles className="mr-2 size-4" /> {isHome ? "Find my living edit" : "Build my Style DNA"} <ArrowRight className="ml-2 size-4" /></Button>
         </section>
       </div>
 
