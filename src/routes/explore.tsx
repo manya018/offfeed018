@@ -26,7 +26,7 @@ const livingStories = [
 ];
 
 const livingCategories = [
-  { title: "Crockery & Tableware", image: "https://images.unsplash.com/photo-1578749556568-bc2c40e68b61?auto=format&fit=crop&w=900&q=85" },
+  { title: "Crockery & Tableware", image: "https://www.robertkime.com/storage/uploads/images/1638537172-tableware-square.jpg?ver=24.09.26" },
   { title: "Bedding & Furnishings", image: "https://images.unsplash.com/photo-1631049307264-da0ec9d70304?auto=format&fit=crop&w=900&q=85" },
   { title: "Candles & Fragrance", image: "https://images.unsplash.com/photo-1602874801007-bd458bb1b8b6?auto=format&fit=crop&w=900&q=85" },
   { title: "Home Decor", image: "https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=900&q=85" },
