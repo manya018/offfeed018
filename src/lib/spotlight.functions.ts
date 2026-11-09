@@ -166,10 +166,10 @@ export const recordSpotlightEvent = createServerFn({ method: "POST" })
     const { data: selected } = await db.from("spotlight_campaign_products").select("product_id")
       .eq("campaign_id", data.campaignId).eq("product_id", data.productId).maybeSingle();
     if (!selected) return { recorded: false };
-    await db.from("spotlight_analytics_events").upsert({
+    await db.from("spotlight_analytics_events").insert({
       campaign_id: data.campaignId, product_id: data.productId, event_type: data.eventType,
       visitor_id: data.visitorId,
-    }, { onConflict: "campaign_id,product_id,event_type,visitor_id,date_trunc" }).then(() => {});
+    });
     return { recorded: true };
   });
 
