@@ -8,7 +8,5 @@ create table if not exists public.spotlight_analytics_events (
 );
 create index if not exists spotlight_analytics_campaign_event_idx
   on public.spotlight_analytics_events (campaign_id, event_type, created_at desc);
-create unique index if not exists spotlight_analytics_dedupe_idx
-  on public.spotlight_analytics_events (campaign_id, product_id, event_type, visitor_id, date_trunc('day', created_at));
 alter table public.spotlight_analytics_events enable row level security;
 grant all on public.spotlight_analytics_events to service_role;
