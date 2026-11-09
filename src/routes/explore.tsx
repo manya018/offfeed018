@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { LookCard } from "@/components/look-card";
 import { himLooks, looks } from "@/lib/offfeed-data";
 import { useStyleSpace } from "@/lib/style-space";
@@ -39,6 +40,7 @@ function ExplorePage() {
   const isHome = requestedSpace === "home" || space === "home";
   const isHim = space === "him";
   const collection = isHim ? himLooks : looks;
+  useEffect(() => { if (requestedSpace === "home") setSpace("home"); }, [requestedSpace, setSpace]);
 
   if (isHome) return <main className="min-h-screen bg-[#fbf5eb] pb-24 text-[#4c392b]">
     <section className="mx-auto max-w-[1440px] px-5 pb-10 pt-14 lg:px-10 lg:pt-20">
