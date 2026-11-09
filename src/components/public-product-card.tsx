@@ -8,11 +8,12 @@ import { addToOfffeedCart } from "@/lib/cart";
 import { readLikedProductIds, setWishlistItem } from "@/lib/look-collections";
 import { MoodboardSaveButton } from "@/components/moodboard-save-button";
 import { FindMySize } from "@/components/find-my-size";
+import { recordSpotlightEvent } from "@/lib/spotlight.functions";
 
-export function PublicProductCard({ product }: { product: ProductWithBrand }) {
+export function PublicProductCard({ product, spotlightCampaignId }: { product: ProductWithBrand; spotlightCampaignId?: string }) {
   const [added, setAdded] = useState(false);
   const [liked, setLiked] = useState(false);
-  const [showSizeGuide, setShowSizeGuide] = useState(false);
+  const [showSizeGuide, setShowSizeGuide] = useState(false);\n  const [visitorId] = useState(() => { try { const key = "offfeed-analytics-visitor"; let id = localStorage.getItem(key); if (!id) { id = crypto.randomUUID(); localStorage.setItem(key, id); } return id; } catch { return crypto.randomUUID(); } });\n\n  useEffect(() => { if (spotlightCampaignId) void recordSpotlightEvent({ data: { campaignId: spotlightCampaignId, productId: product.id, eventType: "view", visitorId } }); }, [spotlightCampaignId, product.id, visitorId]);
 
   useEffect(() => {
     try {
@@ -47,7 +48,7 @@ export function PublicProductCard({ product }: { product: ProductWithBrand }) {
 
   return (
     <article className="min-w-0 border-b border-border/70 pb-4">
-      <Link to="/brand/$brandHandle" params={{ brandHandle: product.brand.handle }} className="group block">
+      <Link to="/brand/$brandHandle" params={{ brandHandle: product.brand.handle }} className="group block" onClick={() => { if (spotlightCampaignId) void recordSpotlightEvent({ data: { campaignId: spotlightCampaignId, productId: product.id, eventType: "click", visitorId } }); }}>
         <div className="relative aspect-[4/5] overflow-hidden bg-secondary">
           {product.imageUrl ? (
             <img src={product.imageUrl} alt={product.productName} loading="lazy" className="size-full object-cover transition-transform duration-500 group-hover:scale-[1.03]" />
