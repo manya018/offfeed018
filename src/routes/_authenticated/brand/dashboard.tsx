@@ -942,11 +942,9 @@ function SpotlightPricingSection() {
   return <section className="border-b border-border/70 py-7" aria-labelledby="spotlight-pricing-heading">
     <div className="max-w-3xl"><p className="text-xs font-semibold uppercase tracking-[0.15em] text-primary">THE OFFFEED EDIT · SPOTLIGHT</p><h2 id="spotlight-pricing-heading" className="mt-2 font-display text-3xl">How Spotlight works</h2><p className="mt-2 text-sm leading-6 text-muted-foreground">Give your brand a dedicated feature with multiple products from your collection. Choose a campaign length, submit your products and OFFFEED will review your application before confirming payment and scheduling.</p></div>
     <div className="mt-5 max-w-3xl overflow-hidden rounded-xl border border-border/80">
-      <div className="grid grid-cols-[1fr_auto] gap-3 border-b border-border/70 bg-muted/30 px-4 py-3 text-sm font-semibold"><span>Package</span><span>Suggested introductory price</span></div>
+      <div className="grid grid-cols-[1fr_auto] gap-3 border-b border-border/70 bg-muted/30 px-4 py-3 text-sm font-semibold"><span>Package</span><span>Price</span></div>
       {packages.map((item) => <div key={item.days} className="grid grid-cols-[1fr_auto] gap-3 border-b border-border/60 px-4 py-4 last:border-0"><span className="text-sm">{item.label}</span><span className="text-sm font-medium">₹{item.price.toLocaleString("en-IN")}</span></div>)}
     </div>
-    <p className="mt-3 max-w-3xl text-xs leading-5 text-muted-foreground">These are proposed introductory test prices, not a final rate card. OFFFEED will confirm the applicable price when reviewing your application. No payment is taken when you apply.</p>
-    <div className="mt-5 max-w-3xl rounded-xl border border-border/80 bg-muted/20 p-4 sm:p-5"><p className="text-sm font-medium text-muted-foreground">Illustrative monthly sponsored revenue</p><p className="mt-2 font-display text-4xl text-emerald-700">₹39,990</p><p className="mt-1 text-xs text-muted-foreground">10 brands × ₹3,999 for a four-week campaign</p></div>
     <p className="mt-3 max-w-3xl text-sm leading-6 text-muted-foreground">Spotlight is additional revenue alongside OFFFEED's existing marketplace commission model. Organic Curated Edit placement remains independent and cannot be purchased.</p>
   </section>;
 }
