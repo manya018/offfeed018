@@ -145,7 +145,7 @@ function OfffeedEditPage() {
                  <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">
                    {campaign.products.map((product: ProductWithBrand) => <div key={product.id} className="relative">
                      <span className="absolute left-2 top-2 z-10 rounded-full border border-white/80 bg-white/90 px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[.16em] text-[#765b52] shadow-sm">Sponsored feature</span>
-                     <PublicProductCard product={product}/>
+                     <PublicProductCard product={product} spotlightCampaignId={campaign.id}/>
                    </div>)}
                  </div>
                </article>
