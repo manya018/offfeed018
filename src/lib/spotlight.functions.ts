@@ -184,9 +184,11 @@ export const getMySpotlightPerformance = createServerFn({ method: "GET" })
     if (error) throw new Error("Spotlight performance could not be loaded.");
     const ids = (campaigns ?? []).map((item: any) => item.id);
     if (!ids.length) return [];
-    const { data: events, error: eventError } = await db.from("spotlight_analytics_events")
+    const { data: eventsData, error: eventError } = await db.from("spotlight_analytics_events")
       .select("campaign_id, product_id, event_type, visitor_id, created_at").in("campaign_id", ids);
-    if (eventError) throw new Error("Spotlight engagement data could not be loaded.");
+    // Keep the report available if the analytics migration has not yet been applied.
+    const analyticsReady = !eventError;
+    const events = eventsData ?? [];
     const productIds = [...new Set((campaigns ?? []).flatMap((item: any) => (item.spotlight_campaign_products ?? []).map((p: any) => p.product_id)))];
     const { data: orders, error: orderError } = productIds.length
       ? await db.from("brand_orders").select("product_id, quantity, created_at, status").in("product_id", productIds).eq("brand_user_id", context.userId).neq("status", "cancelled")
