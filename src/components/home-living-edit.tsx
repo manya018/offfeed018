@@ -4,14 +4,14 @@ import type { ProductWithBrand } from "@/lib/public-brand.functions";
 import { Button } from "@/components/ui/button";
 
 const collections = [
-  { title: "Crockery & Tableware", detail: "Mugs, cups, dinner sets, plates, bowls and serving pieces.", image: "https://www.robertkime.com/storage/uploads/images/1638537172-tableware-square.jpg?ver=24.09.26", match: /crockery|tableware|mug|cup|dinner|plate|bowl|cutlery|serve|tray|ceramic|glassware/i },
-  { title: "Bedding & Furnishings", detail: "Bedsheets, quilts, cushions, throws and soft little comforts.", image: "https://images.unsplash.com/photo-1631049307264-da0ec9d70304?auto=format&fit=crop&w=900&q=85", match: /bedding|bedsheet|linen|quilt|blanket|cushion|pillow|throw|furnishing/i },
-  { title: "Candles & Fragrance", detail: "Scented candles, diffusers, room sprays and incense.", image: "https://images.unsplash.com/photo-1602874801007-bd458bb1b8b6?auto=format&fit=crop&w=900&q=85", match: /candle|fragrance|diffuser|room spray|incense|scent/i },
-  { title: "Home Decor", detail: "Vases, wall art, mirrors, frames and objects with a story.", image: "https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=900&q=85", match: /decor|vase|wall art|mirror|frame|sculpture|ornament|object/i },
-  { title: "Storage & Organisation", detail: "Baskets, organisers and thoughtful everyday storage.", image: "https://images.unsplash.com/photo-1595428774223-ef52624120d2?auto=format&fit=crop&w=900&q=85", match: /storage|organis|basket|box|organizer/i },
-  { title: "Bath & Wellness", detail: "Bath linens, self-care accessories and quiet rituals.", image: "https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?auto=format&fit=crop&w=900&q=85", match: /bath|wellness|towel|soap|self.?care|bathroom/i },
-  { title: "Lighting", detail: "Table lamps, ambient lights and warm little glows.", image: "https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?auto=format&fit=crop&w=900&q=85", match: /light|lamp|lighting|lantern/i },
-  { title: "Plants & Planters", detail: "Greens, planters and small reminders to slow down.", image: "https://images.unsplash.com/photo-1497250681960-ef046c08a56e?auto=format&fit=crop&w=900&q=85", match: /plant|planter|pot|garden/i },
+  { title: "Crockery & Tableware", detail: "Mugs, cups, dinner sets, plates, bowls and serving pieces.", image: "/images/living/crockery%20and%20tableware.jpeg", match: /crockery|tableware|mug|cup|dinner|plate|bowl|cutlery|serve|tray|ceramic|glassware/i },
+  { title: "Bedding & Furnishings", detail: "Bedsheets, quilts, cushions, throws and soft little comforts.", image: "/images/living/bedding%20%26%20furnishing.jpeg", match: /bedding|bedsheet|linen|quilt|blanket|cushion|pillow|throw|furnishing/i },
+  { title: "Candles & Fragrance", detail: "Scented candles, diffusers, room sprays and incense.", image: "/images/living/candles%20%26%20fragrance.jpeg", match: /candle|fragrance|diffuser|room spray|incense|scent/i },
+  { title: "Home Decor", detail: "Vases, wall art, mirrors, frames and objects with a story.", image: "/images/living/home%20decor.jpeg", match: /decor|vase|wall art|mirror|frame|sculpture|ornament|object/i },
+  { title: "Storage & Organisation", detail: "Baskets, organisers and thoughtful everyday storage.", image: "/images/living/storage%20%26%20organization.jpeg", match: /storage|organis|basket|box|organizer/i },
+  { title: "Bath & Wellness", detail: "Bath linens, self-care accessories and quiet rituals.", image: "/images/living/bath%20%26%20wellness.jpeg", match: /bath|wellness|towel|soap|self.?care|bathroom/i },
+  { title: "Lighting", detail: "Table lamps, ambient lights and warm little glows.", image: "/images/living/lighting.jpeg", match: /light|lamp|lighting|lantern/i },
+  { title: "Plants & Planters", detail: "Greens, planters and small reminders to slow down.", image: "/images/living/plants%20%26%20planters.jpeg", match: /plant|planter|pot|garden/i },
 ];
 
 export function HomeLivingEdit({ products, loading }: { products: ProductWithBrand[]; loading: boolean }) {
