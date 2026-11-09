@@ -127,7 +127,7 @@ export const getActiveSpotlightCampaigns = createServerFn({ method: "GET" })
     });
     const paths = [...new Set(rows.flatMap((campaign: any) => campaign.products.flatMap((product: any) =>
       [product.image_path, ...(product.image_paths ?? [])].filter((path: unknown): path is string => typeof path === "string" && !path.startsWith("https://"))
-    ))];
+    )))];
     const { data: signed, error: signError } = paths.length
       ? await db.storage.from("brand-product-images").createSignedUrls(paths, 3600)
       : { data: [], error: null };
