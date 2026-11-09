@@ -36,9 +36,9 @@ export function SiteHeader() {
       <div className="site-header-inner mx-auto flex h-20 w-full items-center justify-between px-5 lg:px-10">
         <Link to="/" className="site-header-logo shrink-0 font-display text-2xl font-semibold tracking-[0.14em]">OFFFEED</Link>
         <div className="site-header-spaces flex shrink-0 items-center gap-2" aria-label="Choose a collection">
-          <div className="flex flex-col items-center justify-center rounded-full border border-border bg-card px-3 py-1">
+          <div className="flex items-center rounded-full border border-border bg-card p-1">
             {(["her", "him"] as const).map((option) => (
-              <Button key={option} asChild size="sm" variant="ghost" className={`h-6 min-w-12 rounded-full px-2 text-[13px] font-semibold uppercase leading-none ${!isHomeCollection && space === option ? "text-foreground" : "text-muted-foreground"}`}>
+              <Button key={option} asChild size="sm" variant={!isHomeCollection && space === option ? "default" : "ghost"} className="h-8 min-w-10 rounded-full px-2.5 text-xs font-semibold uppercase">
                 <Link to="/discover" onClick={() => setSpace(option)} aria-pressed={!isHomeCollection && space === option}>{option === "her" ? "HER" : "HIM"}</Link>
               </Button>
             ))}
