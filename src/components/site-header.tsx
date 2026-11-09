@@ -43,7 +43,7 @@ export function SiteHeader() {
               </Button>
             ))}
           </div>
-          <Button asChild size="sm" variant={isHomeCollection ? "default" : "ghost"} className={`h-[52px] min-w-[104px] rounded-full px-5 text-sm font-semibold uppercase tracking-wide ${isHomeCollection ? "" : "border border-border bg-card text-muted-foreground hover:bg-accent"}`}>
+          <Button asChild size="sm" variant={isHomeCollection ? "default" : "ghost"} className={`h-10 min-w-[88px] rounded-full px-4 text-xs font-semibold uppercase tracking-wide ${isHomeCollection ? "" : "border border-border bg-card text-muted-foreground hover:bg-accent"}`}>
             <Link to="/discover" search={{ category: "home" }} onClick={() => setSpace("home")} aria-pressed={isHomeCollection}>LIVING</Link>
           </Button>
         </div>
