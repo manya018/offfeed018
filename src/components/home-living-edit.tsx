@@ -17,6 +17,7 @@ const collections = [
 
 export function HomeLivingEdit({ products, loading }: { products: ProductWithBrand[]; loading: boolean }) {
   const [selected, setSelected] = useState("");
+  const [categoryMenuOpen, setCategoryMenuOpen] = useState(true);
   const activeCollection = collections.find((item) => item.title === selected);
   const filtered = products.filter((product) => !activeCollection || (product.brand.homeCategories?.includes(activeCollection.title) === true && activeCollection.match.test([product.category, product.productName, product.description, ...product.tags].join(" "))));
 
@@ -31,6 +32,21 @@ export function HomeLivingEdit({ products, loading }: { products: ProductWithBra
           className="block h-auto w-full"
         />
       </a>
+    </section>
+
+    <section aria-label="Living category directory" className="mx-auto mt-6 max-w-[1500px] px-5 lg:px-10">
+      <div className="overflow-hidden rounded-2xl border border-[#e6d7c5] bg-[#f7f2ed] shadow-sm">
+        <div className="flex items-center justify-between border-b border-[#e8ddd5] px-4 py-3 sm:px-5">
+          <div><p className="text-[10px] font-semibold uppercase tracking-[.2em] text-[#9a7658]">The living directory</p><p className="mt-0.5 font-display text-lg text-[#4c392b]">Browse LIVING categories</p></div>
+          <button type="button" onClick={() => { setSelected(""); document.getElementById("home-products")?.scrollIntoView({ behavior: "smooth", block: "start" }); }} className="rounded-full bg-white px-3 py-2 text-xs font-medium text-[#76563d] shadow-sm hover:bg-[#fffaf1]">All categories ↗</button>
+        </div>
+        <div className="p-3 sm:p-4">
+          <button type="button" aria-expanded={categoryMenuOpen} onClick={() => setCategoryMenuOpen((open) => !open)} className="flex w-full items-center justify-between rounded-xl bg-white/80 px-4 py-3 text-left text-sm font-semibold text-[#59463e] transition hover:bg-white"><span>Shop by category <span className="ml-1 text-xs font-normal text-[#9a7658]">({collections.length})</span></span><span className="text-[#9a7658]">{categoryMenuOpen ? "−" : "+"}</span></button>
+          {categoryMenuOpen && <div className="mt-2 grid grid-cols-2 gap-1 sm:grid-cols-3 lg:grid-cols-4">
+            {collections.map((item) => <button key={item.title} type="button" onClick={() => { setSelected(item.title); document.getElementById("home-products")?.scrollIntoView({ behavior: "smooth", block: "start" }); }} aria-pressed={selected === item.title} className={`rounded-lg px-3 py-2.5 text-left text-xs transition ${selected === item.title ? "bg-[#9b6b48] font-semibold text-white" : "text-[#77645a] hover:bg-white hover:text-[#59463e]"}`}>{item.title}</button>)}
+          </div>}
+        </div>
+      </div>
     </section>
 
     <section className="mx-auto max-w-[1500px] px-5 pt-12 lg:px-10">
