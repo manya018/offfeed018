@@ -11,7 +11,7 @@ export const getSpotlightAvailability = createServerFn({ method: "GET" })
     audience: audienceSchema,
     durationDays: z.union([z.literal(7), z.literal(14), z.literal(28)]),
   }).parse(input))
-  .handler(async ({ data }) => {
+  .handler(async ({ context, data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const db = supabaseAdmin as any;
     const now = new Date();
@@ -20,8 +20,8 @@ export const getSpotlightAvailability = createServerFn({ method: "GET" })
     monday.setUTCDate(monday.getUTCDate() - ((day + 6) % 7) + 7);
     const { data: myBrand } = await db.from("brand_applications").select("id").eq("user_id", context.userId).maybeSingle();
     const { data: rows, error } = await db.from("spotlight_campaigns")
-      .select("brand_application_id, scheduled_week, duration_days, status")
-      .eq("audience", data.audience).not("scheduled_week", "is", null)
+      .select("brand_application_id, audience, scheduled_week, duration_days, status")
+      .not("scheduled_week", "is", null)
       .not("status", "in", '("rejected","cancelled")');
     if (error) throw new Error("Spotlight availability could not be loaded.");
     return Array.from({ length: 12 }, (_, index) => {
@@ -34,6 +34,7 @@ export const getSpotlightAvailability = createServerFn({ method: "GET" })
         target.setUTCDate(target.getUTCDate() + weekIndex * 7);
         const targetDate = target.toISOString().slice(0, 10);
         const brands = new Set((rows ?? []).filter((row: any) => {
+          if (row.audience !== data.audience) return false;
           const rowStart = row.scheduled_week;
           if (!rowStart) return false;
           const rowEnd = new Date(rowStart + "T00:00:00Z");
