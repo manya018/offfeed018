@@ -28,6 +28,7 @@ import { Route as BrandBrandHandleRouteImport } from './routes/brand.$brandHandl
 import { Route as ForBrandsApplyRouteImport } from './routes/for-brands.apply'
 import { Route as LookLookIdRouteImport } from './routes/look.$lookId'
 import { Route as AuthenticatedBrandDashboardRouteImport } from './routes/_authenticated/brand/dashboard'
+import { Route as AuthenticatedBrandSpotlightRouteImport } from './routes/_authenticated/brand/spotlight'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -124,6 +125,12 @@ const AuthenticatedBrandDashboardRoute =
     path: '/brand/dashboard',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedBrandSpotlightRoute =
+  AuthenticatedBrandSpotlightRouteImport.update({
+    id: '/brand/spotlight',
+    path: '/brand/spotlight',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -144,6 +151,7 @@ export interface FileRoutesByFullPath {
   '/for-brands/apply': typeof ForBrandsApplyRoute
   '/look/$lookId': typeof LookLookIdRoute
   '/brand/dashboard': typeof AuthenticatedBrandDashboardRoute
+  '/brand/spotlight': typeof AuthenticatedBrandSpotlightRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -164,6 +172,7 @@ export interface FileRoutesByTo {
   '/for-brands/apply': typeof ForBrandsApplyRoute
   '/look/$lookId': typeof LookLookIdRoute
   '/brand/dashboard': typeof AuthenticatedBrandDashboardRoute
+  '/brand/spotlight': typeof AuthenticatedBrandSpotlightRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -186,6 +195,7 @@ export interface FileRoutesById {
   '/for-brands/apply': typeof ForBrandsApplyRoute
   '/look/$lookId': typeof LookLookIdRoute
   '/_authenticated/brand/dashboard': typeof AuthenticatedBrandDashboardRoute
+  '/_authenticated/brand/spotlight': typeof AuthenticatedBrandSpotlightRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -208,6 +218,7 @@ export interface FileRouteTypes {
     | '/for-brands/apply'
     | '/look/$lookId'
     | '/brand/dashboard'
+    | '/brand/spotlight'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -249,6 +260,7 @@ export interface FileRouteTypes {
     | '/for-brands/apply'
     | '/look/$lookId'
     | '/_authenticated/brand/dashboard'
+    | '/_authenticated/brand/spotlight'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -405,17 +417,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedBrandDashboardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/brand/spotlight': {
+      id: '/_authenticated/brand/spotlight'
+      path: '/brand/spotlight'
+      fullPath: '/brand/spotlight'
+      preLoaderRoute: typeof AuthenticatedBrandSpotlightRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
   AuthenticatedBrandDashboardRoute: typeof AuthenticatedBrandDashboardRoute
+  AuthenticatedBrandSpotlightRoute: typeof AuthenticatedBrandSpotlightRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRoute,
   AuthenticatedBrandDashboardRoute: AuthenticatedBrandDashboardRoute,
+  AuthenticatedBrandSpotlightRoute: AuthenticatedBrandSpotlightRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
