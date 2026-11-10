@@ -907,7 +907,7 @@ function BrandSpotlightSection({ products, audiences }: {
   useEffect(() => { setSelectedIds([]); }, [selectedAudience]);
   const toggleProduct = (id: string) => setSelectedIds((current) => current.includes(id) ? current.filter((item) => item !== id) : current.length >= 4 ? current : [...current, id]);
   const submit = async () => {
-    if (selectedIds.length < 2) { toast.error("Choose at least two existing published products."); return; }
+    if (selectedIds.length < 2) { toast.error("Choose at least two published products from your collection."); return; }
     setSaving(true);
     try {
       await submitSpotlightCampaign({ data: { audience: selectedAudience, durationDays, productIds: selectedIds } });
@@ -921,23 +921,23 @@ function BrandSpotlightSection({ products, audiences }: {
     <div className="max-w-3xl">
       <p className="text-xs font-semibold uppercase tracking-[0.15em] text-primary">BRAND VISIBILITY</p>
       <h2 id="brand-spotlight-heading" className="mt-2 font-display text-3xl">Apply for The Spotlight Edit</h2>
-      <p className="mt-2 text-sm leading-6 text-muted-foreground">Choose 2–4 already-published products from your OFFFEED collection. Their existing product photos and details will appear together in one brand feature. No new product listing or separate photo upload is needed.</p>
+      <p className="mt-2 text-sm leading-6 text-muted-foreground">Select any 2–4 of your published products. You can feature products from your collection directly—no separate product approval is required for Spotlight.</p>
     </div>
     <div className="mt-5 grid max-w-4xl gap-4 rounded-xl border border-border/80 p-4 sm:grid-cols-2 sm:p-5">
       <div><Label htmlFor="spotlight-audience">Audience</Label><select id="spotlight-audience" value={selectedAudience} onChange={(event) => setSelectedAudience(event.target.value as "her" | "him" | "home")} className={fieldClass}>{audiences.map((item) => <option key={item} value={item}>{item === "her" ? "HER" : item === "him" ? "HIM" : "LIVING"}</option>)}</select></div>
       <div><Label htmlFor="spotlight-duration">Campaign duration</Label><select id="spotlight-duration" value={durationDays} onChange={(event) => setDurationDays(Number(event.target.value) as 7 | 14 | 28)} className={fieldClass}><option value={7}>1 week</option><option value={14}>2 weeks</option><option value={28}>4 weeks</option></select></div>
       <div className="sm:col-span-2">
-        <div className="flex flex-wrap items-center justify-between gap-2"><div><Label>Select products from your collection</Label><p className="mt-1 text-xs text-muted-foreground">Choose a minimum of 2 and a maximum of 4. Select a card to add or remove it.</p></div><Badge variant="secondary">{selectedIds.length}/4 selected</Badge></div>
+        <div className="flex flex-wrap items-center justify-between gap-2"><div><Label>Select products from your collection</Label><p className="mt-1 text-xs text-muted-foreground">Tap any product card to select it. Choose 2–4 products for one Spotlight feature.</p></div><Badge variant="secondary">{selectedIds.length}/4 selected</Badge></div>
         {available.length ? <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">{available.map((product) => {
           const selected = selectedIds.includes(product.id);
           return <button key={product.id} type="button" aria-pressed={selected} onClick={() => toggleProduct(product.id)} className={`group overflow-hidden rounded-xl border text-left transition ${selected ? "border-primary ring-2 ring-primary/20" : "border-border/70 hover:border-primary/50"}`}>
             <div className="relative aspect-[3/4] bg-muted">{product.imageUrl ? <img src={product.imageUrl} alt={product.product_name} className="size-full object-cover"/> : <div className="grid size-full place-items-center"><ImagePlus className="size-7 text-muted-foreground"/></div>}<span className={`absolute right-2 top-2 grid size-6 place-items-center rounded-full ${selected ? "bg-primary text-primary-foreground" : "bg-background/90 text-foreground"}`}>{selected ? <Check className="size-4"/> : <Plus className="size-4"/>}</span></div>
             <div className="p-3"><p className="truncate text-sm font-medium">{product.product_name}</p><p className="mt-1 text-xs text-muted-foreground">₹{Number(product.price).toLocaleString("en-IN")}</p><a href={`#brand-product-${product.id}`} onClick={(event) => event.stopPropagation()} className="mt-2 inline-block text-[11px] font-medium text-primary underline underline-offset-4">View in collection</a></div>
           </button>;
-        })}</div> : <p className="mt-4 rounded-lg border border-dashed border-border/70 p-4 text-sm text-muted-foreground">No published, approved products are available in this audience yet. Publish and receive approval for at least two products first.</p>}
+        })}</div> : <p className="mt-4 rounded-lg border border-dashed border-border/70 p-4 text-sm text-muted-foreground">No published products are available in this audience yet. Publish at least two products in this audience to select them here.</p>}
         {selectedIds.length === 4 && <p className="mt-2 text-xs text-muted-foreground">You've reached the four-product limit for this campaign.</p>}
       </div>
-      <div className="sm:col-span-2"><Button type="button" disabled={saving || selectedIds.length < 2} onClick={() => void submit()}>{saving ? <LoaderCircle className="animate-spin"/> : <Sparkles/>}Submit Spotlight application</Button><p className="mt-2 text-xs leading-5 text-muted-foreground">OFFFEED will review your selection and confirm the campaign price and payment instructions. No charge is taken by this application form.</p></div>
+      <div className="sm:col-span-2"><Button type="button" disabled={saving || selectedIds.length < 2} onClick={() => void submit()}>{saving ? <LoaderCircle className="animate-spin"/> : <Sparkles/>}Submit Spotlight application</Button><p className="mt-2 text-xs leading-5 text-muted-foreground">Your selected products will be featured after your Spotlight campaign is scheduled and payment is confirmed.</p></div>
     </div>
     <div className="mt-6 max-w-3xl">
       <h3 className="font-display text-xl">Your Spotlight applications</h3>
