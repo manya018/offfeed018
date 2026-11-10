@@ -10,7 +10,7 @@ export const submitSpotlightCampaign = createServerFn({ method: "POST" })
   .inputValidator((input) => z.object({
     audience: audienceSchema,
     durationDays: z.union([z.literal(7), z.literal(14), z.literal(28)]),
-    productIds: z.array(z.string().uuid()).min(2).max(20),
+    productIds: z.array(z.string().uuid()).min(2).max(4),
   }).parse(input))
   .handler(async ({ context, data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -20,7 +20,7 @@ export const submitSpotlightCampaign = createServerFn({ method: "POST" })
     if (brandError || !brand) throw new Error("An approved OFFFEED brand workspace is required to apply.");
     if (!brand.audience?.includes(data.audience)) throw new Error("This audience is not enabled for your brand.");
     const uniqueIds = [...new Set(data.productIds)];
-    if (uniqueIds.length < 2) throw new Error("Choose at least two different products for your Spotlight feature.");
+    if (uniqueIds.length < 2 || uniqueIds.length > 4) throw new Error("Choose between two and four existing products for your Spotlight feature.");
     const { data: products, error: productsError } = await db.from("brand_products")
       .select("id").eq("brand_application_id", brand.id).eq("status", "published")
       .eq("brand_approved", true).contains("audience", [data.audience]).in("id", uniqueIds);
@@ -85,7 +85,7 @@ export const updateOwnerSpotlightCampaign = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const db = supabaseAdmin as any;
     const { data: current, error: readError } = await db.from("spotlight_campaigns")
-      .select("id, duration_days, status").eq("id", data.campaignId).maybeSingle();
+      .select("id, duration_days, status, audience, brand_application_id").eq("id", data.campaignId).maybeSingle();
     if (readError || !current) throw new Error("Spotlight campaign not found.");
     if (data.status === "active" && !["paid", "waived"].includes(data.paymentStatus)) {
       throw new Error("A campaign can only be activated after payment is confirmed or waived.");
@@ -93,6 +93,21 @@ export const updateOwnerSpotlightCampaign = createServerFn({ method: "POST" })
     if (data.status === "active" && !data.startsAt) throw new Error("Set a campaign start date before activating it.");
     const startsAt = data.status === "active" ? new Date(data.startsAt!).toISOString() : null;
     const endsAt = startsAt ? new Date(new Date(startsAt).getTime() + current.duration_days * 86400000).toISOString() : null;
+    if (data.status === "active" && startsAt && endsAt) {
+      const { data: overlapping, error: capacityError } = await db.from("spotlight_campaigns")
+        .select("brand_application_id, starts_at, ends_at")
+        .eq("audience", current.audience).eq("status", "active").eq("payment_status", "paid")
+        .neq("brand_application_id", current.brand_application_id);
+      if (capacityError) throw new Error("Spotlight capacity could not be checked. Please try again.");
+      const overlappingBrands = new Set((overlapping ?? [])
+        .filter((item: any) => item.starts_at && item.ends_at
+          && new Date(item.starts_at).getTime() < new Date(endsAt).getTime()
+          && new Date(item.ends_at).getTime() > new Date(startsAt).getTime())
+        .map((item: any) => item.brand_application_id));
+      if (overlappingBrands.size >= 10) {
+        throw new Error("This audience has reached its limit of 10 Spotlight brands for the selected dates. Choose another campaign period.");
+      }
+    }
     const { error } = await db.from("spotlight_campaigns").update({
       status: data.status, payment_status: data.paymentStatus, campaign_price: data.campaignPrice,
       payment_reference: data.paymentReference || null, starts_at: startsAt, ends_at: endsAt,
@@ -123,9 +138,17 @@ export const getActiveSpotlightCampaigns = createServerFn({ method: "GET" })
       const week = Math.floor(Date.now() / 604800000);
       const offset = week % selected.length;
       const rotated = [...selected.slice(offset), ...selected.slice(0, offset)];
-      return [{ id: campaign.id, brandName: brand.brand_name, brandHandle: brand.public_handle, audience: campaign.audience, products: rotated }];
+      return [{ id: campaign.id, brandApplicationId: brand.id, brandName: brand.brand_name, brandHandle: brand.public_handle, audience: campaign.audience, products: rotated.slice(0, 4) }];
     });
-    const paths = [...new Set(rows.flatMap((campaign: any) => campaign.products.flatMap((product: any) =>
+    // One row per brand; show at most ten distinct brands in each audience.
+    const seenBrands = new Set<string>();
+    const cappedRows = rows.filter((campaign: any) => {
+      if (seenBrands.has(campaign.brandApplicationId)) return false;
+      if (seenBrands.size >= 10) return false;
+      seenBrands.add(campaign.brandApplicationId);
+      return true;
+    });
+    const paths = [...new Set(cappedRows.flatMap((campaign: any) => campaign.products.flatMap((product: any) =>
       [product.image_path, ...(product.image_paths ?? [])].filter((path: unknown): path is string => typeof path === "string" && !path.startsWith("https://"))
     )))];
     const { data: signed, error: signError } = paths.length
@@ -133,7 +156,7 @@ export const getActiveSpotlightCampaigns = createServerFn({ method: "GET" })
       : { data: [], error: null };
     if (signError) throw new Error("Spotlight product images could not be loaded.");
     const signedMap = new Map((signed ?? []).map((item: any) => [item.path, item.signedUrl]));
-    return rows.map((campaign: any) => ({
+    return cappedRows.map((campaign: any) => ({
       ...campaign,
       products: campaign.products.map((product: any) => ({
         id: product.id, productName: product.product_name, description: product.description,
