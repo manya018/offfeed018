@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { createBrandProduct, getBrandWorkspace, importShopifyCatalog, saveBrandShippingProfile, saveBrandSizeGuide, saveImportedShopifyProducts, updateBrandOrderTracking, updateBrandProductSizeChart, updateBrandProductStatus } from "@/lib/brand-products.functions";
 import { submitDispatchEvidence, getDisputeViewerData, rerunReturnAnalysis, type DisputeViewerData, type ForensicReport } from "@/lib/dispute-evidence.functions";
-import { submitSpotlightCampaign, submitSpotlightProducts, getMySpotlightCampaigns, getMySpotlightPerformance } from "@/lib/spotlight.functions";
+import { submitSpotlightCampaign, submitSpotlightProducts, getSpotlightAvailability, getMySpotlightCampaigns, getMySpotlightPerformance } from "@/lib/spotlight.functions";
 
 
 export const Route = createFileRoute("/_authenticated/brand/dashboard")({
@@ -891,7 +891,10 @@ function BrandSpotlightSection({ products, audiences }: {
   audiences: Array<"her" | "him" | "home">;
 }) {
   const [selectedAudience, setSelectedAudience] = useState<"her" | "him" | "home">(audiences[0] ?? "her");
-  const [durationDays, setDurationDays] = useState<7 | 14 | 28>(28);
+  const [durationDays, setDurationDays] = useState<7 | 14 | 28>(7);
+  const [availability, setAvailability] = useState<Array<{startWeek:string;slotsLeft:number;available:boolean;weeklyCounts:number[]}>>([]);
+  const [selectedWeek, setSelectedWeek] = useState("");
+  const [availabilityLoading, setAvailabilityLoading] = useState(false);
   const [campaigns, setCampaigns] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [savingApplication, setSavingApplication] = useState(false);
@@ -902,87 +905,94 @@ function BrandSpotlightSection({ products, audiences }: {
   const refresh = async () => {
     setLoading(true);
     try { setCampaigns(await getMySpotlightCampaigns()); }
-    catch (error) { toast.error(error instanceof Error ? error.message : "Spotlight applications couldn't be loaded."); }
+    catch (error) { toast.error(error instanceof Error ? error.message : "Spotlight bookings couldn't be loaded."); }
     finally { setLoading(false); }
   };
+  const refreshAvailability = async () => {
+    setAvailabilityLoading(true);
+    try {
+      const rows = await getSpotlightAvailability({ data: { audience: selectedAudience, durationDays } });
+      setAvailability(rows);
+      setSelectedWeek(rows.find((row: any) => row.available)?.startWeek ?? "");
+    } catch (error) {
+      setAvailability([]);
+      setSelectedWeek("");
+      toast.error(error instanceof Error ? error.message : "Weekly availability couldn't be loaded.");
+    } finally { setAvailabilityLoading(false); }
+  };
   useEffect(() => { void refresh(); }, []);
+  useEffect(() => { void refreshAvailability(); }, [selectedAudience, durationDays]);
   const apply = async () => {
+    if (!selectedWeek) { toast.error("Choose an available Monday edition first."); return; }
     setSavingApplication(true);
     try {
-      await submitSpotlightCampaign({ data: { audience: selectedAudience, durationDays } });
-      toast.success("Your Spotlight application has been sent to OFFFEED for approval.");
+      await submitSpotlightCampaign({ data: { audience: selectedAudience, durationDays, startWeek: selectedWeek } });
+      toast.success("Your weekly Spotlight slot has been reserved as a payment-pending booking.");
       await refresh();
-    } catch (error) { toast.error(error instanceof Error ? error.message : "Spotlight application couldn't be submitted."); }
+      await refreshAvailability();
+    } catch (error) { toast.error(error instanceof Error ? error.message : "Spotlight booking couldn't be submitted."); await refreshAvailability(); }
     finally { setSavingApplication(false); }
   };
-  const openCollection = (campaign: any) => {
-    setSelectedCampaignId(campaign.id);
-    setSelectedIds([]);
-    setCollectionOpen(true);
-  };
-  const toggleProduct = (id: string) => setSelectedIds((current) => current.includes(id)
-    ? current.filter((item) => item !== id)
-    : current.length >= 4 ? current : [...current, id]);
+  const openCollection = (campaign: any) => { setSelectedCampaignId(campaign.id); setSelectedIds([]); setCollectionOpen(true); };
+  const toggleProduct = (id: string) => setSelectedIds((current) => current.includes(id) ? current.filter((item) => item !== id) : current.length >= 4 ? current : [...current, id]);
   const submitProducts = async () => {
-    if (!selectedCampaignId || selectedIds.length < 2) {
-      toast.error("Choose at least two products from your collection.");
-      return;
-    }
+    if (!selectedCampaignId || selectedIds.length < 2) { toast.error("Choose at least two products from your collection."); return; }
     setSavingProducts(true);
     try {
       await submitSpotlightProducts({ data: { campaignId: selectedCampaignId, productIds: selectedIds } });
       toast.success("Your Spotlight products have been submitted.");
-      setCollectionOpen(false);
-      setSelectedCampaignId(null);
-      setSelectedIds([]);
-      await refresh();
+      setCollectionOpen(false); setSelectedCampaignId(null); setSelectedIds([]); await refresh();
     } catch (error) { toast.error(error instanceof Error ? error.message : "Your products couldn't be submitted."); }
     finally { setSavingProducts(false); }
   };
   const audienceLabel = (audience: string) => audience === "home" ? "LIVING" : audience.toUpperCase();
-  const hasProducts = (campaign: any) => (campaign.spotlight_campaign_products ?? []).length > 0;
+  const formatWeek = (value: string) => new Date(value + "T12:00:00").toLocaleDateString("en-IN", { weekday:"long", day:"numeric", month:"long", year:"numeric" });
+  const prices: Record<number, number> = { 7:1499, 14:2499, 28:3999 };
+  const selectedSlot = availability.find((slot) => slot.startWeek === selectedWeek);
   return <section className="border-b border-border/70 py-7" aria-labelledby="brand-spotlight-heading">
-    <div className="max-w-3xl">
+    <div className="max-w-4xl">
       <p className="text-xs font-semibold uppercase tracking-[0.15em] text-primary">BRAND VISIBILITY</p>
-      <h2 id="brand-spotlight-heading" className="mt-2 font-display text-3xl">Apply for The Spotlight Edit</h2>
-      <p className="mt-2 text-sm leading-6 text-muted-foreground">Choose your audience and campaign duration to apply. Once OFFFEED approves your application, you can select 2–4 products from your existing collection.</p>
+      <h2 id="brand-spotlight-heading" className="mt-2 font-display text-3xl">Book The Spotlight Edit</h2>
+      <p className="mt-2 text-sm leading-6 text-muted-foreground">Reserve a place in an upcoming Monday edition. Each audience has 10 brand places per week. A 2- or 4-week booking reserves your place across consecutive editions.</p>
     </div>
-    <div className="mt-5 grid max-w-4xl gap-4 rounded-xl border border-border/80 p-4 sm:grid-cols-2 sm:p-5">
-      <div><Label htmlFor="spotlight-audience">Audience</Label><select id="spotlight-audience" value={selectedAudience} onChange={(event) => setSelectedAudience(event.target.value as "her" | "him" | "home")} className={fieldClass}>{audiences.map((item) => <option key={item} value={item}>{audienceLabel(item)}</option>)}</select></div>
-      <div><Label htmlFor="spotlight-duration">Campaign duration</Label><select id="spotlight-duration" value={durationDays} onChange={(event) => setDurationDays(Number(event.target.value) as 7 | 14 | 28)} className={fieldClass}><option value={7}>1 week</option><option value={14}>2 weeks</option><option value={28}>4 weeks</option></select></div>
-      <div className="sm:col-span-2"><Button type="button" disabled={savingApplication} onClick={() => void apply()}>{savingApplication ? <LoaderCircle className="animate-spin"/> : <Sparkles/>}Apply for Spotlight Edit</Button><p className="mt-2 text-xs leading-5 text-muted-foreground">Your application must be approved by OFFFEED before product selection is unlocked. No products can be submitted before approval.</p></div>
+    <div className="mt-5 max-w-4xl rounded-xl border border-border/80 p-4 sm:p-5">
+      <div className="rounded-lg bg-muted/35 p-4"><p className="font-medium">Before you book</p><ul className="mt-2 list-disc space-y-1 pl-5 text-sm leading-6 text-muted-foreground"><li>Choose one audience and one package only.</li><li>Each weekly edition starts on Monday, with up to 10 brands in HER, HIM and LIVING separately.</li><li>Submit your maximum four existing products by Saturday at 6:00 PM before your start week.</li><li>OFFFEED prepares the edition on Sunday; products go live on Monday.</li><li>Bookings are reserved across every week in your selected package. Your brand cannot book overlapping weeks again.</li><li>Spotlight fees are non-refundable once payment is collected, subject to applicable law and payment-provider rules.</li></ul></div>
+      <div className="mt-4 grid gap-4 sm:grid-cols-2">
+        <div><Label htmlFor="spotlight-audience">Audience</Label><select id="spotlight-audience" value={selectedAudience} onChange={(event) => setSelectedAudience(event.target.value as "her" | "him" | "home")} className={fieldClass}>{audiences.map((item) => <option key={item} value={item}>{audienceLabel(item)}</option>)}</select></div>
+        <div><Label htmlFor="spotlight-package">Choose one package</Label><select id="spotlight-package" value={durationDays} onChange={(event) => setDurationDays(Number(event.target.value) as 7 | 14 | 28)} className={fieldClass}><option value={7}>1 week · ₹1,499</option><option value={14}>2 weeks · ₹2,499</option><option value={28}>4 weeks · ₹3,999</option></select></div>
+      </div>
+      <div className="mt-4"><div className="flex flex-wrap items-center justify-between gap-2"><Label htmlFor="spotlight-week">Choose an available Monday start date</Label>{availabilityLoading ? <span className="text-xs text-muted-foreground">Checking slots…</span> : <span className="text-xs text-muted-foreground">10 brand slots per audience per week</span>}</div>
+        <select id="spotlight-week" value={selectedWeek} onChange={(event) => setSelectedWeek(event.target.value)} className={fieldClass} disabled={availabilityLoading || !availability.some((slot) => slot.available)}>
+          {!availability.some((slot) => slot.available) && <option value="">No available weeks in the current booking window</option>}
+          {availability.map((slot) => <option key={slot.startWeek} value={slot.startWeek} disabled={!slot.available}>{formatWeek(slot.startWeek)} — {slot.available ? `${slot.slotsLeft} of 10 slots left` : "Fully booked"}</option>)}
+        </select>
+      </div>
+      {selectedSlot && <div className="mt-3 rounded-lg border border-border/70 p-3"><div className="flex flex-wrap items-center justify-between gap-2"><p className="text-sm font-medium">{formatWeek(selectedSlot.startWeek)}</p><Badge variant={selectedSlot.available ? "secondary" : "destructive"}>{selectedSlot.slotsLeft} slots left</Badge></div><p className="mt-1 text-xs text-muted-foreground">{durationDays === 7 ? "One weekly edition" : durationDays === 14 ? "Two consecutive Monday editions" : "Four consecutive Monday editions"} · ₹{prices[durationDays].toLocaleString("en-IN")}</p></div>}
+      <div className="mt-4 flex flex-wrap items-center gap-3"><Button type="button" disabled={savingApplication || availabilityLoading || !selectedWeek || !selectedSlot?.available} onClick={() => void apply()}>{savingApplication ? <LoaderCircle className="animate-spin"/> : <Sparkles/>}Reserve Spotlight slot</Button><span className="text-xs text-muted-foreground">Payment checkout will be connected through Razorpay in a later step. Until then, bookings remain payment-pending and cannot go live.</span></div>
     </div>
     <div className="mt-6 max-w-4xl">
-      <h3 className="font-display text-xl">Your Spotlight applications</h3>
-      {loading ? <p className="mt-3 text-sm text-muted-foreground">Loading applications…</p> : campaigns.length ? <div className="mt-3 divide-y divide-border/70 border-y border-border/70">{campaigns.map((campaign) => {
+      <h3 className="font-display text-xl">Your Spotlight bookings</h3>
+      {loading ? <p className="mt-3 text-sm text-muted-foreground">Loading bookings…</p> : campaigns.length ? <div className="mt-3 divide-y divide-border/70 border-y border-border/70">{campaigns.map((campaign) => {
         const productList = campaign.spotlight_campaign_products ?? [];
         const alreadySubmitted = productList.length > 0;
-        const canSelect = campaign.status === "approved" && !alreadySubmitted;
+        const canSelect = campaign.status === "approved" && ["paid","waived"].includes(campaign.payment_status) && !alreadySubmitted;
         const isOpen = collectionOpen && selectedCampaignId === campaign.id;
         const campaignProducts = products.filter((product) => product.status === "published" && product.audience.includes(campaign.audience));
         return <div key={campaign.id} className="py-4">
-          <div className="flex flex-wrap items-center justify-between gap-2"><p className="text-sm font-medium">{audienceLabel(campaign.audience)} · {campaign.duration_days === 7 ? "1 week" : campaign.duration_days === 14 ? "2 weeks" : "4 weeks"}</p><Badge variant="secondary">{campaign.status.replaceAll("_", " ")}</Badge></div>
-          <p className="mt-1 text-xs text-muted-foreground">Payment: {campaign.payment_status} · {Number(campaign.campaign_price) > 0 ? `₹${Number(campaign.campaign_price).toLocaleString("en-IN")}` : "Price to be confirmed by OFFFEED"}</p>
+          <div className="flex flex-wrap items-center justify-between gap-2"><p className="text-sm font-medium">{audienceLabel(campaign.audience)} · {campaign.duration_days / 7} week{campaign.duration_days > 7 ? "s" : ""} · {campaign.scheduled_week ? formatWeek(campaign.scheduled_week) : "Start date pending"}</p><Badge variant="secondary">{campaign.status.replaceAll("_", " ")} · {campaign.payment_status}</Badge></div>
+          <p className="mt-1 text-xs text-muted-foreground">₹{Number(campaign.campaign_price).toLocaleString("en-IN")} · {campaign.payment_status === "pending" ? "Awaiting payment confirmation" : "Booking payment status: " + campaign.payment_status}</p>
           {campaign.admin_note && <p className="mt-2 text-xs text-muted-foreground">{campaign.admin_note}</p>}
-          {campaign.status === "submitted" && <p className="mt-2 text-sm text-muted-foreground">Your application is awaiting OFFFEED approval. Product selection is locked until it is approved.</p>}
-          {campaign.status === "rejected" && <p className="mt-2 text-sm text-muted-foreground">This application was not approved. Contact OFFFEED if you need more information.</p>}
-          {canSelect && <div className="mt-3"><p className="text-sm text-muted-foreground">Your application is approved. You can now select 2–4 products from your collection.</p><Button type="button" variant="outline" className="mt-2" onClick={() => isOpen ? setCollectionOpen(false) : openCollection(campaign)}><ImagePlus className="size-4"/>{isOpen ? "Close collection" : "Select products from my collection"}</Button>
-            {isOpen && <div className="mt-3 rounded-xl border border-border/70 p-3 sm:p-4">
-              <div className="mb-3 flex items-center justify-between gap-2"><p className="text-sm font-medium">My collection · {audienceLabel(campaign.audience)}</p><Badge variant="secondary">{selectedIds.length}/4 selected</Badge></div>
-              {campaignProducts.length ? <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">{campaignProducts.map((product) => {
-                const selected = selectedIds.includes(product.id);
-                return <button key={product.id} type="button" aria-pressed={selected} onClick={() => toggleProduct(product.id)} className={`group overflow-hidden rounded-xl border text-left transition ${selected ? "border-primary ring-2 ring-primary/20" : "border-border/70 hover:border-primary/50"}`}>
-                  <div className="relative aspect-[3/4] bg-muted">{product.imageUrl ? <img src={product.imageUrl} alt={product.product_name} className="size-full object-cover"/> : <div className="grid size-full place-items-center"><ImagePlus className="size-7 text-muted-foreground"/></div>}<span className={`absolute right-2 top-2 grid size-6 place-items-center rounded-full ${selected ? "bg-primary text-primary-foreground" : "bg-background/90 text-foreground"}`}>{selected ? <Check className="size-4"/> : <Plus className="size-4"/>}</span></div>
-                  <div className="p-3"><p className="truncate text-sm font-medium">{product.product_name}</p><p className="mt-1 text-xs text-muted-foreground">₹{Number(product.price).toLocaleString("en-IN")}</p></div>
-                </button>;
-              })}</div> : <p className="rounded-lg border border-dashed border-border/70 p-4 text-sm text-muted-foreground">No published products are available in this audience yet. Add and publish products to your collection first.</p>}
-              <Button type="button" className="mt-4" disabled={savingProducts || selectedIds.length < 2} onClick={() => void submitProducts()}>{savingProducts ? <LoaderCircle className="animate-spin"/> : <Upload/>}Submit selected products</Button>
-              <p className="mt-2 text-xs text-muted-foreground">You can submit 2–4 products. This option is available only after OFFFEED approval.</p>
+          {campaign.status === "submitted" && <p className="mt-2 text-sm text-muted-foreground">Your slot is reserved, pending payment setup/confirmation. Product selection remains locked until OFFFEED approves the booking and payment is confirmed.</p>}
+          {campaign.status === "rejected" && <p className="mt-2 text-sm text-muted-foreground">This booking was not approved. Contact OFFFEED if you need more information.</p>}
+          {canSelect && <div className="mt-3"><p className="text-sm text-muted-foreground">Your booking is approved and paid. Select 2–4 products from your collection now.</p><Button type="button" variant="outline" className="mt-2" onClick={() => isOpen ? setCollectionOpen(false) : openCollection(campaign)}><ImagePlus className="size-4"/>{isOpen ? "Close collection" : "Select products from my collection"}</Button>
+            {isOpen && <div className="mt-3 rounded-xl border border-border/70 p-3 sm:p-4"><div className="mb-3 flex items-center justify-between gap-2"><p className="text-sm font-medium">My collection · {audienceLabel(campaign.audience)}</p><Badge variant="secondary">{selectedIds.length}/4 selected</Badge></div>
+              {campaignProducts.length ? <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">{campaignProducts.map((product) => {const selected = selectedIds.includes(product.id);return <button key={product.id} type="button" aria-pressed={selected} onClick={() => toggleProduct(product.id)} className={`group overflow-hidden rounded-xl border text-left transition ${selected ? "border-primary ring-2 ring-primary/20" : "border-border/70 hover:border-primary/50"}`}><div className="relative aspect-[3/4] bg-muted">{product.imageUrl ? <img src={product.imageUrl} alt={product.product_name} className="size-full object-cover"/> : <div className="grid size-full place-items-center"><ImagePlus className="size-7 text-muted-foreground"/></div>}<span className={`absolute right-2 top-2 grid size-6 place-items-center rounded-full ${selected ? "bg-primary text-primary-foreground" : "bg-background/90 text-foreground"}`}>{selected ? <Check className="size-4"/> : <Plus className="size-4"/>}</span></div><div className="p-3"><p className="truncate text-sm font-medium">{product.product_name}</p><p className="mt-1 text-xs text-muted-foreground">₹{Number(product.price).toLocaleString("en-IN")}</p></div></button>;})}</div> : <p className="rounded-lg border border-dashed border-border/70 p-4 text-sm text-muted-foreground">No published products are available in this audience yet. Add and publish products to your collection first.</p>}
+              <Button type="button" className="mt-4" disabled={savingProducts || selectedIds.length < 2} onClick={() => void submitProducts()}>{savingProducts ? <LoaderCircle className="animate-spin"/> : <Upload/>}Submit selected products</Button><p className="mt-2 text-xs text-muted-foreground">Submit 2–4 products by Saturday, 6:00 PM before your edition starts.</p>
             </div>}
           </div>}
-          {alreadySubmitted && <div className="mt-3"><p className="text-sm font-medium">Products submitted</p><p className="mt-1 text-xs text-muted-foreground">{productList.length} products attached to this campaign. OFFFEED will schedule the feature after payment confirmation.</p></div>}
+          {alreadySubmitted && <p className="mt-3 text-sm text-muted-foreground">{productList.length} products submitted. OFFFEED will prepare the row for Sunday-night publishing.</p>}
         </div>;
-      })}</div> : <p className="mt-3 text-sm text-muted-foreground">You haven't submitted a Spotlight application yet.</p>}
+      })}</div> : <p className="mt-3 text-sm text-muted-foreground">You haven't made a Spotlight booking yet.</p>}
     </div>
   </section>;
 }
