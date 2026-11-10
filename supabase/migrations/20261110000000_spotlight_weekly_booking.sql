@@ -93,6 +93,6 @@ end;
 $$;
 
 revoke all on function public.create_spotlight_booking(text, integer, date, uuid) from public;
-grant execute on function public.create_spotlight_booking(text, integer, date) to service_role;
+grant execute on function public.create_spotlight_booking(text, integer, date, uuid) to service_role;
 
 comment on column public.spotlight_campaigns.scheduled_week is 'Monday edition start date reserved by this Spotlight booking.';
