@@ -898,6 +898,7 @@ function BrandSpotlightSection({ products, audiences }: {
   const [campaigns, setCampaigns] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [savingApplication, setSavingApplication] = useState(false);
+  const [acceptedNonRefundable, setAcceptedNonRefundable] = useState(false);
   const [savingProducts, setSavingProducts] = useState(false);
   const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -968,7 +969,8 @@ function BrandSpotlightSection({ products, audiences }: {
         </select>
       </div>
       {selectedSlot && <div className="mt-3 rounded-lg border border-border/70 p-3"><div className="flex flex-wrap items-center justify-between gap-2"><p className="text-sm font-medium">{formatWeek(selectedSlot.startWeek)}</p><Badge variant={selectedSlot.available ? "secondary" : "destructive"}>{selectedSlot.slotsLeft} slots left</Badge></div><p className="mt-1 text-xs text-muted-foreground">{durationDays === 7 ? "One weekly edition" : durationDays === 14 ? "Two consecutive Monday editions" : "Four consecutive Monday editions"} · ₹{prices[durationDays].toLocaleString("en-IN")}</p></div>}
-      <div className="mt-4 flex flex-wrap items-center gap-3"><Button type="button" disabled={savingApplication || availabilityLoading || !selectedWeek || !selectedSlot?.available} onClick={() => void apply()}>{savingApplication ? <LoaderCircle className="animate-spin"/> : <Sparkles/>}Reserve Spotlight slot</Button><span className="text-xs text-muted-foreground">Payment checkout will be connected through Razorpay in a later step. Until then, bookings remain payment-pending and cannot go live.</span></div>
+      <label className="mt-4 flex cursor-pointer items-start gap-2 text-xs leading-5 text-muted-foreground"><input type="checkbox" checked={acceptedNonRefundable} onChange={(event) => setAcceptedNonRefundable(event.target.checked)} className="mt-1 size-4 accent-primary"/><span>I understand that Spotlight fees are non-refundable once paid, subject to applicable law. I have checked the selected audience, package and Monday start date.</span></label>
+      <div className="mt-4 flex flex-wrap items-center gap-3"><Button type="button" disabled={savingApplication || availabilityLoading || !selectedWeek || !selectedSlot?.available || !acceptedNonRefundable} onClick={() => void apply()}>{savingApplication ? <LoaderCircle className="animate-spin"/> : <Sparkles/>}Reserve Spotlight slot</Button><span className="text-xs text-muted-foreground">Razorpay checkout will be connected later. For now, bookings remain payment-pending and cannot go live until payment is confirmed by OFFFEED.</span></div>
     </div>
     <div className="mt-6 max-w-4xl">
       <h3 className="font-display text-xl">Your Spotlight bookings</h3>
