@@ -29,7 +29,7 @@ function BrandSpotlightPage() {
   }));
 
   return <main className="mx-auto min-h-screen w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-    <div className="mb-5"><Button asChild variant="ghost" className="-ml-3"><Link to="/_authenticated/brand/dashboard"><ArrowLeft className="size-4"/>Back to Brand Dashboard</Link></Button></div>
+    <div className="mb-5"><Button asChild variant="ghost" className="-ml-3"><Link to="/brand/dashboard"><ArrowLeft className="size-4"/>Back to Brand Dashboard</Link></Button></div>
     {workspace.isLoading ? <div className="flex min-h-64 items-center justify-center gap-2 text-sm text-muted-foreground"><LoaderCircle className="size-4 animate-spin"/>Loading your brand workspace…</div> :
       workspace.isError ? <div className="rounded-xl border border-destructive/30 p-5 text-sm text-muted-foreground">Your brand workspace couldn't be loaded. Please refresh the page.</div> :
       <div className="mx-auto max-w-5xl">
