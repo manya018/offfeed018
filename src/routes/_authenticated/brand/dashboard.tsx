@@ -7,6 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { createBrandProduct, getBrandWorkspace, importShopifyCatalog, saveBrandShippingProfile, saveBrandSizeGuide, saveImportedShopifyProducts, updateBrandOrderTracking, updateBrandProductSizeChart, updateBrandProductStatus } from "@/lib/brand-products.functions";
@@ -603,9 +605,8 @@ function BrandDashboard() {
         <Stat label="Your share" value={`${Math.round((1 - commission) * 100)}%`} icon={PackagePlus}/>
       </div>
 
-      <SpotlightPricingSection />
+      <section className="my-7 flex flex-col gap-3 rounded-2xl border border-border/80 bg-card p-5 sm:flex-row sm:items-center sm:justify-between"><div><p className="text-xs font-semibold uppercase tracking-[0.15em] text-primary">BRAND VISIBILITY</p><h2 className="mt-1 font-display text-2xl">The Spotlight Edit</h2><p className="mt-1 max-w-xl text-sm text-muted-foreground">Explore packages, check weekly availability and book a dedicated feature for your brand.</p></div><Button asChild><Link to="/_authenticated/brand/spotlight">Apply for Spotlight <ArrowRight className="size-4"/></Link></Button></section>
       <SpotlightPerformanceSection />
-      <BrandSpotlightSection products={products} audiences={supportedAudience} />
 
       <section className="border-b border-border/70 py-7" aria-labelledby="brand-size-guides-heading">
         <div className="max-w-3xl"><p className="text-xs font-semibold uppercase tracking-[0.15em] text-primary">REUSABLE SIZE GUIDES</p><h2 id="brand-size-guides-heading" className="mt-2 font-display text-3xl">Set it once. Use it across products.</h2><p className="mt-2 text-sm leading-6 text-muted-foreground">Create one default chart for each category. New products and existing products without a custom chart will use it automatically. Product-specific overrides stay separate.</p></div>
@@ -886,7 +887,7 @@ function Stat({ label, value, icon: Icon }: { label: string; value: string; icon
   return <div className="flex items-center gap-3"><span className="grid size-10 place-items-center rounded-full bg-secondary text-primary"><Icon className="size-4"/></span><span><span className="block text-xs text-muted-foreground">{label}</span><span className="mt-1 block text-xl font-medium">{value}</span></span></div>;
 }
 
-function BrandSpotlightSection({ products, audiences }: {
+export function BrandSpotlightSection({ products, audiences }: {
   products: Array<{ id: string; product_name: string; price: number; status: string; audience: string[]; imageUrl?: string | null }>;
   audiences: Array<"her" | "him" | "home">;
 }) {
@@ -965,12 +966,28 @@ function BrandSpotlightSection({ products, audiences }: {
         <div><Label htmlFor="spotlight-audience">Audience</Label><select id="spotlight-audience" value={selectedAudience} onChange={(event) => setSelectedAudience(event.target.value as "her" | "him" | "home")} className={fieldClass}>{audiences.map((item) => <option key={item} value={item}>{audienceLabel(item)}</option>)}</select></div>
         <div><Label htmlFor="spotlight-package">Choose one package</Label><select id="spotlight-package" value={durationDays} onChange={(event) => setDurationDays(Number(event.target.value) as 7 | 14 | 28)} className={fieldClass}><option value={7}>1 week · ₹1,499</option><option value={14}>2 weeks · ₹2,499</option><option value={28}>4 weeks · ₹3,999</option></select></div>
       </div>
-      <div className="mt-4"><div className="flex flex-wrap items-center justify-between gap-2"><Label htmlFor="spotlight-week">Choose an available Monday start date</Label>{availabilityLoading ? <span className="text-xs text-muted-foreground">Checking slots…</span> : <span className="text-xs text-muted-foreground">10 brand slots per audience per week</span>}</div>
-        <select id="spotlight-week" value={selectedWeek} onChange={(event) => setSelectedWeek(event.target.value)} className={fieldClass} disabled={availabilityLoading || !availability.some((slot) => slot.available)}>
-          {bookingSetupRequired && <option value="">Booking calendar setup required</option>}
-          {!bookingSetupRequired && !availability.some((slot) => slot.available) && <option value="">No available weeks in the current booking window</option>}
-          {availability.map((slot) => <option key={slot.startWeek} value={slot.startWeek} disabled={!slot.available}>{formatWeek(slot.startWeek)} — {slot.available ? `${slot.slotsLeft} of 10 slots left` : "Fully booked"}</option>)}
-        </select>
+      <div className="mt-4">
+        <div className="flex flex-wrap items-center justify-between gap-2"><Label>Choose an available Monday start date</Label><span className="text-xs text-muted-foreground">10 brand slots per audience per week</span></div>
+        <Popover>
+          <PopoverTrigger asChild><Button type="button" variant="outline" className="mt-2 h-12 w-full justify-between rounded-lg bg-card px-4 font-normal" disabled={availabilityLoading || bookingSetupRequired}><span>{selectedWeek ? formatWeek(selectedWeek) : availabilityLoading ? "Checking available dates…" : bookingSetupRequired ? "Calendar setup required" : "Choose a Monday"}</span><span className="text-xs text-muted-foreground">{selectedSlot ? `${selectedSlot.slotsLeft}/10 slots left` : "View calendar"}</span></Button></PopoverTrigger>
+          <PopoverContent align="start" className="w-auto max-w-[calc(100vw-2rem)] p-3">
+            <div className="mb-2 flex flex-wrap gap-3 text-xs text-muted-foreground"><span className="inline-flex items-center gap-1"><span className="size-2 rounded-full bg-emerald-600"/>Available Monday</span><span className="inline-flex items-center gap-1"><span className="size-2 rounded-full bg-destructive"/>Fully booked</span></div>
+            <Calendar
+              mode="single"
+              selected={selectedWeek ? new Date(selectedWeek + "T12:00:00") : undefined}
+              onSelect={(date) => { if (!date) return; const value = date.toISOString().slice(0,10); const slot = availability.find((item) => item.startWeek === value); if (slot?.available) setSelectedWeek(value); }}
+              disabled={(date) => { const value = date.toISOString().slice(0,10); return date.getDay() !== 1 || !availability.some((slot) => slot.startWeek === value && slot.available); }}
+              modifiers={{ availableMonday: availability.filter((slot) => slot.available).map((slot) => new Date(slot.startWeek + "T12:00:00")), fullMonday: availability.filter((slot) => !slot.available).map((slot) => new Date(slot.startWeek + "T12:00:00")) }}
+              modifiersClassNames={{ availableMonday: "font-semibold text-emerald-700 underline decoration-2 underline-offset-4", fullMonday: "text-destructive line-through opacity-60" }}
+              fromDate={availability.length ? new Date(availability[0].startWeek + "T12:00:00") : new Date()}
+              toDate={availability.length ? new Date(availability[availability.length-1].startWeek + "T12:00:00") : new Date()}
+              showOutsideDays={false}
+            />
+            <div className="mt-2 max-h-36 space-y-1 overflow-y-auto border-t border-border pt-2">{availability.map((slot) => <button key={slot.startWeek} type="button" disabled={!slot.available} onClick={() => setSelectedWeek(slot.startWeek)} className="flex w-full items-center justify-between rounded-md px-2 py-1.5 text-left text-xs hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"><span>{formatWeek(slot.startWeek)}</span><span className={slot.available ? "font-medium text-emerald-700" : "text-destructive"}>{slot.available ? `${slot.slotsLeft} slots left` : "Full"}</span></button>)}</div>
+          </PopoverContent>
+        </Popover>
+        {bookingSetupRequired && <p className="mt-2 rounded-lg border border-amber-300/60 bg-amber-50 p-3 text-sm text-amber-900">The Spotlight booking calendar has not been activated in the OFFFEED database yet. Please apply the latest Supabase migration before accepting bookings. No slots are being marked as full.</p>}
+        {selectedSlot && <div className="mt-3 rounded-lg border border-border/70 p-3"><div className="flex flex-wrap items-center justify-between gap-2"><p className="text-sm font-medium">{formatWeek(selectedSlot.startWeek)}</p><Badge variant="secondary">{selectedSlot.slotsLeft} of 10 slots available</Badge></div><p className="mt-1 text-xs text-muted-foreground">{durationDays === 7 ? "One weekly edition" : durationDays === 14 ? "Two consecutive Monday editions" : "Four consecutive Monday editions"} · ₹{prices[durationDays].toLocaleString("en-IN")}</p></div>}
       </div>
       {bookingSetupRequired && <p className="mt-2 rounded-lg border border-amber-300/60 bg-amber-50 p-3 text-sm text-amber-900">The Spotlight booking calendar has not been activated in the OFFFEED database yet. Please apply the latest Supabase migration before accepting bookings. No slots are being marked as full.</p>}
       {selectedSlot && <div className="mt-3 rounded-lg border border-border/70 p-3"><div className="flex flex-wrap items-center justify-between gap-2"><p className="text-sm font-medium">{formatWeek(selectedSlot.startWeek)}</p><Badge variant={selectedSlot.available ? "secondary" : "destructive"}>{selectedSlot.slotsLeft} slots left</Badge></div><p className="mt-1 text-xs text-muted-foreground">{durationDays === 7 ? "One weekly edition" : durationDays === 14 ? "Two consecutive Monday editions" : "Four consecutive Monday editions"} · ₹{prices[durationDays].toLocaleString("en-IN")}</p></div>}
