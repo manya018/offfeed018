@@ -96,7 +96,7 @@ export const updateOwnerSpotlightCampaign = createServerFn({ method: "POST" })
     if (data.status === "active" && startsAt && endsAt) {
       const { data: overlapping, error: capacityError } = await db.from("spotlight_campaigns")
         .select("brand_application_id, starts_at, ends_at")
-        .eq("audience", current.audience).eq("status", "active").eq("payment_status", "paid")
+        .eq("audience", current.audience).eq("status", "active").in("payment_status", ["paid", "waived"])
         .neq("brand_application_id", current.brand_application_id);
       if (capacityError) throw new Error("Spotlight capacity could not be checked. Please try again.");
       const overlappingBrands = new Set((overlapping ?? [])
@@ -125,7 +125,7 @@ export const getActiveSpotlightCampaigns = createServerFn({ method: "GET" })
     const now = new Date().toISOString();
     const { data: campaigns, error } = await db.from("spotlight_campaigns")
       .select("id, audience, duration_days, starts_at, ends_at, brand_applications(id, brand_name, public_handle, category), spotlight_campaign_products(product_id, position, brand_products(id, product_name, description, category, price, product_url, image_path, image_paths, sizes, size_chart, colors, tags, audience, created_at, status, brand_approved))")
-      .eq("audience", data.audience).eq("status", "active").eq("payment_status", "paid")
+      .eq("audience", data.audience).eq("status", "active").in("payment_status", ["paid", "waived"])
       .lte("starts_at", now).gt("ends_at", now).order("starts_at", { ascending: false }).limit(30);
     if (error) throw new Error("Spotlight features could not be loaded.");
     const rows = (campaigns ?? []).flatMap((campaign: any) => {
