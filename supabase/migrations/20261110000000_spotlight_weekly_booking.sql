@@ -8,7 +8,8 @@ create index if not exists spotlight_campaigns_week_capacity_idx
 create or replace function public.create_spotlight_booking(
   p_audience text,
   p_duration_days integer,
-  p_start_week date
+  p_start_week date,
+  p_user_id uuid
 ) returns uuid
 language plpgsql
 security definer
@@ -35,7 +36,7 @@ begin
 
   select * into v_brand
   from public.brand_applications
-  where user_id = auth.uid() and status = 'approved'
+  where user_id = p_user_id and status = 'approved'
   limit 1;
   if v_brand.id is null then
     raise exception 'An approved OFFFEED brand workspace is required.';
@@ -78,7 +79,7 @@ begin
     payment_status, campaign_price, scheduled_week,
     starts_at, ends_at, admin_note
   ) values (
-    v_brand.id, auth.uid(), p_audience, p_duration_days, 'submitted',
+    v_brand.id, p_user_id, p_audience, p_duration_days, 'submitted',
     'pending',
     case p_duration_days when 7 then 1499 when 14 then 2499 else 3999 end,
     p_start_week,
@@ -91,7 +92,7 @@ begin
 end;
 $$;
 
-revoke all on function public.create_spotlight_booking(text, integer, date) from public;
-grant execute on function public.create_spotlight_booking(text, integer, date) to authenticated, service_role;
+revoke all on function public.create_spotlight_booking(text, integer, date, uuid) from public;
+grant execute on function public.create_spotlight_booking(text, integer, date) to service_role;
 
 comment on column public.spotlight_campaigns.scheduled_week is 'Monday edition start date reserved by this Spotlight booking.';
