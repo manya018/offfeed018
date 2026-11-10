@@ -142,9 +142,9 @@ function OfffeedEditPage() {
                    <div><p className="text-[10px] font-semibold uppercase tracking-[.2em] text-[#a17e75]">SPOTLIGHT BRAND</p><h3 className="mt-1 font-display text-2xl sm:text-3xl">{campaign.brandName}</h3></div>
                    <a href={`/brand/${encodeURIComponent(campaign.brandHandle)}`} className="text-xs font-semibold uppercase tracking-[.14em] text-[#9a7770] hover:underline">Explore brand ↗</a>
                  </div>
-                 <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">
-                   {campaign.products.map((product: ProductWithBrand) => <div key={product.id} className="relative">
-                     <span className="absolute left-2 top-2 z-10 rounded-full border border-white/80 bg-white/90 px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[.16em] text-[#765b52] shadow-sm">Sponsored feature</span>
+                 <div className="grid grid-cols-4 gap-2 sm:gap-4">
+                   {campaign.products.slice(0, 4).map((product: ProductWithBrand) => <div key={product.id} className="relative min-w-0">
+                     <span className="absolute left-1 top-1 z-10 rounded-full border border-white/80 bg-white/90 px-1.5 py-1 text-[8px] font-semibold uppercase tracking-[.1em] text-[#765b52] shadow-sm sm:left-2 sm:top-2 sm:px-2.5 sm:text-[9px]">Spotlight</span>
                      <PublicProductCard product={product} spotlightCampaignId={campaign.id}/>
                    </div>)}
                  </div>
