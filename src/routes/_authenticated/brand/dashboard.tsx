@@ -605,7 +605,7 @@ function BrandDashboard() {
         <Stat label="Your share" value={`${Math.round((1 - commission) * 100)}%`} icon={PackagePlus}/>
       </div>
 
-      <section className="my-7 flex flex-col gap-3 rounded-2xl border border-border/80 bg-card p-5 sm:flex-row sm:items-center sm:justify-between"><div><p className="text-xs font-semibold uppercase tracking-[0.15em] text-primary">BRAND VISIBILITY</p><h2 className="mt-1 font-display text-2xl">The Spotlight Edit</h2><p className="mt-1 max-w-xl text-sm text-muted-foreground">Explore packages, check weekly availability and book a dedicated feature for your brand.</p></div><Button asChild><Link to="/_authenticated/brand/spotlight">Apply for Spotlight <ArrowRight className="size-4"/></Link></Button></section>
+      <section className="my-7 flex flex-col gap-3 rounded-2xl border border-border/80 bg-card p-5 sm:flex-row sm:items-center sm:justify-between"><div><p className="text-xs font-semibold uppercase tracking-[0.15em] text-primary">BRAND VISIBILITY</p><h2 className="mt-1 font-display text-2xl">The Spotlight Edit</h2><p className="mt-1 max-w-xl text-sm text-muted-foreground">Explore packages, check weekly availability and book a dedicated feature for your brand.</p></div><Button asChild><Link to="/brand/spotlight">Apply for Spotlight <ArrowRight className="size-4"/></Link></Button></section>
       <SpotlightPerformanceSection />
 
       <section className="border-b border-border/70 py-7" aria-labelledby="brand-size-guides-heading">
