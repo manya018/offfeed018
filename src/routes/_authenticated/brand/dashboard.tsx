@@ -955,26 +955,55 @@ function SpotlightPerformanceSection() {
   const [selected, setSelected] = useState("");
   const [week, setWeek] = useState("all");
   const reports = performance.data ?? [];
-  const activeId = reports.some((item: any) => item.id === selected) ? selected : reports[0]?.id ?? "";
+  const preferredCampaign = reports.find((item: any) => item.status === "active")
+    ?? reports.find((item: any) => item.status === "completed")
+    ?? reports[0];
+  const activeId = reports.some((item: any) => item.id === selected) ? selected : preferredCampaign?.id ?? "";
   const campaign = reports.find((item: any) => item.id === activeId);
   const weekly = campaign?.weeklyReports ?? [];
   const selectedWeek = week === "all" ? null : weekly.find((item: any) => String(item.week) === week);
   const metrics = selectedWeek ?? campaign;
+  const dateLabel = (value?: string | null) => value
+    ? new Date(value).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })
+    : "Date to be scheduled";
+  const campaignLabel = (item: any) => {
+    const audience = item.audience === "home" ? "LIVING" : item.audience.toUpperCase();
+    const duration = item.durationDays === 7 ? "1 week" : item.durationDays === 14 ? "2 weeks" : "4 weeks";
+    return `${audience} · ${duration} · ${dateLabel(item.startsAt)} · ${item.status.replaceAll("_", " ")}`;
+  };
+  const periodAvailable = Boolean(campaign?.startsAt && ["active", "completed"].includes(campaign.status));
+  const numberLabel = (value: unknown) => {
+    const number = Number(value);
+    return Number.isFinite(number) ? number.toLocaleString("en-IN") : "—";
+  };
   return <section className="border-b border-border/70 py-7" aria-labelledby="spotlight-performance-heading">
     <div className="max-w-4xl"><p className="text-xs font-semibold uppercase tracking-[0.15em] text-primary">CAMPAIGN INSIGHTS</p><h2 id="spotlight-performance-heading" className="mt-2 font-display text-3xl">Your Spotlight performance</h2><p className="mt-2 text-sm leading-6 text-muted-foreground">See how shoppers discovered and engaged with the products in your Spotlight feature.</p></div>
     {performance.isLoading ? <p className="mt-5 text-sm text-muted-foreground">Loading your campaign report…</p> :
      <div className="mt-5 max-w-4xl rounded-2xl border border-border/80 p-4 sm:p-6">
        <div className="flex flex-wrap items-center justify-between gap-3"><div><h3 className="font-display text-xl">EDIT Spotlight — Campaign report</h3><p className="mt-1 text-xs text-muted-foreground">Live OFFFEED analytics · No sample numbers</p></div><Badge variant="secondary">{campaign?.status ?? (performance.isError ? "Data unavailable" : "No campaign yet")}</Badge></div>
-       <div className="mt-4 grid gap-3 sm:grid-cols-2"><div><Label htmlFor="spotlight-report-campaign">Campaign</Label><select id="spotlight-report-campaign" value={activeId} onChange={(e) => {setSelected(e.target.value);setWeek("all");}} className={fieldClass}>{reports.map((item: any) => <option key={item.id} value={item.id}>{item.audience.toUpperCase()} · {item.durationDays}-week{item.durationDays === 7 ? "" : "s"} · {item.status}</option>)}</select></div><div><Label htmlFor="spotlight-report-week">Reporting period</Label><select id="spotlight-report-week" value={week} onChange={(e) => setWeek(e.target.value)} className={fieldClass}><option value="all">Campaign to date</option>{weekly.map((item: any) => <option key={item.week} value={String(item.week)}>Week {item.week}</option>)}</select></div></div>
+       <div className="mt-4 grid gap-3 sm:grid-cols-2">
+         <div><Label htmlFor="spotlight-report-campaign">Campaign</Label><select id="spotlight-report-campaign" value={activeId} onChange={(e) => { setSelected(e.target.value); setWeek("all"); }} className={fieldClass} disabled={!reports.length}>
+           {!reports.length && <option value="">No campaigns yet</option>}
+           {reports.map((item: any) => <option key={item.id} value={item.id}>{campaignLabel(item)}</option>)}
+         </select></div>
+         <div><Label htmlFor="spotlight-report-week">Reporting period</Label><select id="spotlight-report-week" value={week} onChange={(e) => setWeek(e.target.value)} className={fieldClass} disabled={!periodAvailable}>
+           <option value="all">Campaign to date</option>
+           {periodAvailable && weekly.map((item: any) => <option key={item.week} value={String(item.week)}>Week {item.week}</option>)}
+         </select></div>
+       </div>
        <div className="mt-5 overflow-hidden rounded-xl border border-border/80">
          <table className="w-full text-sm">
            <thead className="bg-muted/30"><tr className="border-b border-border/70"><th scope="col" className="px-4 py-3 text-left font-semibold">Performance metric</th><th scope="col" className="px-4 py-3 text-right font-semibold">Number</th></tr></thead>
            <tbody>
-             {[{label:"Product views",value:metrics?.views ?? (performance.isError ? "—" : 0)},{label:"Product clicks",value:metrics?.clicks ?? (performance.isError ? "—" : 0)},{label:"Saves",value:metrics?.saves ?? (performance.isError ? "—" : 0)},{label:"Purchases",value:metrics?.purchases ?? (performance.isError ? "—" : 0)}].map((metric) => <tr key={metric.label} className="border-b border-border/60 last:border-0"><th scope="row" className="px-4 py-3 text-left font-normal">{metric.label}</th><td className="px-4 py-3 text-right font-semibold tabular-nums">{Number(metric.value).toLocaleString("en-IN")}</td></tr>)}
+             {[{label:"Product views",value:metrics?.views},{label:"Product clicks",value:metrics?.clicks},{label:"Saves",value:metrics?.saves},{label:"Purchases",value:metrics?.purchases}].map((metric) => <tr key={metric.label} className="border-b border-border/60 last:border-0"><th scope="row" className="px-4 py-3 text-left font-normal">{metric.label}</th><td className="px-4 py-3 text-right font-semibold tabular-nums">{campaign ? numberLabel(metric.value ?? 0) : "—"}</td></tr>)}
            </tbody>
          </table>
        </div>
-       {performance.isError ? <p className="mt-3 text-xs leading-5 text-muted-foreground">The campaign report could not connect to the Spotlight data tables. Apply the Spotlight database migrations and refresh this page.</p> : !campaign ? <p className="mt-3 text-xs leading-5 text-muted-foreground">No Spotlight campaign has been submitted yet. Your real counts will appear here after your first campaign starts.</p> : campaign.analyticsReady === false ? <p className="mt-3 text-xs leading-5 text-muted-foreground">View, click and save tracking will appear here once the Spotlight analytics database migration has been applied.</p> : null}{campaign?.purchaseDataReady === false && <p className="mt-2 text-xs text-muted-foreground">Purchase data is temporarily unavailable.</p>}
+       {performance.isError ? <p className="mt-3 text-xs leading-5 text-muted-foreground">The campaign report could not connect to the Spotlight data tables. Apply the Spotlight database migrations and refresh this page.</p> :
+        !campaign ? <p className="mt-3 text-xs leading-5 text-muted-foreground">Your Spotlight campaign reports will appear here after you submit an application.</p> :
+        !periodAvailable ? <p className="mt-3 text-xs leading-5 text-muted-foreground">Report available once this campaign starts. You can still view its application status here.</p> :
+        campaign.analyticsReady === false ? <p className="mt-3 text-xs leading-5 text-muted-foreground">View, click and save tracking will appear here once the Spotlight analytics database migration has been applied.</p> : null}
+       {campaign?.purchaseDataReady === false && <p className="mt-2 text-xs text-muted-foreground">Purchase data is temporarily unavailable.</p>}
        <div className="mt-4"><p className="text-xs font-medium text-muted-foreground">Products included</p><p className="mt-1 text-sm">{campaign?.productNames?.join(" · ") || "No campaign products selected"}</p></div>
        <p className="mt-4 text-xs leading-5 text-muted-foreground">Views, clicks and saves count unique visitor-product interactions per reporting period. Purchases count non-cancelled orders for selected products during the campaign dates.</p>
      </div>}
