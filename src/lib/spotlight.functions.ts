@@ -5,25 +5,64 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 const OWNER_EMAIL = "manyagupta018@gmail.com";
 const audienceSchema = z.enum(["her", "him", "home"]);
 
-export const submitSpotlightCampaign = createServerFn({ method: "POST" })
+export const getSpotlightAvailability = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input) => z.object({
     audience: audienceSchema,
     durationDays: z.union([z.literal(7), z.literal(14), z.literal(28)]),
   }).parse(input))
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const db = supabaseAdmin as any;
+    const now = new Date();
+    const monday = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+    const day = monday.getUTCDay();
+    monday.setUTCDate(monday.getUTCDate() - ((day + 6) % 7) + 7);
+    const { data: rows, error } = await db.from("spotlight_campaigns")
+      .select("brand_application_id, scheduled_week, duration_days, status")
+      .eq("audience", data.audience).not("scheduled_week", "is", null)
+      .not("status", "in", '("rejected","cancelled")');
+    if (error) throw new Error("Spotlight availability could not be loaded.");
+    return Array.from({ length: 12 }, (_, index) => {
+      const start = new Date(monday);
+      start.setUTCDate(start.getUTCDate() + index * 7);
+      const weekDate = start.toISOString().slice(0, 10);
+      const weeks = data.durationDays / 7;
+      const weeklyCounts = Array.from({ length: weeks }, (_, weekIndex) => {
+        const target = new Date(start);
+        target.setUTCDate(target.getUTCDate() + weekIndex * 7);
+        const targetDate = target.toISOString().slice(0, 10);
+        const brands = new Set((rows ?? []).filter((row: any) => {
+          const rowStart = row.scheduled_week;
+          if (!rowStart) return false;
+          const rowEnd = new Date(rowStart + "T00:00:00Z");
+          rowEnd.setUTCDate(rowEnd.getUTCDate() + row.duration_days);
+          return rowStart <= targetDate && rowEnd.toISOString().slice(0, 10) > targetDate;
+        }).map((row: any) => row.brand_application_id));
+        return brands.size;
+      });
+      const used = Math.max(...weeklyCounts);
+      const left = Math.max(0, 10 - used);
+      return { startWeek: weekDate, slotsLeft: left, available: left > 0, weeklyCounts };
+    });
+  });
+
+export const submitSpotlightCampaign = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({
+    audience: audienceSchema,
+    durationDays: z.union([z.literal(7), z.literal(14), z.literal(28)]),
+    startWeek: z.string().regex(/^\\d{4}-\\d{2}-\\d{2}$/),
+  }).parse(input))
   .handler(async ({ context, data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const db = supabaseAdmin as any;
-    const { data: brand, error: brandError } = await db.from("brand_applications")
-      .select("id, brand_name, audience, status").eq("user_id", context.userId).eq("status", "approved").maybeSingle();
-    if (brandError || !brand) throw new Error("An approved OFFFEED brand workspace is required to apply.");
-    if (!brand.audience?.includes(data.audience)) throw new Error("This audience is not enabled for your brand.");
-    const { data: campaign, error: campaignError } = await db.from("spotlight_campaigns").insert({
-      brand_application_id: brand.id, user_id: context.userId, audience: data.audience,
-      duration_days: data.durationDays, status: "submitted", payment_status: "pending",
-    }).select("id").single();
-    if (campaignError || !campaign) throw new Error("Your Spotlight application could not be submitted.");
-    return { id: campaign.id, brandName: brand.brand_name, status: "submitted" as const };
+    const { data: bookingId, error } = await db.rpc("create_spotlight_booking", {
+      p_audience: data.audience, p_duration_days: data.durationDays,
+      p_start_week: data.startWeek, p_user_id: context.userId,
+    });
+    if (error || !bookingId) throw new Error(error?.message || "Your Spotlight slot could not be reserved.");
+    return { id: bookingId, status: "submitted" as const, startWeek: data.startWeek };
   });
 
 export const submitSpotlightProducts = createServerFn({ method: "POST" })
@@ -65,7 +104,7 @@ export const getMySpotlightCampaigns = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const db = supabaseAdmin as any;
     const { data, error } = await db.from("spotlight_campaigns")
-      .select("id, audience, duration_days, status, payment_status, campaign_price, starts_at, ends_at, admin_note, created_at, spotlight_campaign_products(product_id, position, brand_products(id, product_name, price))")
+      .select("id, audience, duration_days, status, payment_status, campaign_price, scheduled_week, starts_at, ends_at, admin_note, created_at, spotlight_campaign_products(product_id, position, brand_products(id, product_name, price))")
       .eq("user_id", context.userId).order("created_at", { ascending: false }).limit(30);
     if (error) throw new Error("Your Spotlight applications could not be loaded.");
     return data ?? [];
