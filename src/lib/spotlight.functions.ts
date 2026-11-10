@@ -10,7 +10,6 @@ export const submitSpotlightCampaign = createServerFn({ method: "POST" })
   .inputValidator((input) => z.object({
     audience: audienceSchema,
     durationDays: z.union([z.literal(7), z.literal(14), z.literal(28)]),
-    productIds: z.array(z.string().uuid()).min(2).max(4),
   }).parse(input))
   .handler(async ({ context, data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -19,27 +18,45 @@ export const submitSpotlightCampaign = createServerFn({ method: "POST" })
       .select("id, brand_name, audience, status").eq("user_id", context.userId).eq("status", "approved").maybeSingle();
     if (brandError || !brand) throw new Error("An approved OFFFEED brand workspace is required to apply.");
     if (!brand.audience?.includes(data.audience)) throw new Error("This audience is not enabled for your brand.");
-    const uniqueIds = [...new Set(data.productIds)];
-    if (uniqueIds.length < 2 || uniqueIds.length > 4) throw new Error("Choose between two and four existing products for your Spotlight feature.");
-    const { data: products, error: productsError } = await db.from("brand_products")
-      .select("id").eq("brand_application_id", brand.id).eq("status", "published")
-      .contains("audience", [data.audience]).in("id", uniqueIds);
-    if (productsError || (products ?? []).length !== uniqueIds.length) {
-      throw new Error("Choose only published products from your own collection that are available in the selected audience.");
-    }
     const { data: campaign, error: campaignError } = await db.from("spotlight_campaigns").insert({
       brand_application_id: brand.id, user_id: context.userId, audience: data.audience,
       duration_days: data.durationDays, status: "submitted", payment_status: "pending",
     }).select("id").single();
     if (campaignError || !campaign) throw new Error("Your Spotlight application could not be submitted.");
-    const { error: productError } = await db.from("spotlight_campaign_products").insert(
+    return { id: campaign.id, brandName: brand.brand_name, status: "submitted" as const };
+  });
+
+export const submitSpotlightProducts = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({
+    campaignId: z.string().uuid(),
+    productIds: z.array(z.string().uuid()).min(2).max(4),
+  }).parse(input))
+  .handler(async ({ context, data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const db = supabaseAdmin as any;
+    const { data: campaign, error: campaignError } = await db.from("spotlight_campaigns")
+      .select("id, brand_application_id, audience, status").eq("id", data.campaignId)
+      .eq("user_id", context.userId).maybeSingle();
+    if (campaignError || !campaign) throw new Error("Spotlight application not found.");
+    if (campaign.status !== "approved") throw new Error("Product selection unlocks only after OFFFEED approves your Spotlight application.");
+    const { data: existing, error: existingError } = await db.from("spotlight_campaign_products")
+      .select("product_id").eq("campaign_id", campaign.id);
+    if (existingError) throw new Error("Existing Spotlight products could not be checked.");
+    if ((existing ?? []).length) throw new Error("Products have already been submitted for this Spotlight campaign.");
+    const uniqueIds = [...new Set(data.productIds)];
+    if (uniqueIds.length < 2 || uniqueIds.length > 4) throw new Error("Choose between two and four products.");
+    const { data: products, error: productsError } = await db.from("brand_products")
+      .select("id").eq("brand_application_id", campaign.brand_application_id).eq("status", "published")
+      .contains("audience", [campaign.audience]).in("id", uniqueIds);
+    if (productsError || (products ?? []).length !== uniqueIds.length) {
+      throw new Error("Choose only published products from your own collection that match this campaign audience.");
+    }
+    const { error: insertError } = await db.from("spotlight_campaign_products").insert(
       uniqueIds.map((productId, position) => ({ campaign_id: campaign.id, product_id: productId, position }))
     );
-    if (productError) {
-      await db.from("spotlight_campaigns").delete().eq("id", campaign.id);
-      throw new Error("The selected products could not be attached to your application.");
-    }
-    return { id: campaign.id, brandName: brand.brand_name, status: "submitted" as const };
+    if (insertError) throw new Error("Your selected Spotlight products could not be submitted.");
+    return { campaignId: campaign.id, productCount: uniqueIds.length };
   });
 
 export const getMySpotlightCampaigns = createServerFn({ method: "GET" })
