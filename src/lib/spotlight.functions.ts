@@ -18,13 +18,7 @@ export const getSpotlightAvailability = createServerFn({ method: "GET" })
     const monday = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
     const day = monday.getUTCDay();
     monday.setUTCDate(monday.getUTCDate() - ((day + 6) % 7) + 7);
-    const { data: myBrand } = await db.from("brand_applications").select("id").eq("user_id", context.userId).maybeSingle();
-    const { data: rows, error } = await db.from("spotlight_campaigns")
-      .select("brand_application_id, audience, scheduled_week, duration_days, status")
-      .not("scheduled_week", "is", null)
-      .not("status", "in", '("rejected","cancelled")');
-    if (error) throw new Error("Spotlight availability could not be loaded.");
-    return Array.from({ length: 12 }, (_, index) => {
+    const makeWeeks = (rows: any[] = [], setupRequired = false) => Array.from({ length: 12 }, (_, index) => {
       const start = new Date(monday);
       start.setUTCDate(start.getUTCDate() + index * 7);
       const weekDate = start.toISOString().slice(0, 10);
@@ -33,21 +27,46 @@ export const getSpotlightAvailability = createServerFn({ method: "GET" })
         const target = new Date(start);
         target.setUTCDate(target.getUTCDate() + weekIndex * 7);
         const targetDate = target.toISOString().slice(0, 10);
-        const brands = new Set((rows ?? []).filter((row: any) => {
-          if (row.audience !== data.audience) return false;
-          const rowStart = row.scheduled_week;
-          if (!rowStart) return false;
-          const rowEnd = new Date(rowStart + "T00:00:00Z");
+        const brands = new Set(rows.filter((row: any) => {
+          if (row.audience !== data.audience || !row.scheduled_week) return false;
+          const rowEnd = new Date(row.scheduled_week + "T00:00:00Z");
           rowEnd.setUTCDate(rowEnd.getUTCDate() + row.duration_days);
-          return rowStart <= targetDate && rowEnd.toISOString().slice(0, 10) > targetDate;
+          return row.scheduled_week <= targetDate && rowEnd.toISOString().slice(0, 10) > targetDate
+            && !["rejected", "cancelled"].includes(row.status);
         }).map((row: any) => row.brand_application_id));
         return brands.size;
       });
-      const used = Math.max(...weeklyCounts);
-      const left = Math.max(0, 10 - used);
-      const alreadyBookedThisMonth = (rows ?? []).some((row: any) => row.brand_application_id === myBrand?.id && row.scheduled_week?.slice(0, 7) === weekDate.slice(0, 7) && !["rejected", "cancelled"].includes(row.status));
-      return { startWeek: weekDate, slotsLeft: left, available: left > 0 && !alreadyBookedThisMonth, weeklyCounts, alreadyBookedThisMonth };
+      const slotsLeft = Math.max(0, 10 - Math.max(...weeklyCounts));
+      const alreadyBookedThisMonth = rows.some((row: any) =>
+        row.brand_application_id === context.userId && row.scheduled_week?.slice(0, 7) === weekDate.slice(0, 7)
+        && !["rejected", "cancelled"].includes(row.status));
+      return { startWeek: weekDate, slotsLeft, available: !setupRequired && slotsLeft > 0 && !alreadyBookedThisMonth, weeklyCounts, alreadyBookedThisMonth, setupRequired };
     });
+    const { data: myBrand, error: brandError } = await db.from("brand_applications")
+      .select("id").eq("user_id", context.userId).eq("status", "approved").maybeSingle();
+    if (brandError) throw new Error("Your approved brand account could not be verified.");
+    const { data: rows, error } = await db.from("spotlight_campaigns")
+      .select("brand_application_id, audience, scheduled_week, duration_days, status")
+      .not("scheduled_week", "is", null);
+    if (error) {
+      // A missing scheduled_week column means the SQL migration has not yet been applied.
+      if (error.code === "42703" || /scheduled_week.*(does not exist|schema cache)|column.*scheduled_week/i.test(error.message ?? "")) {
+        return { weeks: makeWeeks(), setupRequired: true };
+      }
+      throw new Error("Spotlight availability could not be loaded. Please try again.");
+    }
+    const brandId = myBrand?.id;
+    const enrichedRows = (rows ?? []).map((row: any) => ({ ...row, _currentBrand: brandId }));
+    const weeks = makeWeeks(enrichedRows);
+    return { weeks: weeks.map((week: any) => ({
+      ...week,
+      alreadyBookedThisMonth: (rows ?? []).some((row: any) => row.brand_application_id === brandId
+        && row.scheduled_week?.slice(0, 7) === week.startWeek.slice(0, 7)
+        && !["rejected", "cancelled"].includes(row.status)),
+      available: week.available && !(rows ?? []).some((row: any) => row.brand_application_id === brandId
+        && row.scheduled_week?.slice(0, 7) === week.startWeek.slice(0, 7)
+        && !["rejected", "cancelled"].includes(row.status)),
+    })), setupRequired: false };
   });
 
 export const submitSpotlightCampaign = createServerFn({ method: "POST" })
