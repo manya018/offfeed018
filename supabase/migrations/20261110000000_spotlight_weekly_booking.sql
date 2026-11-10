@@ -45,6 +45,17 @@ begin
     raise exception 'This audience is not enabled for your brand.';
   end if;
 
+  -- A brand gets one booking start per calendar month, even for a one-week package.
+  if exists (
+    select 1 from public.spotlight_campaigns c
+    where c.brand_application_id = v_brand.id
+      and c.status not in ('rejected','cancelled')
+      and c.scheduled_week is not null
+      and date_trunc('month', c.scheduled_week) = date_trunc('month', p_start_week)
+  ) then
+    raise exception 'Your brand already has a Spotlight booking for that calendar month. Please give other brands a chance and choose a later month.';
+  end if;
+
   -- One campaign per brand at a time; overlapping paid periods are not allowed.
   if exists (
     select 1 from public.spotlight_campaigns c
