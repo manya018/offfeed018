@@ -895,6 +895,7 @@ function BrandSpotlightSection({ products, audiences }: {
   const [availability, setAvailability] = useState<Array<{startWeek:string;slotsLeft:number;available:boolean;weeklyCounts:number[]}>>([]);
   const [selectedWeek, setSelectedWeek] = useState("");
   const [availabilityLoading, setAvailabilityLoading] = useState(false);
+  const [bookingSetupRequired, setBookingSetupRequired] = useState(false);
   const [campaigns, setCampaigns] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [savingApplication, setSavingApplication] = useState(false);
@@ -912,11 +913,13 @@ function BrandSpotlightSection({ products, audiences }: {
   const refreshAvailability = async () => {
     setAvailabilityLoading(true);
     try {
-      const rows = await getSpotlightAvailability({ data: { audience: selectedAudience, durationDays } });
-      setAvailability(rows);
-      setSelectedWeek(rows.find((row: any) => row.available)?.startWeek ?? "");
+      const result = await getSpotlightAvailability({ data: { audience: selectedAudience, durationDays } });
+      setBookingSetupRequired(result.setupRequired);
+      setAvailability(result.weeks);
+      setSelectedWeek(result.weeks.find((row: any) => row.available)?.startWeek ?? "");
     } catch (error) {
       setAvailability([]);
+      setBookingSetupRequired(false);
       setSelectedWeek("");
       toast.error(error instanceof Error ? error.message : "Weekly availability couldn't be loaded.");
     } finally { setAvailabilityLoading(false); }
@@ -964,13 +967,15 @@ function BrandSpotlightSection({ products, audiences }: {
       </div>
       <div className="mt-4"><div className="flex flex-wrap items-center justify-between gap-2"><Label htmlFor="spotlight-week">Choose an available Monday start date</Label>{availabilityLoading ? <span className="text-xs text-muted-foreground">Checking slots…</span> : <span className="text-xs text-muted-foreground">10 brand slots per audience per week</span>}</div>
         <select id="spotlight-week" value={selectedWeek} onChange={(event) => setSelectedWeek(event.target.value)} className={fieldClass} disabled={availabilityLoading || !availability.some((slot) => slot.available)}>
-          {!availability.some((slot) => slot.available) && <option value="">No available weeks in the current booking window</option>}
+          {bookingSetupRequired && <option value="">Booking calendar setup required</option>}
+          {!bookingSetupRequired && !availability.some((slot) => slot.available) && <option value="">No available weeks in the current booking window</option>}
           {availability.map((slot) => <option key={slot.startWeek} value={slot.startWeek} disabled={!slot.available}>{formatWeek(slot.startWeek)} — {slot.available ? `${slot.slotsLeft} of 10 slots left` : "Fully booked"}</option>)}
         </select>
       </div>
+      {bookingSetupRequired && <p className="mt-2 rounded-lg border border-amber-300/60 bg-amber-50 p-3 text-sm text-amber-900">The Spotlight booking calendar has not been activated in the OFFFEED database yet. Please apply the latest Supabase migration before accepting bookings. No slots are being marked as full.</p>}
       {selectedSlot && <div className="mt-3 rounded-lg border border-border/70 p-3"><div className="flex flex-wrap items-center justify-between gap-2"><p className="text-sm font-medium">{formatWeek(selectedSlot.startWeek)}</p><Badge variant={selectedSlot.available ? "secondary" : "destructive"}>{selectedSlot.slotsLeft} slots left</Badge></div><p className="mt-1 text-xs text-muted-foreground">{durationDays === 7 ? "One weekly edition" : durationDays === 14 ? "Two consecutive Monday editions" : "Four consecutive Monday editions"} · ₹{prices[durationDays].toLocaleString("en-IN")}</p></div>}
       <label className="mt-4 flex cursor-pointer items-start gap-2 text-xs leading-5 text-muted-foreground"><input type="checkbox" checked={acceptedNonRefundable} onChange={(event) => setAcceptedNonRefundable(event.target.checked)} className="mt-1 size-4 accent-primary"/><span>I understand that Spotlight fees are non-refundable once paid, subject to applicable law. I have checked the selected audience, package and Monday start date.</span></label>
-      <div className="mt-4 flex flex-wrap items-center gap-3"><Button type="button" disabled={savingApplication || availabilityLoading || !selectedWeek || !selectedSlot?.available || !acceptedNonRefundable} onClick={() => void apply()}>{savingApplication ? <LoaderCircle className="animate-spin"/> : <Sparkles/>}Reserve Spotlight slot</Button><span className="text-xs text-muted-foreground">Razorpay checkout will be connected later. For now, bookings remain payment-pending and cannot go live until payment is confirmed by OFFFEED.</span></div>
+      <div className="mt-4 flex flex-wrap items-center gap-3"><Button type="button" disabled={savingApplication || availabilityLoading || bookingSetupRequired || !selectedWeek || !selectedSlot?.available || !acceptedNonRefundable} onClick={() => void apply()}>{savingApplication ? <LoaderCircle className="animate-spin"/> : <Sparkles/>}Reserve Spotlight slot</Button><span className="text-xs text-muted-foreground">Razorpay checkout will be connected later. For now, bookings remain payment-pending and cannot go live until payment is confirmed by OFFFEED.</span></div>
     </div>
     <div className="mt-6 max-w-4xl">
       <h3 className="font-display text-xl">Your Spotlight bookings</h3>
