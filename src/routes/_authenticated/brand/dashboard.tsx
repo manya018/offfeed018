@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { createBrandProduct, getBrandWorkspace, importShopifyCatalog, saveBrandShippingProfile, saveBrandSizeGuide, saveImportedShopifyProducts, updateBrandOrderTracking, updateBrandProductSizeChart, updateBrandProductStatus } from "@/lib/brand-products.functions";
 import { submitDispatchEvidence, getDisputeViewerData, rerunReturnAnalysis, type DisputeViewerData, type ForensicReport } from "@/lib/dispute-evidence.functions";
-import { submitSpotlightCampaign, getMySpotlightCampaigns, getMySpotlightPerformance } from "@/lib/spotlight.functions";
+import { submitSpotlightCampaign, submitSpotlightProducts, getMySpotlightCampaigns, getMySpotlightPerformance } from "@/lib/spotlight.functions";
 
 
 export const Route = createFileRoute("/_authenticated/brand/dashboard")({
@@ -892,12 +892,13 @@ function BrandSpotlightSection({ products, audiences }: {
 }) {
   const [selectedAudience, setSelectedAudience] = useState<"her" | "him" | "home">(audiences[0] ?? "her");
   const [durationDays, setDurationDays] = useState<7 | 14 | 28>(28);
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [campaigns, setCampaigns] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  const [savingApplication, setSavingApplication] = useState(false);
+  const [savingProducts, setSavingProducts] = useState(false);
+  const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [collectionOpen, setCollectionOpen] = useState(false);
-  const available = products.filter((product) => product.status === "published" && product.audience.includes(selectedAudience));
   const refresh = async () => {
     setLoading(true);
     try { setCampaigns(await getMySpotlightCampaigns()); }
@@ -905,50 +906,86 @@ function BrandSpotlightSection({ products, audiences }: {
     finally { setLoading(false); }
   };
   useEffect(() => { void refresh(); }, []);
-  useEffect(() => { setSelectedIds([]); setCollectionOpen(false); }, [selectedAudience]);
-  const toggleProduct = (id: string) => setSelectedIds((current) => current.includes(id) ? current.filter((item) => item !== id) : current.length >= 4 ? current : [...current, id]);
-  const submit = async () => {
-    if (selectedIds.length < 2) { toast.error("Choose at least two published products from your collection."); return; }
-    setSaving(true);
+  const apply = async () => {
+    setSavingApplication(true);
     try {
-      await submitSpotlightCampaign({ data: { audience: selectedAudience, durationDays, productIds: selectedIds } });
-      toast.success("Your Spotlight application has been submitted for review.");
-      setSelectedIds([]);
+      await submitSpotlightCampaign({ data: { audience: selectedAudience, durationDays } });
+      toast.success("Your Spotlight application has been sent to OFFFEED for approval.");
       await refresh();
     } catch (error) { toast.error(error instanceof Error ? error.message : "Spotlight application couldn't be submitted."); }
-    finally { setSaving(false); }
+    finally { setSavingApplication(false); }
   };
+  const openCollection = (campaign: any) => {
+    setSelectedCampaignId(campaign.id);
+    setSelectedIds([]);
+    setCollectionOpen(true);
+  };
+  const toggleProduct = (id: string) => setSelectedIds((current) => current.includes(id)
+    ? current.filter((item) => item !== id)
+    : current.length >= 4 ? current : [...current, id]);
+  const submitProducts = async () => {
+    if (!selectedCampaignId || selectedIds.length < 2) {
+      toast.error("Choose at least two products from your collection.");
+      return;
+    }
+    setSavingProducts(true);
+    try {
+      await submitSpotlightProducts({ data: { campaignId: selectedCampaignId, productIds: selectedIds } });
+      toast.success("Your Spotlight products have been submitted.");
+      setCollectionOpen(false);
+      setSelectedCampaignId(null);
+      setSelectedIds([]);
+      await refresh();
+    } catch (error) { toast.error(error instanceof Error ? error.message : "Your products couldn't be submitted."); }
+    finally { setSavingProducts(false); }
+  };
+  const audienceLabel = (audience: string) => audience === "home" ? "LIVING" : audience.toUpperCase();
+  const hasProducts = (campaign: any) => (campaign.spotlight_campaign_products ?? []).length > 0;
   return <section className="border-b border-border/70 py-7" aria-labelledby="brand-spotlight-heading">
     <div className="max-w-3xl">
       <p className="text-xs font-semibold uppercase tracking-[0.15em] text-primary">BRAND VISIBILITY</p>
       <h2 id="brand-spotlight-heading" className="mt-2 font-display text-3xl">Apply for The Spotlight Edit</h2>
-      <p className="mt-2 text-sm leading-6 text-muted-foreground">Select any 2–4 of your published products. You can feature products from your collection directly—no separate product approval is required for Spotlight.</p>
+      <p className="mt-2 text-sm leading-6 text-muted-foreground">Choose your audience and campaign duration to apply. Once OFFFEED approves your application, you can select 2–4 products from your existing collection.</p>
     </div>
     <div className="mt-5 grid max-w-4xl gap-4 rounded-xl border border-border/80 p-4 sm:grid-cols-2 sm:p-5">
-      <div><Label htmlFor="spotlight-audience">Audience</Label><select id="spotlight-audience" value={selectedAudience} onChange={(event) => setSelectedAudience(event.target.value as "her" | "him" | "home")} className={fieldClass}>{audiences.map((item) => <option key={item} value={item}>{item === "her" ? "HER" : item === "him" ? "HIM" : "LIVING"}</option>)}</select></div>
+      <div><Label htmlFor="spotlight-audience">Audience</Label><select id="spotlight-audience" value={selectedAudience} onChange={(event) => setSelectedAudience(event.target.value as "her" | "him" | "home")} className={fieldClass}>{audiences.map((item) => <option key={item} value={item}>{audienceLabel(item)}</option>)}</select></div>
       <div><Label htmlFor="spotlight-duration">Campaign duration</Label><select id="spotlight-duration" value={durationDays} onChange={(event) => setDurationDays(Number(event.target.value) as 7 | 14 | 28)} className={fieldClass}><option value={7}>1 week</option><option value={14}>2 weeks</option><option value={28}>4 weeks</option></select></div>
-      <div className="sm:col-span-2">
-        <div className="flex flex-wrap items-center justify-between gap-2"><div><Label>Choose products</Label><p className="mt-1 text-xs text-muted-foreground">Open your OFFFEED collection and select 2–4 products for this Spotlight feature.</p></div><Badge variant="secondary">{selectedIds.length}/4 selected</Badge></div>
-        <Button type="button" variant="outline" className="mt-3" onClick={() => setCollectionOpen((open) => !open)}><ImagePlus className="size-4"/>{collectionOpen ? "Close my collection" : "Select from my collection"}</Button>
-        {collectionOpen && (available.length ? <div className="mt-4 rounded-xl border border-border/70 p-3 sm:p-4"><div className="mb-3 flex items-center justify-between gap-2"><p className="text-sm font-medium">My OFFFEED collection · {selectedAudience === "home" ? "LIVING" : selectedAudience.toUpperCase()}</p><span className="text-xs text-muted-foreground">{available.length} available products</span></div><div className="grid grid-cols-2 gap-3 sm:grid-cols-4">{available.map((product) => {
-          const selected = selectedIds.includes(product.id);
-          return <button key={product.id} type="button" aria-pressed={selected} onClick={() => toggleProduct(product.id)} className={`group overflow-hidden rounded-xl border text-left transition ${selected ? "border-primary ring-2 ring-primary/20" : "border-border/70 hover:border-primary/50"}`}>
-            <div className="relative aspect-[3/4] bg-muted">{product.imageUrl ? <img src={product.imageUrl} alt={product.product_name} className="size-full object-cover"/> : <div className="grid size-full place-items-center"><ImagePlus className="size-7 text-muted-foreground"/></div>}<span className={`absolute right-2 top-2 grid size-6 place-items-center rounded-full ${selected ? "bg-primary text-primary-foreground" : "bg-background/90 text-foreground"}`}>{selected ? <Check className="size-4"/> : <Plus className="size-4"/>}</span></div>
-            <div className="p-3"><p className="truncate text-sm font-medium">{product.product_name}</p><p className="mt-1 text-xs text-muted-foreground">₹{Number(product.price).toLocaleString("en-IN")}</p><a href={`#brand-product-${product.id}`} onClick={(event) => event.stopPropagation()} className="mt-2 inline-block text-[11px] font-medium text-primary underline underline-offset-4">View in collection</a></div>
-          </button>;
-        })}</div></div> : collectionOpen ? <p className="mt-4 rounded-lg border border-dashed border-border/70 p-4 text-sm text-muted-foreground">No published products are available in this audience yet. Add and publish products in your collection for this audience first.</p> : null)}
-        {selectedIds.length === 4 && <p className="mt-2 text-xs text-muted-foreground">You've reached the four-product limit for this campaign.</p>}
-      </div>
-      <div className="sm:col-span-2"><Button type="button" disabled={saving || selectedIds.length < 2} onClick={() => void submit()}>{saving ? <LoaderCircle className="animate-spin"/> : <Sparkles/>}Submit Spotlight application</Button><p className="mt-2 text-xs leading-5 text-muted-foreground">Your selected products will be featured after your Spotlight campaign is scheduled and payment is confirmed.</p></div>
+      <div className="sm:col-span-2"><Button type="button" disabled={savingApplication} onClick={() => void apply()}>{savingApplication ? <LoaderCircle className="animate-spin"/> : <Sparkles/>}Apply for Spotlight Edit</Button><p className="mt-2 text-xs leading-5 text-muted-foreground">Your application must be approved by OFFFEED before product selection is unlocked. No products can be submitted before approval.</p></div>
     </div>
-    <div className="mt-6 max-w-3xl">
+    <div className="mt-6 max-w-4xl">
       <h3 className="font-display text-xl">Your Spotlight applications</h3>
-      {loading ? <p className="mt-3 text-sm text-muted-foreground">Loading applications…</p> : campaigns.length ? <div className="mt-3 divide-y divide-border/70 border-y border-border/70">{campaigns.map((campaign) => <div key={campaign.id} className="py-4"><div className="flex flex-wrap items-center justify-between gap-2"><p className="text-sm font-medium">{campaign.audience.toUpperCase()} · {campaign.duration_days} days</p><Badge variant="secondary">{campaign.status.replaceAll("_", " ")}</Badge></div><p className="mt-1 text-xs text-muted-foreground">Payment: {campaign.payment_status} · {Number(campaign.campaign_price) > 0 ? `₹${Number(campaign.campaign_price).toLocaleString("en-IN")}` : "Price to be confirmed by OFFFEED"}</p>{campaign.admin_note && <p className="mt-2 text-xs text-muted-foreground">{campaign.admin_note}</p>}</div>)}</div> : <p className="mt-3 text-sm text-muted-foreground">You haven't submitted a Spotlight application yet.</p>}
+      {loading ? <p className="mt-3 text-sm text-muted-foreground">Loading applications…</p> : campaigns.length ? <div className="mt-3 divide-y divide-border/70 border-y border-border/70">{campaigns.map((campaign) => {
+        const productList = campaign.spotlight_campaign_products ?? [];
+        const alreadySubmitted = productList.length > 0;
+        const canSelect = campaign.status === "approved" && !alreadySubmitted;
+        const isOpen = collectionOpen && selectedCampaignId === campaign.id;
+        const campaignProducts = products.filter((product) => product.status === "published" && product.audience.includes(campaign.audience));
+        return <div key={campaign.id} className="py-4">
+          <div className="flex flex-wrap items-center justify-between gap-2"><p className="text-sm font-medium">{audienceLabel(campaign.audience)} · {campaign.duration_days === 7 ? "1 week" : campaign.duration_days === 14 ? "2 weeks" : "4 weeks"}</p><Badge variant="secondary">{campaign.status.replaceAll("_", " ")}</Badge></div>
+          <p className="mt-1 text-xs text-muted-foreground">Payment: {campaign.payment_status} · {Number(campaign.campaign_price) > 0 ? `₹${Number(campaign.campaign_price).toLocaleString("en-IN")}` : "Price to be confirmed by OFFFEED"}</p>
+          {campaign.admin_note && <p className="mt-2 text-xs text-muted-foreground">{campaign.admin_note}</p>}
+          {campaign.status === "submitted" && <p className="mt-2 text-sm text-muted-foreground">Your application is awaiting OFFFEED approval. Product selection is locked until it is approved.</p>}
+          {campaign.status === "rejected" && <p className="mt-2 text-sm text-muted-foreground">This application was not approved. Contact OFFFEED if you need more information.</p>}
+          {canSelect && <div className="mt-3"><p className="text-sm text-muted-foreground">Your application is approved. You can now select 2–4 products from your collection.</p><Button type="button" variant="outline" className="mt-2" onClick={() => isOpen ? setCollectionOpen(false) : openCollection(campaign)}><ImagePlus className="size-4"/>{isOpen ? "Close collection" : "Select products from my collection"}</Button>
+            {isOpen && <div className="mt-3 rounded-xl border border-border/70 p-3 sm:p-4">
+              <div className="mb-3 flex items-center justify-between gap-2"><p className="text-sm font-medium">My collection · {audienceLabel(campaign.audience)}</p><Badge variant="secondary">{selectedIds.length}/4 selected</Badge></div>
+              {campaignProducts.length ? <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">{campaignProducts.map((product) => {
+                const selected = selectedIds.includes(product.id);
+                return <button key={product.id} type="button" aria-pressed={selected} onClick={() => toggleProduct(product.id)} className={`group overflow-hidden rounded-xl border text-left transition ${selected ? "border-primary ring-2 ring-primary/20" : "border-border/70 hover:border-primary/50"}`}>
+                  <div className="relative aspect-[3/4] bg-muted">{product.imageUrl ? <img src={product.imageUrl} alt={product.product_name} className="size-full object-cover"/> : <div className="grid size-full place-items-center"><ImagePlus className="size-7 text-muted-foreground"/></div>}<span className={`absolute right-2 top-2 grid size-6 place-items-center rounded-full ${selected ? "bg-primary text-primary-foreground" : "bg-background/90 text-foreground"}`}>{selected ? <Check className="size-4"/> : <Plus className="size-4"/>}</span></div>
+                  <div className="p-3"><p className="truncate text-sm font-medium">{product.product_name}</p><p className="mt-1 text-xs text-muted-foreground">₹{Number(product.price).toLocaleString("en-IN")}</p></div>
+                </button>;
+              })}</div> : <p className="rounded-lg border border-dashed border-border/70 p-4 text-sm text-muted-foreground">No published products are available in this audience yet. Add and publish products to your collection first.</p>}
+              <Button type="button" className="mt-4" disabled={savingProducts || selectedIds.length < 2} onClick={() => void submitProducts()}>{savingProducts ? <LoaderCircle className="animate-spin"/> : <Upload/>}Submit selected products</Button>
+              <p className="mt-2 text-xs text-muted-foreground">You can submit 2–4 products. This option is available only after OFFFEED approval.</p>
+            </div>}
+          </div>}
+          {alreadySubmitted && <div className="mt-3"><p className="text-sm font-medium">Products submitted</p><p className="mt-1 text-xs text-muted-foreground">{productList.length} products attached to this campaign. OFFFEED will schedule the feature after payment confirmation.</p></div>}
+        </div>;
+      })}</div> : <p className="mt-3 text-sm text-muted-foreground">You haven't submitted a Spotlight application yet.</p>}
     </div>
   </section>;
 }
-
-
 function SpotlightPricingSection() {
   const packages = [{ days: 7, label: "1-week Spotlight", price: 1499 }, { days: 14, label: "2-week Spotlight", price: 2499 }, { days: 28, label: "4-week Spotlight", price: 3999 }];
   return <section className="border-b border-border/70 py-7" aria-labelledby="spotlight-pricing-heading">
