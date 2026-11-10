@@ -18,7 +18,7 @@ export const getSpotlightAvailability = createServerFn({ method: "GET" })
     const monday = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
     const day = monday.getUTCDay();
     monday.setUTCDate(monday.getUTCDate() - ((day + 6) % 7) + 7);
-    const makeWeeks = (rows: any[] = [], setupRequired = false) => Array.from({ length: 12 }, (_, index) => {
+    const makeWeeks = (rows: any[] = [], brandId: string | undefined, setupRequired = false) => Array.from({ length: 12 }, (_, index) => {
       const start = new Date(monday);
       start.setUTCDate(start.getUTCDate() + index * 7);
       const weekDate = start.toISOString().slice(0, 10);
@@ -38,7 +38,7 @@ export const getSpotlightAvailability = createServerFn({ method: "GET" })
       });
       const slotsLeft = Math.max(0, 10 - Math.max(...weeklyCounts));
       const alreadyBookedThisMonth = rows.some((row: any) =>
-        row.brand_application_id === context.userId && row.scheduled_week?.slice(0, 7) === weekDate.slice(0, 7)
+        row.brand_application_id === brandId && row.scheduled_week?.slice(0, 7) === weekDate.slice(0, 7)
         && !["rejected", "cancelled"].includes(row.status));
       return { startWeek: weekDate, slotsLeft, available: !setupRequired && slotsLeft > 0 && !alreadyBookedThisMonth, weeklyCounts, alreadyBookedThisMonth, setupRequired };
     });
@@ -51,13 +51,12 @@ export const getSpotlightAvailability = createServerFn({ method: "GET" })
     if (error) {
       // A missing scheduled_week column means the SQL migration has not yet been applied.
       if (error.code === "42703" || /scheduled_week.*(does not exist|schema cache)|column.*scheduled_week/i.test(error.message ?? "")) {
-        return { weeks: makeWeeks(), setupRequired: true };
+        return { weeks: makeWeeks([], myBrand?.id, true), setupRequired: true };
       }
       throw new Error("Spotlight availability could not be loaded. Please try again.");
     }
     const brandId = myBrand?.id;
-    const enrichedRows = (rows ?? []).map((row: any) => ({ ...row, _currentBrand: brandId }));
-    const weeks = makeWeeks(enrichedRows);
+    const weeks = makeWeeks(rows ?? [], brandId);
     return { weeks: weeks.map((week: any) => ({
       ...week,
       alreadyBookedThisMonth: (rows ?? []).some((row: any) => row.brand_application_id === brandId
