@@ -23,9 +23,9 @@ export const submitSpotlightCampaign = createServerFn({ method: "POST" })
     if (uniqueIds.length < 2 || uniqueIds.length > 4) throw new Error("Choose between two and four existing products for your Spotlight feature.");
     const { data: products, error: productsError } = await db.from("brand_products")
       .select("id").eq("brand_application_id", brand.id).eq("status", "published")
-      .eq("brand_approved", true).contains("audience", [data.audience]).in("id", uniqueIds);
+      .contains("audience", [data.audience]).in("id", uniqueIds);
     if (productsError || (products ?? []).length !== uniqueIds.length) {
-      throw new Error("Choose only published, approved products available in the selected audience.");
+      throw new Error("Choose only published products from your own collection that are available in the selected audience.");
     }
     const { data: campaign, error: campaignError } = await db.from("spotlight_campaigns").insert({
       brand_application_id: brand.id, user_id: context.userId, audience: data.audience,
@@ -62,7 +62,7 @@ export const getOwnerSpotlightCampaigns = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const db = supabaseAdmin as any;
     const { data, error } = await db.from("spotlight_campaigns")
-      .select("id, brand_application_id, audience, duration_days, status, payment_status, campaign_price, payment_reference, starts_at, ends_at, admin_note, created_at, brand_applications(brand_name,email), spotlight_campaign_products(product_id, position, brand_products(id, product_name, price, status, brand_approved))")
+      .select("id, brand_application_id, audience, duration_days, status, payment_status, campaign_price, payment_reference, starts_at, ends_at, admin_note, created_at, brand_applications(brand_name,email), spotlight_campaign_products(product_id, position, brand_products(id, product_name, price, status))")
       .order("created_at", { ascending: false }).limit(200);
     if (error) throw new Error("Spotlight applications could not be loaded.");
     return data ?? [];
@@ -131,7 +131,7 @@ export const getActiveSpotlightCampaigns = createServerFn({ method: "GET" })
     const rows = (campaigns ?? []).flatMap((campaign: any) => {
       const brand = campaign.brand_applications;
       const selected = (campaign.spotlight_campaign_products ?? [])
-        .filter((item: any) => item.brand_products?.status === "published" && item.brand_products?.brand_approved)
+        .filter((item: any) => item.brand_products?.status === "published")
         .sort((a: any, b: any) => a.position - b.position)
         .map((item: any) => ({ ...item.brand_products, brand }));
       if (!brand?.public_handle || selected.length < 2) return [];
