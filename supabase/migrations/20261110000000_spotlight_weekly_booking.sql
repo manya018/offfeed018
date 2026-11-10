@@ -45,6 +45,9 @@ begin
     raise exception 'This audience is not enabled for your brand.';
   end if;
 
+  -- Serialize concurrent booking attempts from the same brand.
+  perform pg_advisory_xact_lock(hashtext('spotlight-brand:' || v_brand.id::text));
+
   -- A brand gets one booking start per calendar month, even for a one-week package.
   if exists (
     select 1 from public.spotlight_campaigns c
