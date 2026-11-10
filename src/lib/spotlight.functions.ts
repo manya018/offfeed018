@@ -18,6 +18,7 @@ export const getSpotlightAvailability = createServerFn({ method: "GET" })
     const monday = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
     const day = monday.getUTCDay();
     monday.setUTCDate(monday.getUTCDate() - ((day + 6) % 7) + 7);
+    const { data: myBrand } = await db.from("brand_applications").select("id").eq("user_id", context.userId).maybeSingle();
     const { data: rows, error } = await db.from("spotlight_campaigns")
       .select("brand_application_id, scheduled_week, duration_days, status")
       .eq("audience", data.audience).not("scheduled_week", "is", null)
@@ -43,7 +44,8 @@ export const getSpotlightAvailability = createServerFn({ method: "GET" })
       });
       const used = Math.max(...weeklyCounts);
       const left = Math.max(0, 10 - used);
-      return { startWeek: weekDate, slotsLeft: left, available: left > 0, weeklyCounts };
+      const alreadyBookedThisMonth = (rows ?? []).some((row: any) => row.brand_application_id === myBrand?.id && row.scheduled_week?.slice(0, 7) === weekDate.slice(0, 7) && !["rejected", "cancelled"].includes(row.status));
+      return { startWeek: weekDate, slotsLeft: left, available: left > 0 && !alreadyBookedThisMonth, weeklyCounts, alreadyBookedThisMonth };
     });
   });
 
@@ -75,10 +77,10 @@ export const submitSpotlightProducts = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const db = supabaseAdmin as any;
     const { data: campaign, error: campaignError } = await db.from("spotlight_campaigns")
-      .select("id, brand_application_id, audience, status").eq("id", data.campaignId)
+      .select("id, brand_application_id, audience, status, payment_status").eq("id", data.campaignId)
       .eq("user_id", context.userId).maybeSingle();
     if (campaignError || !campaign) throw new Error("Spotlight application not found.");
-    if (campaign.status !== "approved") throw new Error("Product selection unlocks only after OFFFEED approves your Spotlight application.");
+    if (campaign.status !== "approved" || !["paid", "waived"].includes(campaign.payment_status)) throw new Error("Product selection unlocks only after OFFFEED approves the booking and confirms payment.");
     const { data: existing, error: existingError } = await db.from("spotlight_campaign_products")
       .select("product_id").eq("campaign_id", campaign.id);
     if (existingError) throw new Error("Existing Spotlight products could not be checked.");
@@ -118,7 +120,7 @@ export const getOwnerSpotlightCampaigns = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const db = supabaseAdmin as any;
     const { data, error } = await db.from("spotlight_campaigns")
-      .select("id, brand_application_id, audience, duration_days, status, payment_status, campaign_price, payment_reference, starts_at, ends_at, admin_note, created_at, brand_applications(brand_name,email), spotlight_campaign_products(product_id, position, brand_products(id, product_name, price, status))")
+      .select("id, brand_application_id, audience, duration_days, status, payment_status, campaign_price, payment_reference, scheduled_week, starts_at, ends_at, admin_note, created_at, brand_applications(brand_name,email), spotlight_campaign_products(product_id, position, brand_products(id, product_name, price, status))")
       .order("created_at", { ascending: false }).limit(200);
     if (error) throw new Error("Spotlight applications could not be loaded.");
     return data ?? [];
