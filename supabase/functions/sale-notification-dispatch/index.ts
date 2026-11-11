@@ -32,7 +32,7 @@ Deno.serve(async (request) => {
   if (vapidPublic && vapidPrivate) webpush.setVapidDetails(Deno.env.get("VAPID_SUBJECT") ?? "mailto:offfeeed@gmail.com", vapidPublic, vapidPrivate);
   const { data: jobs, error: claimError } = await db.rpc("claim_due_sale_notification_jobs", { p_limit: 20 });
   if (claimError) return reply({ error: "Could not claim due jobs" }, 500);
-  const result = { claimed: jobs?.length ?? 0, inApp: 0, email: 0, push: 0, failed: 0 };
+  const result = { claimed: jobs?.length ?? 0, inApp: 0, email: 0, push: 0, failed: 0, deliveryErrors: 0 };
   for (const job of jobs ?? []) {
     try {
       const { data: sale, error } = await db.from("brand_sales").select("id,name,starts_at,ends_at,status,brand_applications(brand_name)").eq("id", job.sale_id).maybeSingle();
@@ -61,9 +61,10 @@ Deno.serve(async (request) => {
         if (inboxError) throw inboxError;
         result.inApp += inbox.length;
       }
+      let recipientDeliveryErrors = 0;
       for (const p of recipients.filter((p) => p.sale_email_enabled && p.email)) {
         try { await sendEmail(p.email, subject, title, body, destination); result.email++; }
-        catch (mailError) { console.error("OFFFEED sale email failed", p.user_id, mailError); }
+        catch (mailError) { recipientDeliveryErrors++; result.deliveryErrors++; console.error("OFFFEED sale email failed", p.user_id, mailError); }
       }
       if (vapidPublic && vapidPrivate) {
         const pushIds = recipients.filter((p) => p.push_enabled).map((p) => p.user_id);
@@ -76,12 +77,16 @@ Deno.serve(async (request) => {
             } catch (pushError) {
               const status = (pushError as { statusCode?: number })?.statusCode;
               if (status === 404 || status === 410) await db.from("customer_push_subscriptions").delete().eq("id", sub.id);
+              recipientDeliveryErrors++; result.deliveryErrors++;
               console.error("OFFFEED sale push failed", sub.user_id, pushError);
             }
           }
         }
       }
-      await db.from("sale_notification_jobs").update({ status: "sent", sent_at: new Date().toISOString(), last_error: null }).eq("id", job.id);
+      const delivered = inbox.length + (result.email > 0 ? 1 : 0) + (result.push > 0 ? 1 : 0);
+      const deliveryStatus = delivered > 0 ? "sent" : "failed";
+      await db.from("sale_notification_jobs").update({ status: deliveryStatus, sent_at: deliveryStatus === "sent" ? new Date().toISOString() : null, last_error: recipientDeliveryErrors ? "One or more email or push deliveries failed; see Edge Function logs." : (deliveryStatus === "failed" ? "No eligible customer delivery channel succeeded." : null) }).eq("id", job.id);
+      if (deliveryStatus === "failed") result.failed++;
     } catch (jobError) {
       result.failed++;
       await db.from("sale_notification_jobs").update({ status: "failed", last_error: String(jobError).slice(0, 1000) }).eq("id", job.id);
