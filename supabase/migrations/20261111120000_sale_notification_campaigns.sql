@@ -31,7 +31,8 @@ create policy "Customers read own notifications" on public.customer_notification
  for select to authenticated using(user_id=auth.uid());
 create policy "Customers update own notifications" on public.customer_notifications
  for update to authenticated using(user_id=auth.uid()) with check(user_id=auth.uid());
-grant select,update on public.customer_notifications to authenticated;
+grant select on public.customer_notifications to authenticated;
+grant update(read_at) on public.customer_notifications to authenticated;
 grant all on public.sale_notification_campaigns,public.customer_notifications to service_role;
 
 create or replace function public.schedule_sale_notification_campaigns()
@@ -98,6 +99,7 @@ begin
    '/brand/'||coalesce((select public_handle from public.brand_applications where id=sale.brand_application_id), '')
   from auth.users u
   where u.deleted_at is null
+    and not exists (select 1 from public.brand_applications ba where ba.user_id=u.id)
   on conflict(user_id,campaign_id) do nothing;
   get diagnostics inserted_count=row_count;
   update public.sale_notification_campaigns set status='sent',sent_at=now(),recipient_count=inserted_count where id=campaign.id;
