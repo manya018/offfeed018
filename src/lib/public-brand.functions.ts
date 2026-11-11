@@ -24,6 +24,8 @@ type ProductWithBrand = {
   description: string;
   category: string;
   price: number;
+  salePrice?: number | null;
+  saleDiscountLabel?: string | null;
   productUrl: string | null;
   imageUrl: string | null;
   imageUrls: string[];
@@ -68,6 +70,38 @@ function getImageUrl(path: string | null, signedUrls: Map<string, string>) {
   } catch {
     return null;
   }
+}
+
+async function attachActiveSalePrices(supabase: ReturnType<typeof createPublicClient>, products: ProductWithBrand[]) {
+  if (!products.length) return products;
+  const { data, error } = await (supabase as any).from("brand_sale_products")
+    .select("product_id, brand_sales!inner(discount_type, discount_value, starts_at, ends_at, status)")
+    .in("product_id", products.map((product) => product.id));
+  // A missing sales migration should not take down public product discovery.
+  if (error) {
+    console.warn("[OFFFEED sales] Active promotions could not be loaded:", error.message);
+    return products;
+  }
+  const now = Date.now();
+  const saleByProduct = new Map<string, { price: number; label: string }>();
+  for (const row of data ?? []) {
+    const sale = row.brand_sales;
+    if (!sale || sale.status === "cancelled" || new Date(sale.starts_at).getTime() > now || new Date(sale.ends_at).getTime() <= now) continue;
+    const product = products.find((item) => item.id === row.product_id);
+    if (!product) continue;
+    const salePrice = sale.discount_type === "percentage"
+      ? Math.round(product.price * (1 - Number(sale.discount_value) / 100) * 100) / 100
+      : Math.round((product.price - Number(sale.discount_value)) * 100) / 100;
+    if (salePrice <= 0 || salePrice >= product.price) continue;
+    saleByProduct.set(product.id, {
+      price: salePrice,
+      label: sale.discount_type === "percentage" ? `${Number(sale.discount_value)}% off` : `₹${Number(sale.discount_value).toLocaleString("en-IN")} off`,
+    });
+  }
+  return products.map((product) => {
+    const sale = saleByProduct.get(product.id);
+    return sale ? { ...product, salePrice: sale.price, saleDiscountLabel: sale.label } : product;
+  });
 }
 
 function relevanceScore(product: ProductWithBrand, aesthetic: string) {
@@ -143,7 +177,7 @@ export const getPublicBrandProfile = createServerFn({ method: "GET" })
         processingDaysMax: safeShippingProfile?.processing_days_max ?? null,
         shippingNote: safeShippingProfile?.shipping_note ?? null,
       },
-      products: (rows ?? []).map((row) => ({
+      products: await attachActiveSalePrices(supabase, (rows ?? []).map((row) => ({
         id: row.id,
         productName: row.product_name,
         description: row.description,
@@ -158,7 +192,7 @@ export const getPublicBrandProfile = createServerFn({ method: "GET" })
         tags: row.tags,
         audience: row.audience,
         createdAt: row.created_at,
-      })),
+      }))),
     };
   });
 
@@ -229,9 +263,9 @@ export const getShopTheLookProducts = createServerFn({ method: "GET" })
       .map((product) => ({ product, score: relevanceScore(product, data.aesthetic) }))
       .filter(({ product, score }) => (!data.categoryOnly || data.aesthetic === "home" || score > 0 || (data.aesthetic === "clothing" && /tops|t-shirt|polo|shirt|blouse|dress|skirt|denim|jean|trouser|pant|short|co.?ord|jumpsuit|jacket|outerwear|knitwear|hoodie|sweatshirt|activewear|lingerie|loungewear|saree|lehenga|kurta|suit|anarkali|sharara|dupatta|indo.?western|sherwani|nehru|bandhgala|dhoti|waistcoat|sneaker|heel|flat|sandal|boot|loafer|footwear|complete look|mixed look/i.test(product.category))) && (!data.requireMatch || score > 0))
       .sort((left, right) => right.score - left.score);
-    return ranked
+    return attachActiveSalePrices(supabase, ranked
       .slice(0, data.resultLimit ?? (data.categoryOnly ? 60 : 8))
-      .map(({ product }) => product);
+      .map(({ product }) => product));
   });
 
 export type { ProductWithBrand };

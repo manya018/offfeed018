@@ -29,6 +29,7 @@ import { Route as ForBrandsApplyRouteImport } from './routes/for-brands.apply'
 import { Route as LookLookIdRouteImport } from './routes/look.$lookId'
 import { Route as AuthenticatedBrandDashboardRouteImport } from './routes/_authenticated/brand/dashboard'
 import { Route as AuthenticatedBrandSpotlightRouteImport } from './routes/_authenticated/brand/spotlight'
+import { Route as AuthenticatedBrandSalesRouteImport } from './routes/_authenticated/brand/sales'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -131,6 +132,9 @@ const AuthenticatedBrandSpotlightRoute =
     path: '/brand/spotlight',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedBrandSalesRoute = AuthenticatedBrandSalesRouteImport.update({
+  id: '/brand/sales', path: '/brand/sales', getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -152,6 +156,7 @@ export interface FileRoutesByFullPath {
   '/look/$lookId': typeof LookLookIdRoute
   '/brand/dashboard': typeof AuthenticatedBrandDashboardRoute
   '/brand/spotlight': typeof AuthenticatedBrandSpotlightRoute
+  '/brand/sales': typeof AuthenticatedBrandSalesRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -173,6 +178,7 @@ export interface FileRoutesByTo {
   '/look/$lookId': typeof LookLookIdRoute
   '/brand/dashboard': typeof AuthenticatedBrandDashboardRoute
   '/brand/spotlight': typeof AuthenticatedBrandSpotlightRoute
+  '/brand/sales': typeof AuthenticatedBrandSalesRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -196,6 +202,7 @@ export interface FileRoutesById {
   '/look/$lookId': typeof LookLookIdRoute
   '/_authenticated/brand/dashboard': typeof AuthenticatedBrandDashboardRoute
   '/_authenticated/brand/spotlight': typeof AuthenticatedBrandSpotlightRoute
+  '/_authenticated/brand/sales': typeof AuthenticatedBrandSalesRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -424,6 +431,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedBrandSpotlightRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/brand/sales': {
+      id: '/_authenticated/brand/sales'
+      path: '/brand/sales'
+      fullPath: '/brand/sales'
+      preLoaderRoute: typeof AuthenticatedBrandSalesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
@@ -431,12 +445,14 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
   AuthenticatedBrandDashboardRoute: typeof AuthenticatedBrandDashboardRoute
   AuthenticatedBrandSpotlightRoute: typeof AuthenticatedBrandSpotlightRoute
+  AuthenticatedBrandSalesRoute: typeof AuthenticatedBrandSalesRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRoute,
   AuthenticatedBrandDashboardRoute: AuthenticatedBrandDashboardRoute,
   AuthenticatedBrandSpotlightRoute: AuthenticatedBrandSpotlightRoute,
+  AuthenticatedBrandSalesRoute: AuthenticatedBrandSalesRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
