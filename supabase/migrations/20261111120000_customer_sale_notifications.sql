@@ -126,8 +126,7 @@ for select to authenticated using(user_id=auth.uid());
 drop policy if exists "Customers update own notifications" on public.customer_notifications;
 create policy "Customers update own notifications" on public.customer_notifications
 for update to authenticated using(user_id=auth.uid()) with check(user_id=auth.uid());
-grant select,insert,update,delete on public.customer_notification_preferences,public.customer_push_subscriptions to authenticated;
-grant select,update on public.customer_notifications to authenticated;
+revoke all on public.customer_notification_preferences,public.customer_push_subscriptions,public.customer_notifications,public.sale_notification_jobs from anon,authenticated;
 grant all on public.customer_notification_preferences,public.customer_push_subscriptions,public.customer_notifications,public.sale_notification_jobs to service_role;
 
 -- Optional scheduler: configure the Vault secrets sale_notification_function_url and
