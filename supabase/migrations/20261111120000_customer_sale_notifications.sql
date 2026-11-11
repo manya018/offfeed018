@@ -40,6 +40,7 @@ create table if not exists public.sale_notification_jobs (
   scheduled_for timestamptz not null,
   status text not null default 'pending' check(status in ('pending','processing','sent','failed','cancelled')),
   attempts integer not null default 0,
+  claimed_at timestamptz,
   last_error text,
   created_at timestamptz not null default now(),
   sent_at timestamptz,
@@ -112,13 +113,14 @@ language sql security definer set search_path=public
 as $$
   with due as (
     select id from public.sale_notification_jobs
-    where status='pending' and scheduled_for <= now()
+    where (status='pending' and scheduled_for <= now())
+       or (status='processing' and claimed_at < now() - interval '10 minutes')
     order by scheduled_for
     for update skip locked
     limit greatest(1,least(p_limit,100))
   )
   update public.sale_notification_jobs j
-  set status='processing',attempts=j.attempts+1
+  set status='processing',attempts=j.attempts+1,claimed_at=now()
   from due where j.id=due.id
   returning j.*;
 $$;
