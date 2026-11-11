@@ -2,6 +2,12 @@ name: Apply Spotlight campaign migration
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - "supabase/migrations/20261110000000_spotlight_weekly_booking.sql"
+      - ".github/workflows/apply-spotlight-migration.yml"
 
 permissions:
   contents: read
@@ -10,6 +16,9 @@ jobs:
   apply-spotlight-schema:
     runs-on: ubuntu-latest
     steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
       - name: Install PostgreSQL client
         run: |
           sudo apt-get update
@@ -23,4 +32,6 @@ jobs:
             echo "Missing repository secret: SUPABASE_DB_URL"
             exit 1
           fi
-          psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -f supabase/migrations/20261109000000_add_spotlight_campaigns.sql\n          psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -f supabase/migrations/20261109010000_add_spotlight_analytics.sql
+          psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -f supabase/migrations/20261109000000_add_spotlight_campaigns.sql
+          psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -f supabase/migrations/20261109010000_add_spotlight_analytics.sql
+          psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -f supabase/migrations/20261110000000_spotlight_weekly_booking.sql
