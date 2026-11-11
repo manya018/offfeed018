@@ -16,8 +16,8 @@ jobs:
         run: |
           test -n "$SUPABASE_URL" || (echo "Missing SUPABASE_URL secret" && exit 1)
           test -n "$SALE_NOTIFICATION_CRON_SECRET" || (echo "Missing SALE_NOTIFICATION_CRON_SECRET secret" && exit 1)
-          curl --fail-with-body --silent --show-error \\
-            --request POST "$SUPABASE_URL/functions/v1/sale-notification-dispatch" \\
-            --header "Authorization: Bearer $SALE_NOTIFICATION_CRON_SECRET" \\
-            --header "Content-Type: application/json" \\
+          curl --fail-with-body --silent --show-error \
+            --request POST "$SUPABASE_URL/functions/v1/sale-notification-dispatch" \
+            --header "Authorization: Bearer $SALE_NOTIFICATION_CRON_SECRET" \
+            --header "Content-Type: application/json" \
             --data "{}"
