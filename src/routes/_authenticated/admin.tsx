@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { verifyAdminAccess, getAdminOverview, getAdminBrands, getAdminProducts, updateAdminBrandStatus } from "@/lib/admin.functions";
 import { getOwnerSpotlightCampaigns, updateOwnerSpotlightCampaign } from "@/lib/spotlight.functions";
+import { OwnerSaleNotifications } from "@/components/owner-sale-notifications";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   beforeLoad: async () => {
@@ -122,6 +123,7 @@ function OwnerAdminDashboard() {
           </div>
 
           <div className="mx-auto max-w-[1440px] px-4 py-7 md:px-9 md:py-9">
+            {section === "notifications" ? <OwnerSaleNotifications /> : null}
             {section === "overview" ? <OverviewSection overview={overview} brands={brands} onOpenBrands={() => setSection("brands")}/> : null}
             {section === "brands" ? <section>
               <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
@@ -191,7 +193,7 @@ function OwnerAdminDashboard() {
               </div>
               <p className="mt-3 text-[11px] text-[#a08e84]">Showing the latest 500 listings at most. No listing status or brand data is changed from this screen.</p>
             </section> : null}
-            {section !== "overview" && section !== "brands" && section !== "products" && section !== "spotlight" ? <section className="rounded-2xl border border-[#e8dfd6] bg-[#fbf9f5] p-8 md:p-12">
+            {section !== "overview" && section !== "brands" && section !== "products" && section !== "spotlight" && section !== "notifications" ? <section className="rounded-2xl border border-[#e8dfd6] bg-[#fbf9f5] p-8 md:p-12">
               <div className="mx-auto max-w-lg text-center">
                 <div className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-[#efe4de] text-[#76534b]">{activeNav ? <ActiveSectionIcon className="size-6"/> : <ClipboardList className="size-6"/>}</div>
                 <p className="mt-5 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#a28e84]">Owner HQ module</p>
