@@ -62,8 +62,10 @@ Deno.serve(async (request) => {
         result.inApp += inbox.length;
       }
       let recipientDeliveryErrors = 0;
+      let jobEmail = 0;
+      let jobPush = 0;
       for (const p of recipients.filter((p) => p.sale_email_enabled && p.email)) {
-        try { await sendEmail(p.email, subject, title, body, destination); result.email++; }
+        try { await sendEmail(p.email, subject, title, body, destination); result.email++; jobEmail++; }
         catch (mailError) { recipientDeliveryErrors++; result.deliveryErrors++; console.error("OFFFEED sale email failed", p.user_id, mailError); }
       }
       if (vapidPublic && vapidPrivate) {
@@ -73,7 +75,7 @@ Deno.serve(async (request) => {
           for (const sub of subscriptions ?? []) {
             try {
               await webpush.sendNotification({ endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } }, JSON.stringify({ title, body, url: destination, tag: sale.id + "-" + job.event_type }));
-              result.push++;
+              result.push++; jobPush++;
             } catch (pushError) {
               const status = (pushError as { statusCode?: number })?.statusCode;
               if (status === 404 || status === 410) await db.from("customer_push_subscriptions").delete().eq("id", sub.id);
@@ -83,7 +85,7 @@ Deno.serve(async (request) => {
           }
         }
       }
-      const delivered = inbox.length + (result.email > 0 ? 1 : 0) + (result.push > 0 ? 1 : 0);
+      const delivered = inbox.length + jobEmail + jobPush;
       const deliveryStatus = delivered > 0 ? "sent" : "failed";
       await db.from("sale_notification_jobs").update({ status: deliveryStatus, sent_at: deliveryStatus === "sent" ? new Date().toISOString() : null, last_error: recipientDeliveryErrors ? "One or more email or push deliveries failed; see Edge Function logs." : (deliveryStatus === "failed" ? "No eligible customer delivery channel succeeded." : null) }).eq("id", job.id);
       if (deliveryStatus === "failed") result.failed++;
