@@ -51,9 +51,9 @@ Deno.serve(async (request) => {
       }
       const siteUrl = Deno.env.get("SITE_URL") ?? "https://offfeed018.lovable.app";
       const destination = siteUrl + "/discover";
-      const { data: prefs, error: prefError } = await db.from("customer_notification_preferences").select("user_id,email,in_app_enabled,sale_email_enabled,push_enabled").or("in_app_enabled.eq.true,sale_email_enabled.eq.true,push_enabled.eq.true");
+      const { data: prefs, error: prefError } = await db.from("customer_notification_preferences").select("user_id,email,account_type,in_app_enabled,sale_email_enabled,push_enabled").or("in_app_enabled.eq.true,sale_email_enabled.eq.true,push_enabled.eq.true");
       if (prefError) throw prefError;
-      const recipients = prefs ?? [];
+      const recipients = (prefs ?? []).filter((p) => p.account_type === "customer");
       const inbox = recipients.filter((p) => p.in_app_enabled).map((p) => ({ user_id: p.user_id, notification_type: job.event_type, title, body, data: { saleId: sale.id, url: destination }, dedupe_key: sale.id + ":" + job.event_type }));
       if (inbox.length) {
         const { error: inboxError } = await db.from("customer_notifications").upsert(inbox, { onConflict: "user_id,dedupe_key", ignoreDuplicates: true });
