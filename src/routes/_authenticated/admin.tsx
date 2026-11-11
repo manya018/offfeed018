@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { verifyAdminAccess, getAdminOverview, getAdminBrands, getAdminProducts, updateAdminBrandStatus } from "@/lib/admin.functions";
 import { getOwnerSpotlightCampaigns, updateOwnerSpotlightCampaign } from "@/lib/spotlight.functions";
+import { getOwnerSaleNotificationOverview } from "@/lib/sale-notification-admin.functions";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   beforeLoad: async () => {
@@ -145,7 +146,8 @@ function OwnerAdminDashboard() {
                 </div>}
               </div>
             </section> : null}
-            {section === "spotlight" ? <SpotlightAdminSection /> : null}\n            {section === "products" ? <section>
+            {section === "spotlight" ? <SpotlightAdminSection /> : null}
+            {section === "notifications" ? <SaleNotificationsAdminSection /> : null}\n            {section === "products" ? <section>
               <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
                 <div>
                   <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#a28e84]">Marketplace catalogue</p>
@@ -191,7 +193,7 @@ function OwnerAdminDashboard() {
               </div>
               <p className="mt-3 text-[11px] text-[#a08e84]">Showing the latest 500 listings at most. No listing status or brand data is changed from this screen.</p>
             </section> : null}
-            {section !== "overview" && section !== "brands" && section !== "products" && section !== "spotlight" ? <section className="rounded-2xl border border-[#e8dfd6] bg-[#fbf9f5] p-8 md:p-12">
+            {section !== "overview" && section !== "brands" && section !== "products" && section !== "spotlight" && section !== "notifications" ? <section className="rounded-2xl border border-[#e8dfd6] bg-[#fbf9f5] p-8 md:p-12">
               <div className="mx-auto max-w-lg text-center">
                 <div className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-[#efe4de] text-[#76534b]">{activeNav ? <ActiveSectionIcon className="size-6"/> : <ClipboardList className="size-6"/>}</div>
                 <p className="mt-5 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#a28e84]">Owner HQ module</p>
@@ -277,5 +279,26 @@ function SpotlightAdminSection() {
          <div className="mt-4 flex flex-wrap items-center justify-between gap-3"><p className="max-w-xl text-xs leading-5 text-[#887a72]">To activate: mark payment as Paid or Waived and set a start date. Products rotate weekly during the campaign.</p><Button disabled={update.isPending} onClick={() => update.mutate({campaignId:campaign.id,status:draft.status,paymentStatus:draft.paymentStatus,campaignPrice:Number(draft.price),startsAt:draft.startsAt || undefined,paymentReference:draft.paymentReference,adminNote:draft.note})}>{update.isPending ? <LoaderCircle className="size-4 animate-spin"/> : <Check className="size-4"/>}Save campaign</Button></div>
        </article>;
      })}</div>}
+  </section>;
+}
+
+
+function SaleNotificationsAdminSection() {
+  const overview = useQuery({ queryKey: ["owner-sale-notification-overview"], queryFn: () => getOwnerSaleNotificationOverview(), retry: 1 });
+  const data = overview.data;
+  const stats = [
+    { label: "In-app audience", value: data?.inAppCustomers ?? 0 },
+    { label: "Queued / processing", value: data?.pending ?? 0 },
+    { label: "Successfully dispatched", value: data?.sent ?? 0 },
+    { label: "Failed jobs", value: data?.failed ?? 0 },
+  ];
+  return <section>
+    <div className="mb-6 flex flex-wrap items-end justify-between gap-4"><div><p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#a28e84]">Customer communications</p><h1 className="mt-1 font-serif text-3xl text-[#493a34]">Sale notifications</h1><p className="mt-2 text-sm text-[#887a72]">Monitor queued sale announcements and delivery jobs. This view does not expose customer email addresses.</p></div><Button variant="outline" onClick={() => void overview.refetch()} className="border-[#e1d5cc] bg-[#fbf9f5] text-[#76534b]"><RefreshCw className="mr-2 size-4"/>Refresh</Button></div>
+    {overview.isError ? <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">{overview.error instanceof Error ? overview.error.message : "Notification data could not be loaded. Apply the notification migration first."}</div> : null}
+    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{stats.map((item) => <div key={item.label} className="rounded-2xl border border-[#e8dfd6] bg-[#fbf9f5] p-5"><p className="text-xs text-[#8e7f76]">{item.label}</p><p className="mt-3 font-serif text-4xl text-[#493a34]">{overview.isLoading ? "—" : item.value.toLocaleString("en-IN")}</p></div>)}</div>
+    <div className="mt-6 rounded-2xl border border-[#e8dfd6] bg-[#fbf9f5] p-5"><h2 className="font-serif text-2xl text-[#493a34]">Recent sale notification jobs</h2>
+      {overview.isLoading ? <p className="py-6 text-sm text-[#887a72]">Loading delivery history…</p> : !data?.recent.length ? <p className="py-6 text-sm text-[#887a72]">No sale notification jobs have been created yet.</p> : <div className="mt-4 divide-y divide-[#eee6df]">{data.recent.map((job: any) => <div key={job.id} className="flex flex-wrap items-center justify-between gap-3 py-3"><div><p className="text-sm font-medium text-[#57463e]">{job.brand_sales?.name ?? "Sale"} · {String(job.event_type).replaceAll("_", " ")}</p><p className="mt-1 text-xs text-[#9a8a81]">Scheduled {new Date(job.scheduled_for).toLocaleString("en-IN")} · Attempts {job.attempts}</p>{job.last_error ? <p className="mt-1 text-xs text-red-700">{job.last_error}</p> : null}</div><Badge variant="outline" className="capitalize">{job.status}</Badge></div>)}</div>}
+    </div>
+    <p className="mt-4 text-xs leading-5 text-[#a08e84]">Email and push delivery counts are not yet broken down by recipient in this dashboard. Email remains opt-in; browser push requires explicit device permission.</p>
   </section>;
 }

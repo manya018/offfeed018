@@ -1,9 +1,11 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Menu, Search, UserRound, ShoppingBag, Heart, Bookmark } from "lucide-react";
+import { Menu, Search, UserRound, ShoppingBag, Heart, Bookmark, Bell } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useStyleSpace } from "@/lib/style-space";
 import { offfeedCartEventName, readOfffeedCart } from "@/lib/cart";
+import { supabase } from "@/integrations/supabase/client";
+import { getCustomerNotifications } from "@/lib/customer-notifications.functions";
 
 const links = [
   { label: "Home", to: "/" as const },
@@ -18,9 +20,24 @@ const links = [
 export function SiteHeader() {
   const [open, setOpen] = useState(false);
   const [bagCount, setBagCount] = useState(0);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
   const { space, setSpace } = useStyleSpace();
   const currentSearch = useRouterState({ select: (state) => state.location.search as { category?: string; view?: string } });
   const isHomeCollection = currentSearch.category === "home" || space === "home";
+  useEffect(() => {
+    const refreshNotifications = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) { setUnreadNotifications(0); return; }
+        const result = await getCustomerNotifications();
+        setUnreadNotifications((result.notifications ?? []).filter((item: { read_at: string | null }) => !item.read_at).length);
+      } catch { setUnreadNotifications(0); }
+    };
+    void refreshNotifications();
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => { window.setTimeout(() => { void refreshNotifications(); }, 0); });
+    window.addEventListener("focus", refreshNotifications);
+    return () => { subscription.unsubscribe(); window.removeEventListener("focus", refreshNotifications); };
+  }, []);
   useEffect(() => {
     const syncBag = () => setBagCount(readOfffeedCart().reduce((sum, item) => sum + item.quantity, 0));
     syncBag();
@@ -56,6 +73,7 @@ export function SiteHeader() {
           <Button variant="ghost" size="icon" aria-label={`Shopping bag, ${bagCount} items`} className="relative" asChild><Link to="/checkout"><ShoppingBag />{bagCount > 0 && <span className="absolute -right-1 -top-1 grid min-h-4 min-w-4 place-items-center rounded-full bg-primary px-1 text-[10px] leading-4 text-primary-foreground">{bagCount > 99 ? "99+" : bagCount}</span>}</Link></Button>
           <Button variant="ghost" size="icon" aria-label="My Moodboards" title="My Moodboards" asChild><a href="/moodboards"><Bookmark /></a></Button>
           <Button variant="ghost" size="icon" aria-label="Wishlist — liked looks" asChild><Link to="/wishlist"><Heart /></Link></Button>
+          <Button variant="ghost" size="icon" aria-label={unreadNotifications ? `Notifications, ${unreadNotifications} unread` : "Notifications"} title="Notifications" className="relative" asChild><Link to="/notifications"><Bell />{unreadNotifications > 0 && <span className="absolute -right-1 -top-1 grid min-h-4 min-w-4 place-items-center rounded-full bg-primary px-1 text-[10px] leading-4 text-primary-foreground">{unreadNotifications > 99 ? "99+" : unreadNotifications}</span>}</Link></Button>
           <Button variant="ghost" size="icon" aria-label="Profile" asChild><Link to="/profile"><UserRound /></Link></Button>
           <Button className="site-header-cta hidden shrink-0 whitespace-nowrap px-4 sm:inline-flex" asChild><Link to="/discover">Get Off the Feed</Link></Button>
           <Button variant="ghost" size="icon" aria-label="Open navigation" className="lg:hidden" onClick={() => setOpen((value) => !value)}><Menu /></Button>
