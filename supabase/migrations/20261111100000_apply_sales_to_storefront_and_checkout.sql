@@ -1,3 +1,5 @@
+grant select on public.brand_sales, public.brand_sale_products to anon, authenticated;
+
 -- Publicly expose only currently running promotions and their product links.
 drop policy if exists "Public can view active brand sales" on public.brand_sales;
 create policy "Public can view active brand sales" on public.brand_sales
