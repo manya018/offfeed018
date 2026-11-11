@@ -15,6 +15,8 @@
 5. Add GitHub Actions repository secrets `SUPABASE_URL` and `SALE_NOTIFICATION_CRON_SECRET`. The workflow `.github/workflows/dispatch-sale-notifications.yml` invokes the dispatcher every five minutes.
 6. Rebuild/redeploy the web app so the customer notification page and header link are published.
 
+The five-minute GitHub schedule only runs after this workflow is present on the repository's default branch. Keep the PR unmerged until the database migration, Edge Function and customer delivery paths have been validated; after merge, confirm the scheduled workflow is running.
+
 ## Customer consent and audience
 - In-app alerts are enabled by default for registered customer accounts.
 - Sale email is opt-in and disabled by default. Do not send promotional email to a customer who has not enabled it.
