@@ -75,11 +75,13 @@ function CustomerNotificationsPage() {
   const disablePush = async () => {
     setBusy(true);
     try {
-      const registration = await navigator.serviceWorker.getRegistration("/sw.js");
+      const registration = await navigator.serviceWorker.getRegistration();
       const subscription = await registration?.pushManager.getSubscription();
       if (subscription) {
         await removeCustomerPushSubscription({ data: { endpoint: subscription.endpoint } });
         await subscription.unsubscribe();
+      } else {
+        await updateCustomerNotificationPreferences({ data: { inAppEnabled: preferences.in_app_enabled, saleEmailEnabled: preferences.sale_email_enabled, pushEnabled: false } });
       }
       setPreferences((current) => ({ ...current, push_enabled: false }));
       toast.success("Push notifications disabled on this device.");
