@@ -31,7 +31,7 @@ export const createBrandSale=createServerFn({method:"POST"}).middleware([require
  const db=await dbFor();
  const {data:brand,error:be}=await db.from("brand_applications").select("id").eq("user_id",context.userId).eq("status","approved").maybeSingle();
  if(be||!brand)throw new Error("An approved brand workspace is required.");
- const {data:all,error:pe}=await db.from("brand_products").select("id,price").eq("brand_application_id",brand.id).eq("status","published");
+ const {data:all,error:pe}=await db.from("brand_products").select("id,price").eq("brand_application_id",brand.id).eq("status","published").eq("brand_approved",true);
  if(pe)throw new Error("Products could not be verified.");
  const rows=all??[], ids=data.productScope==="collection"?rows.map((p:any)=>p.id):[...new Set(data.productIds)];
  if(!ids.length||ids.some((id:string)=>!rows.some((p:any)=>p.id===id)))throw new Error("Choose products from your own published collection.");
