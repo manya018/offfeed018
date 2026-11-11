@@ -429,6 +429,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedBrandSpotlightRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/brand/sales': {
+      id: '/_authenticated/brand/sales'
+      path: '/brand/sales'
+      fullPath: '/brand/sales'
+      preLoaderRoute: typeof AuthenticatedBrandSalesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
@@ -436,13 +443,14 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
   AuthenticatedBrandDashboardRoute: typeof AuthenticatedBrandDashboardRoute
   AuthenticatedBrandSpotlightRoute: typeof AuthenticatedBrandSpotlightRoute
+  AuthenticatedBrandSalesRoute: typeof AuthenticatedBrandSalesRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRoute,
   AuthenticatedBrandDashboardRoute: AuthenticatedBrandDashboardRoute,
   AuthenticatedBrandSpotlightRoute: AuthenticatedBrandSpotlightRoute,
-  AuthenticatedBrandSalesRoute,
+  AuthenticatedBrandSalesRoute: AuthenticatedBrandSalesRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
