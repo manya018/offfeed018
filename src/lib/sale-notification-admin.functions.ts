@@ -10,7 +10,7 @@ export const getOwnerSaleNotificationOverview = createServerFn({ method: "GET" }
     supabaseAdmin.from("sale_notification_jobs").select("id", { count: "exact", head: true }).in("status", ["pending", "processing"]),
     supabaseAdmin.from("sale_notification_jobs").select("id", { count: "exact", head: true }).eq("status", "failed"),
     supabaseAdmin.from("sale_notification_jobs").select("id", { count: "exact", head: true }).eq("status", "sent"),
-    supabaseAdmin.from("customer_notification_preferences").select("user_id", { count: "exact", head: true }).eq("in_app_enabled", true),
+    supabaseAdmin.from("customer_notification_preferences").select("user_id", { count: "exact", head: true }).eq("in_app_enabled", true).eq("account_type", "customer"),
     supabaseAdmin.from("sale_notification_jobs").select("id,event_type,status,scheduled_for,sent_at,attempts,last_error,brand_sales(name)").order("created_at", { ascending: false }).limit(30),
   ]);
   const error = [pending.error, failed.error, sent.error, subscribers.error, recent.error].find(Boolean);
