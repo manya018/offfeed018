@@ -28,3 +28,7 @@ The five-minute GitHub schedule only runs after this workflow is present on the 
 - Verify reminder and ending-soon jobs for a multi-day test sale.
 - Check `sale_notification_jobs` for failed jobs and `customer_notifications` for inbox records.
 - Confirm the approved Gmail sender is still `offfeeed@gmail.com`.
+
+
+## Automated build validation
+The pull request is checked by the GitHub Actions workflow `.github/workflows/pull-request-build.yml`, which installs dependencies from `bun.lock` and runs the production build. A successful build does not replace Lovable Cloud deployment or end-to-end notification delivery tests.
