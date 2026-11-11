@@ -62,7 +62,7 @@ drop trigger if exists on_auth_user_notification_preferences on auth.users;
 create trigger on_auth_user_notification_preferences
 after insert or update of email, raw_user_meta_data on auth.users
 for each row execute function public.sync_customer_notification_preferences();
-insert into public.customer_notification_preferences(user_id,email)
+insert into public.customer_notification_preferences(user_id,email,account_type)
 select id,email,case when raw_user_meta_data->>'account_type'='brand' then 'brand' else 'customer' end from auth.users
 on conflict(user_id) do update set email=excluded.email,account_type=excluded.account_type,updated_at=now();
 
