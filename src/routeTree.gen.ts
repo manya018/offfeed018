@@ -29,6 +29,7 @@ import { Route as ForBrandsApplyRouteImport } from './routes/for-brands.apply'
 import { Route as LookLookIdRouteImport } from './routes/look.$lookId'
 import { Route as AuthenticatedBrandDashboardRouteImport } from './routes/_authenticated/brand/dashboard'
 import { Route as AuthenticatedBrandSpotlightRouteImport } from './routes/_authenticated/brand/spotlight'
+import { Route as AuthenticatedBrandSalesRouteImport } from './routes/_authenticated/brand/sales'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -131,6 +132,9 @@ const AuthenticatedBrandSpotlightRoute =
     path: '/brand/spotlight',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedBrandSalesRoute = AuthenticatedBrandSalesRouteImport.update({
+  id: '/brand/sales', path: '/brand/sales', getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -152,6 +156,7 @@ export interface FileRoutesByFullPath {
   '/look/$lookId': typeof LookLookIdRoute
   '/brand/dashboard': typeof AuthenticatedBrandDashboardRoute
   '/brand/spotlight': typeof AuthenticatedBrandSpotlightRoute
+  '/brand/sales': typeof AuthenticatedBrandSalesRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -437,6 +442,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRoute,
   AuthenticatedBrandDashboardRoute: AuthenticatedBrandDashboardRoute,
   AuthenticatedBrandSpotlightRoute: AuthenticatedBrandSpotlightRoute,
+  AuthenticatedBrandSalesRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
