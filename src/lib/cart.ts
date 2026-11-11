@@ -45,7 +45,7 @@ export function addToOfffeedCart(product: ProductWithBrand) {
       productName: product.productName,
       brandName: product.brand.name,
       brandHandle: product.brand.handle,
-      price: product.price,
+      price: product.salePrice != null && product.salePrice > 0 ? product.salePrice : product.price,
       imageUrl: product.imageUrl,
       sizes: product.sizes,
       colors: product.colors,
