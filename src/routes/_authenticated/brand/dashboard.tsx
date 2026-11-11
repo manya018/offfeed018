@@ -954,6 +954,9 @@ export function BrandSpotlightSection({ products, audiences }: {
   const formatWeek = (value: string) => new Date(value + "T12:00:00").toLocaleDateString("en-IN", { weekday:"long", day:"numeric", month:"long", year:"numeric" });
   const prices: Record<number, number> = { 7:1499, 14:2499, 28:3999 };
   const selectedSlot = availability.find((slot) => slot.startWeek === selectedWeek);
+  const selectedPeriodDates = selectedWeek ? Array.from({ length: durationDays }, (_, index) => { const date = new Date(selectedWeek + "T12:00:00"); date.setDate(date.getDate() + index); return date; }) : [];
+  const selectedPeriodStart = selectedPeriodDates[0];
+  const selectedPeriodEnd = selectedPeriodDates[selectedPeriodDates.length - 1];
   return <section className="border-b border-border/70 py-7" aria-labelledby="brand-spotlight-heading">
     <div className="max-w-4xl">
       <p className="text-xs font-semibold uppercase tracking-[0.15em] text-primary">BRAND VISIBILITY</p>
@@ -977,8 +980,20 @@ export function BrandSpotlightSection({ products, audiences }: {
               selected={selectedWeek ? new Date(selectedWeek + "T12:00:00") : undefined}
               onSelect={(date) => { if (!date) return; const value = date.toISOString().slice(0,10); const slot = availability.find((item) => item.startWeek === value); if (slot?.available) setSelectedWeek(value); }}
               disabled={(date) => { const value = date.toISOString().slice(0,10); return date.getDay() !== 1 || !availability.some((slot) => slot.startWeek === value && slot.available); }}
-              modifiers={{ availableMonday: availability.filter((slot) => slot.available).map((slot) => new Date(slot.startWeek + "T12:00:00")), fullMonday: availability.filter((slot) => !slot.available).map((slot) => new Date(slot.startWeek + "T12:00:00")) }}
-              modifiersClassNames={{ availableMonday: "font-semibold text-emerald-700 underline decoration-2 underline-offset-4", fullMonday: "text-destructive line-through opacity-60" }}
+              modifiers={{
+                availableMonday: availability.filter((slot) => slot.available).map((slot) => new Date(slot.startWeek + "T12:00:00")),
+                fullMonday: availability.filter((slot) => !slot.available).map((slot) => new Date(slot.startWeek + "T12:00:00")),
+                campaignPeriod: selectedPeriodDates,
+                campaignStart: selectedPeriodStart ? [selectedPeriodStart] : [],
+                campaignEnd: selectedPeriodEnd ? [selectedPeriodEnd] : [],
+              }}
+              modifiersClassNames={{
+                availableMonday: "font-semibold text-emerald-700 underline decoration-2 underline-offset-4",
+                fullMonday: "text-destructive line-through opacity-60",
+                campaignPeriod: "bg-primary/15 text-foreground rounded-none",
+                campaignStart: "bg-primary text-primary-foreground rounded-l-full font-bold",
+                campaignEnd: "bg-primary text-primary-foreground rounded-r-full font-bold",
+              }}
               fromDate={availability.length ? new Date(availability[0].startWeek + "T12:00:00") : new Date()}
               toDate={availability.length ? new Date(availability[availability.length-1].startWeek + "T12:00:00") : new Date()}
               showOutsideDays={false}
@@ -987,7 +1002,7 @@ export function BrandSpotlightSection({ products, audiences }: {
           </PopoverContent>
         </Popover>
         {bookingSetupRequired && <p className="mt-2 rounded-lg border border-amber-300/60 bg-amber-50 p-3 text-sm text-amber-900">The Spotlight booking calendar has not been activated in the OFFFEED database yet. Please apply the latest Supabase migration before accepting bookings. No slots are being marked as full.</p>}
-        {selectedSlot && <div className="mt-3 rounded-lg border border-border/70 p-3"><div className="flex flex-wrap items-center justify-between gap-2"><p className="text-sm font-medium">{formatWeek(selectedSlot.startWeek)}</p><Badge variant="secondary">{selectedSlot.slotsLeft} of 10 slots available</Badge></div><p className="mt-1 text-xs text-muted-foreground">{durationDays === 7 ? "One weekly edition" : durationDays === 14 ? "Two consecutive Monday editions" : "Four consecutive Monday editions"} · ₹{prices[durationDays].toLocaleString("en-IN")}</p></div>}
+        {selectedSlot && <div className="mt-3 rounded-lg border border-border/70 p-3"><div className="flex flex-wrap items-center justify-between gap-2"><p className="text-sm font-medium">{formatWeek(selectedSlot.startWeek)}</p><Badge variant="secondary">{selectedSlot.slotsLeft} of 10 slots available</Badge></div><p className="mt-1 text-sm font-medium">Your selected campaign period: {selectedPeriodStart?.toLocaleDateString("en-IN", { day:"numeric", month:"short", year:"numeric" })} – {selectedPeriodEnd?.toLocaleDateString("en-IN", { day:"numeric", month:"short", year:"numeric" })}</p><p className="mt-1 text-xs text-muted-foreground">{durationDays === 7 ? "One weekly edition" : durationDays === 14 ? "Two consecutive Monday editions" : "Four consecutive Monday editions"} · ₹{prices[durationDays].toLocaleString("en-IN")}. The full period is highlighted in the calendar.</p></div>}
       </div>
       {bookingSetupRequired && <p className="mt-2 rounded-lg border border-amber-300/60 bg-amber-50 p-3 text-sm text-amber-900">The Spotlight booking calendar has not been activated in the OFFFEED database yet. Please apply the latest Supabase migration before accepting bookings. No slots are being marked as full.</p>}
       {selectedSlot && <div className="mt-3 rounded-lg border border-border/70 p-3"><div className="flex flex-wrap items-center justify-between gap-2"><p className="text-sm font-medium">{formatWeek(selectedSlot.startWeek)}</p><Badge variant={selectedSlot.available ? "secondary" : "destructive"}>{selectedSlot.slotsLeft} slots left</Badge></div><p className="mt-1 text-xs text-muted-foreground">{durationDays === 7 ? "One weekly edition" : durationDays === 14 ? "Two consecutive Monday editions" : "Four consecutive Monday editions"} · ₹{prices[durationDays].toLocaleString("en-IN")}</p></div>}
