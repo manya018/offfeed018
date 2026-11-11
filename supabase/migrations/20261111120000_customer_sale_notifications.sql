@@ -2,6 +2,7 @@
 create table if not exists public.customer_notification_preferences (
   user_id uuid primary key references auth.users(id) on delete cascade,
   email text,
+  account_type text not null default 'customer' check (account_type in ('customer','brand')),
   in_app_enabled boolean not null default true,
   sale_email_enabled boolean not null default false,
   push_enabled boolean not null default false,
@@ -50,9 +51,9 @@ create or replace function public.sync_customer_notification_preferences()
 returns trigger language plpgsql security definer set search_path=public
 as $$
 begin
-  insert into public.customer_notification_preferences(user_id,email)
-  values(new.id,new.email)
-  on conflict(user_id) do update set email=excluded.email,updated_at=now();
+  insert into public.customer_notification_preferences(user_id,email,account_type)
+  values(new.id,new.email,case when new.raw_user_meta_data->>'account_type'='brand' then 'brand' else 'customer' end)
+  on conflict(user_id) do update set email=excluded.email,account_type=excluded.account_type,updated_at=now();
   return new;
 end;
 $$;
@@ -61,8 +62,8 @@ create trigger on_auth_user_notification_preferences
 after insert or update of email on auth.users
 for each row execute function public.sync_customer_notification_preferences();
 insert into public.customer_notification_preferences(user_id,email)
-select id,email from auth.users
-on conflict(user_id) do update set email=excluded.email,updated_at=now();
+select id,email,case when raw_user_meta_data->>'account_type'='brand' then 'brand' else 'customer' end from auth.users
+on conflict(user_id) do update set email=excluded.email,account_type=excluded.account_type,updated_at=now();
 
 create or replace function public.schedule_sale_notification_jobs()
 returns trigger language plpgsql security definer set search_path=public
