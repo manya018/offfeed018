@@ -92,6 +92,20 @@ create trigger brand_sales_schedule_notifications
 after insert on public.brand_sales
 for each row execute function public.schedule_sale_notification_jobs();
 
+
+-- Queue notifications for sales that already exist when this migration is applied.
+insert into public.sale_notification_jobs(sale_id,event_type,scheduled_for)
+select id,'sale_started',starts_at from public.brand_sales where status <> 'cancelled'
+on conflict(sale_id,event_type) do nothing;
+insert into public.sale_notification_jobs(sale_id,event_type,scheduled_for)
+select id,'sale_reminder',ends_at - interval '24 hours' from public.brand_sales
+where status <> 'cancelled' and ends_at - interval '24 hours' > starts_at
+on conflict(sale_id,event_type) do nothing;
+insert into public.sale_notification_jobs(sale_id,event_type,scheduled_for)
+select id,'sale_ending_soon',ends_at - interval '2 hours' from public.brand_sales
+where status <> 'cancelled' and ends_at - interval '2 hours' > starts_at
+on conflict(sale_id,event_type) do nothing;
+
 create or replace function public.claim_due_sale_notification_jobs(p_limit integer default 20)
 returns setof public.sale_notification_jobs
 language sql security definer set search_path=public
