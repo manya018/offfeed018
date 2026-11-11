@@ -954,6 +954,7 @@ export function BrandSpotlightSection({ products, audiences }: {
   const formatWeek = (value: string) => new Date(value + "T12:00:00").toLocaleDateString("en-IN", { weekday:"long", day:"numeric", month:"long", year:"numeric" });
   const prices: Record<number, number> = { 7:1499, 14:2499, 28:3999 };
   const selectedSlot = availability.find((slot) => slot.startWeek === selectedWeek);
+  const previewMondays = bookingSetupRequired ? Array.from({ length: 12 }, (_, index) => { const date = new Date(); date.setHours(12,0,0,0); const day = date.getDay(); date.setDate(date.getDate() + ((8 - day) % 7 || 7) + index * 7); return date; }) : [];
   const selectedPeriodDates = selectedWeek ? Array.from({ length: durationDays }, (_, index) => { const date = new Date(selectedWeek + "T12:00:00"); date.setDate(date.getDate() + index); return date; }) : [];
   const selectedPeriodStart = selectedPeriodDates[0];
   const selectedPeriodEnd = selectedPeriodDates[selectedPeriodDates.length - 1];
@@ -978,11 +979,11 @@ export function BrandSpotlightSection({ products, audiences }: {
             <Calendar
               mode="single"
               selected={selectedWeek ? new Date(selectedWeek + "T12:00:00") : undefined}
-              onSelect={(date) => { if (!date) return; const value = date.toISOString().slice(0,10); const slot = availability.find((item) => item.startWeek === value); if (slot?.available) setSelectedWeek(value); }}
-              disabled={(date) => { const value = date.toISOString().slice(0,10); return date.getDay() !== 1 || !availability.some((slot) => slot.startWeek === value && slot.available); }}
+              onSelect={(date) => { if (!date) return; const value = date.toISOString().slice(0,10); const slot = availability.find((item) => item.startWeek === value); if (bookingSetupRequired || slot?.available) setSelectedWeek(value); }}
+              disabled={(date) => { const value = date.toISOString().slice(0,10); return date.getDay() !== 1 || (!bookingSetupRequired && !availability.some((slot) => slot.startWeek === value && slot.available)); }}
               modifiers={{
-                availableMonday: availability.filter((slot) => slot.available).map((slot) => new Date(slot.startWeek + "T12:00:00")),
-                fullMonday: availability.filter((slot) => !slot.available).map((slot) => new Date(slot.startWeek + "T12:00:00")),
+                availableMonday: bookingSetupRequired ? previewMondays : availability.filter((slot) => slot.available).map((slot) => new Date(slot.startWeek + "T12:00:00")),
+                fullMonday: bookingSetupRequired ? [] : availability.filter((slot) => !slot.available).map((slot) => new Date(slot.startWeek + "T12:00:00")),
                 campaignPeriod: selectedPeriodDates,
                 campaignStart: selectedPeriodStart ? [selectedPeriodStart] : [],
                 campaignEnd: selectedPeriodEnd ? [selectedPeriodEnd] : [],
@@ -994,17 +995,17 @@ export function BrandSpotlightSection({ products, audiences }: {
                 campaignStart: "bg-primary text-primary-foreground rounded-l-full font-bold",
                 campaignEnd: "bg-primary text-primary-foreground rounded-r-full font-bold",
               }}
-              fromDate={availability.length ? new Date(availability[0].startWeek + "T12:00:00") : new Date()}
-              toDate={availability.length ? new Date(availability[availability.length-1].startWeek + "T12:00:00") : new Date()}
+              fromDate={bookingSetupRequired ? previewMondays[0] : availability.length ? new Date(availability[0].startWeek + "T12:00:00") : new Date()}
+              toDate={bookingSetupRequired ? previewMondays[previewMondays.length - 1] : availability.length ? new Date(availability[availability.length-1].startWeek + "T12:00:00") : new Date()}
               showOutsideDays={false}
             />
             <div className="mt-2 max-h-36 space-y-1 overflow-y-auto border-t border-border pt-2">{availability.map((slot) => <button key={slot.startWeek} type="button" disabled={!slot.available} onClick={() => setSelectedWeek(slot.startWeek)} className="flex w-full items-center justify-between rounded-md px-2 py-1.5 text-left text-xs hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"><span>{formatWeek(slot.startWeek)}</span><span className={slot.available ? "font-medium text-emerald-700" : "text-destructive"}>{slot.available ? `${slot.slotsLeft} slots left` : "Full"}</span></button>)}</div>
           </PopoverContent>
         </Popover>
-        {bookingSetupRequired && <p className="mt-2 rounded-lg border border-amber-300/60 bg-amber-50 p-3 text-sm text-amber-900">The Spotlight booking calendar has not been activated in the OFFFEED database yet. Please apply the latest Supabase migration before accepting bookings. No slots are being marked as full.</p>}
+        {bookingSetupRequired && <p className="mt-2 rounded-lg border border-amber-300/60 bg-amber-50 p-3 text-sm text-amber-900">Green Mondays are upcoming date previews. Live slot counts and reservations will activate once the Spotlight database migration is applied.</p>}
         {selectedSlot && <div className="mt-3 rounded-lg border border-border/70 p-3"><div className="flex flex-wrap items-center justify-between gap-2"><p className="text-sm font-medium">{formatWeek(selectedSlot.startWeek)}</p><Badge variant="secondary">{selectedSlot.slotsLeft} of 10 slots available</Badge></div><p className="mt-1 text-sm font-medium">Your selected campaign period: {selectedPeriodStart?.toLocaleDateString("en-IN", { day:"numeric", month:"short", year:"numeric" })} – {selectedPeriodEnd?.toLocaleDateString("en-IN", { day:"numeric", month:"short", year:"numeric" })}</p><p className="mt-1 text-xs text-muted-foreground">{durationDays === 7 ? "One weekly edition" : durationDays === 14 ? "Two consecutive Monday editions" : "Four consecutive Monday editions"} · ₹{prices[durationDays].toLocaleString("en-IN")}. The full period is highlighted in the calendar.</p></div>}
       </div>
-      {bookingSetupRequired && <p className="mt-2 rounded-lg border border-amber-300/60 bg-amber-50 p-3 text-sm text-amber-900">The Spotlight booking calendar has not been activated in the OFFFEED database yet. Please apply the latest Supabase migration before accepting bookings. No slots are being marked as full.</p>}
+      {bookingSetupRequired && <p className="mt-2 rounded-lg border border-amber-300/60 bg-amber-50 p-3 text-sm text-amber-900">Green Mondays are upcoming date previews. Live slot counts and reservations will activate once the Spotlight database migration is applied.</p>}
       {selectedSlot && <div className="mt-3 rounded-lg border border-border/70 p-3"><div className="flex flex-wrap items-center justify-between gap-2"><p className="text-sm font-medium">{formatWeek(selectedSlot.startWeek)}</p><Badge variant={selectedSlot.available ? "secondary" : "destructive"}>{selectedSlot.slotsLeft} slots left</Badge></div><p className="mt-1 text-xs text-muted-foreground">{durationDays === 7 ? "One weekly edition" : durationDays === 14 ? "Two consecutive Monday editions" : "Four consecutive Monday editions"} · ₹{prices[durationDays].toLocaleString("en-IN")}</p></div>}
       <label className="mt-4 flex cursor-pointer items-start gap-2 text-xs leading-5 text-muted-foreground"><input type="checkbox" checked={acceptedNonRefundable} onChange={(event) => setAcceptedNonRefundable(event.target.checked)} className="mt-1 size-4 accent-primary"/><span>I understand that Spotlight fees are non-refundable once paid, subject to applicable law. I have checked the selected audience, package and Monday start date.</span></label>
       <div className="mt-4 flex flex-wrap items-center gap-3"><Button type="button" disabled={savingApplication || availabilityLoading || bookingSetupRequired || !selectedWeek || !selectedSlot?.available || !acceptedNonRefundable} onClick={() => void apply()}>{savingApplication ? <LoaderCircle className="animate-spin"/> : <Sparkles/>}Reserve Spotlight slot</Button><span className="text-xs text-muted-foreground">Razorpay checkout will be connected later. For now, bookings remain payment-pending and cannot go live until payment is confirmed by OFFFEED.</span></div>
