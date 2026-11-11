@@ -15,9 +15,10 @@ async function sendEmail(to: string, subject: string, title: string, body: strin
   const sender = await profile.json() as { emailAddress?: string };
   if ((sender.emailAddress ?? "").toLowerCase() !== "offfeeed@gmail.com") throw new Error("Connected Gmail sender is not the approved OFFFEED address.");
   const boundary = "offfeed-sale-boundary";
-  const text = title + "\n\n" + body + "\n\nExplore the sale: " + url + "\n\nOFFFEED";
-  const html = '<div style="font-family:Arial,sans-serif;line-height:1.7;color:#302824"><h2>' + escapeHtml(title) + '</h2><p>' + escapeHtml(body) + '</p><p><a href="' + url + '" style="background:#76534b;color:#fff;padding:12px 18px;text-decoration:none;border-radius:6px">Explore the sale</a></p><p>With care,<br>OFFFEED</p></div>';
-  const message = ["To: " + to, "Subject: " + subject, "MIME-Version: 1.0", 'Content-Type: multipart/alternative; boundary="' + boundary + '"', "", "--" + boundary, 'Content-Type: text/plain; charset="UTF-8"', "", text, "", "--" + boundary, 'Content-Type: text/html; charset="UTF-8"', "", html, "", "--" + boundary + "--", ""].join("\r\n");
+  const manageUrl = new URL(url).origin + "/notifications";
+  const text = title + "\n\n" + body + "\n\nExplore the sale: " + url + "\nManage email preferences: " + manageUrl + "\n\nOFFFEED";
+  const html = '<div style="font-family:Arial,sans-serif;line-height:1.7;color:#302824"><h2>' + escapeHtml(title) + '</h2><p>' + escapeHtml(body) + '</p><p><a href="' + url + '" style="background:#76534b;color:#fff;padding:12px 18px;text-decoration:none;border-radius:6px">Explore the sale</a></p><p style="font-size:12px;color:#8a7b72">You received this because you opted in to OFFFEED sale emails. <a href="' + manageUrl + '">Manage notification preferences</a>.</p><p>With care,<br>OFFFEED</p></div>';
+  const message = ["To: " + to, "Subject: " + subject, "List-Unsubscribe: <" + manageUrl + ">", "MIME-Version: 1.0", 'Content-Type: multipart/alternative; boundary="' + boundary + '"', "", "--" + boundary, 'Content-Type: text/plain; charset="UTF-8"', "", text, "", "--" + boundary, 'Content-Type: text/html; charset="UTF-8"', "", html, "", "--" + boundary + "--", ""].join("\r\n");
   const raw = base64(message).replaceAll("+", "-").replaceAll("/", "_").replace(/=+$/, "");
   const sent = await fetch(gateway + "/users/me/messages/send", { method: "POST", headers: { Authorization: "Bearer " + key, "X-Connection-Api-Key": connection, "Content-Type": "application/json" }, body: JSON.stringify({ raw }) });
   if (!sent.ok) throw new Error("Gmail send failed [" + sent.status + "].");
