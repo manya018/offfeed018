@@ -178,6 +178,7 @@ export interface FileRoutesByTo {
   '/look/$lookId': typeof LookLookIdRoute
   '/brand/dashboard': typeof AuthenticatedBrandDashboardRoute
   '/brand/spotlight': typeof AuthenticatedBrandSpotlightRoute
+  '/brand/sales': typeof AuthenticatedBrandSalesRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -201,6 +202,7 @@ export interface FileRoutesById {
   '/look/$lookId': typeof LookLookIdRoute
   '/_authenticated/brand/dashboard': typeof AuthenticatedBrandDashboardRoute
   '/_authenticated/brand/spotlight': typeof AuthenticatedBrandSpotlightRoute
+  '/_authenticated/brand/sales': typeof AuthenticatedBrandSalesRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
