@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowDownToLine, ArrowLeft, ArrowRight, Check, ExternalLink, ImagePlus, LoaderCircle, PackagePlus, PencilLine, Plus, RefreshCw, Search, Sparkles, ShieldAlert, ShieldCheck, Shirt, Trash2, Truck, Upload, Video, X } from "lucide-react";
+import { ArrowDownToLine, ArrowLeft, ArrowRight, Check, ExternalLink, ImagePlus, LoaderCircle, PackagePlus, PencilLine, Plus, RefreshCw, Search, Sparkles, ShieldAlert, ShieldCheck, Shirt, Tag, Trash2, Truck, Upload, Video, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
