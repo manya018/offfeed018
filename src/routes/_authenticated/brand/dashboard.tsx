@@ -979,8 +979,8 @@ export function BrandSpotlightSection({ products, audiences }: {
             <Calendar
               mode="single"
               selected={selectedWeek ? new Date(selectedWeek + "T12:00:00") : undefined}
-              onSelect={(date) => { if (!date) return; const value = date.toISOString().slice(0,10); const slot = availability.find((item) => item.startWeek === value); if (bookingSetupRequired || slot?.available) setSelectedWeek(value); }}
-              disabled={(date) => { const value = date.toISOString().slice(0,10); return date.getDay() !== 1 || (!bookingSetupRequired && !availability.some((slot) => slot.startWeek === value && slot.available)); }}
+              onSelect={(date) => { if (!date) return; const value = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`; const slot = availability.find((item) => item.startWeek === value); if (bookingSetupRequired || slot?.available) setSelectedWeek(value); }}
+              disabled={(date) => { const value = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`; return date.getDay() !== 1 || (!bookingSetupRequired && !availability.some((slot) => slot.startWeek === value && slot.available)); }}
               modifiers={{
                 availableMonday: bookingSetupRequired ? previewMondays : availability.filter((slot) => slot.available).map((slot) => new Date(slot.startWeek + "T12:00:00")),
                 fullMonday: bookingSetupRequired ? [] : availability.filter((slot) => !slot.available).map((slot) => new Date(slot.startWeek + "T12:00:00")),
