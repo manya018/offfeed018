@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Menu, Search, UserRound, ShoppingBag, Heart, Bookmark } from "lucide-react";
+import { Menu, Search, UserRound, ShoppingBag, Heart, Bookmark, Bell } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useStyleSpace } from "@/lib/style-space";
@@ -56,6 +56,7 @@ export function SiteHeader() {
           <Button variant="ghost" size="icon" aria-label={`Shopping bag, ${bagCount} items`} className="relative" asChild><Link to="/checkout"><ShoppingBag />{bagCount > 0 && <span className="absolute -right-1 -top-1 grid min-h-4 min-w-4 place-items-center rounded-full bg-primary px-1 text-[10px] leading-4 text-primary-foreground">{bagCount > 99 ? "99+" : bagCount}</span>}</Link></Button>
           <Button variant="ghost" size="icon" aria-label="My Moodboards" title="My Moodboards" asChild><a href="/moodboards"><Bookmark /></a></Button>
           <Button variant="ghost" size="icon" aria-label="Wishlist — liked looks" asChild><Link to="/wishlist"><Heart /></Link></Button>
+          <Button variant="ghost" size="icon" aria-label="Notifications" title="Notifications" asChild><Link to="/notifications"><Bell /></Link></Button>
           <Button variant="ghost" size="icon" aria-label="Profile" asChild><Link to="/profile"><UserRound /></Link></Button>
           <Button className="site-header-cta hidden shrink-0 whitespace-nowrap px-4 sm:inline-flex" asChild><Link to="/discover">Get Off the Feed</Link></Button>
           <Button variant="ghost" size="icon" aria-label="Open navigation" className="lg:hidden" onClick={() => setOpen((value) => !value)}><Menu /></Button>
