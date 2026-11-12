@@ -1,0 +1,46 @@
+name: Deploy OFFFEED sale notification function
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - name: Validate deployment secrets
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+          VAPID_PUBLIC_KEY: ${{ secrets.VAPID_PUBLIC_KEY }}
+          VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
+          SALE_NOTIFICATION_CRON_SECRET: ${{ secrets.SALE_NOTIFICATION_CRON_SECRET }}
+          SALE_NOTIFICATION_TEST_USER_ID: ${{ secrets.SALE_NOTIFICATION_TEST_USER_ID }}
+        run: |
+          for name in SUPABASE_ACCESS_TOKEN SUPABASE_PROJECT_REF VAPID_PUBLIC_KEY VAPID_PRIVATE_KEY SALE_NOTIFICATION_CRON_SECRET SALE_NOTIFICATION_TEST_USER_ID; do
+            if [ -z "${!name}" ]; then echo "Missing GitHub Actions secret: $name"; exit 1; fi
+          done
+      - name: Configure Edge Function secrets
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+          VAPID_PUBLIC_KEY: ${{ secrets.VAPID_PUBLIC_KEY }}
+          VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
+          SALE_NOTIFICATION_CRON_SECRET: ${{ secrets.SALE_NOTIFICATION_CRON_SECRET }}
+          SALE_NOTIFICATION_TEST_USER_ID: ${{ secrets.SALE_NOTIFICATION_TEST_USER_ID }}
+        run: |
+          supabase secrets set --project-ref "$SUPABASE_PROJECT_REF" \
+            VAPID_PUBLIC_KEY="$VAPID_PUBLIC_KEY" \
+            VAPID_PRIVATE_KEY="$VAPID_PRIVATE_KEY" \
+            VAPID_SUBJECT="mailto:offfeeed@gmail.com" \
+            SITE_URL="https://offfeed018.lovable.app" \
+            SALE_NOTIFICATION_CRON_SECRET="$SALE_NOTIFICATION_CRON_SECRET" \
+            SALE_NOTIFICATION_TEST_USER_ID="$SALE_NOTIFICATION_TEST_USER_ID"
+      - name: Deploy sale notification dispatcher
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+        run: supabase functions deploy sale-notification-dispatch --project-ref "$SUPABASE_PROJECT_REF" --no-verify-jwt
