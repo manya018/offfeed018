@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { EVIDENCE_BUCKET, submitReturnEvidence } from "@/lib/dispute-evidence.functions";
 
 type Order = { id: string; order_number: string; product_name: string; quantity: number; unit_price: number | string; status: string; created_at: string; estimated_delivery_start?: string | null; estimated_delivery_end?: string | null; tracking_url?: string | null };
 type Address = { id: string; label: string; line1: string; line2?: string | null; city: string; state: string; pin_code: string; landmark?: string | null; is_default: boolean };
@@ -22,6 +23,7 @@ function ProfilePage() {
   const [returnReason, setReturnReason] = useState("size_fit");
   const [returnDetails, setReturnDetails] = useState("");
   const [returnEvidence, setReturnEvidence] = useState("");
+  const [returnPhotoFiles, setReturnPhotoFiles] = useState<File[]>([]);
   const [returnBusy, setReturnBusy] = useState(false);
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [addressEditorOpen, setAddressEditorOpen] = useState(false);
@@ -313,20 +315,44 @@ function ProfilePage() {
             {returnOrderId === order.id ? <form className="space-y-3" onSubmit={async (event) => {
               event.preventDefault();
               if (!user) return;
+              if (returnPhotoFiles.length < 2 || returnPhotoFiles.length > 6) {
+                toast.error("Upload between 2 and 6 photos of the item you received.");
+                return;
+              }
+              if (returnPhotoFiles.some((file) => !["image/jpeg", "image/png", "image/webp"].includes(file.type) || file.size > 12 * 1024 * 1024)) {
+                toast.error("Use JPG, PNG or WebP photos, each no larger than 12 MB.");
+                return;
+              }
               setReturnBusy(true);
+              const uploadedPaths: string[] = [];
+              let requestCreated = false;
               try {
-                const { error } = await (supabase as any).rpc("request_offfeed_return", {
-                  p_order_id: order.id,
-                  p_reason: returnReason,
-                  p_details: returnDetails.trim(),
-                  p_evidence_url: returnEvidence.trim(),
-                });
-                if (error) throw error;
-                toast.success("Return request submitted. The brand will review it.");
-                setReturnOrderId(""); setReturnDetails(""); setReturnEvidence("");
+                for (const file of returnPhotoFiles) {
+                  const extension = file.name.split(".").pop()?.toLowerCase() || "jpg";
+                  const path = `${user.id}/${crypto.randomUUID()}.${extension}`;
+                  const { error: uploadError } = await supabase.storage.from(EVIDENCE_BUCKET).upload(path, file, {
+                    contentType: file.type,
+                    upsert: false,
+                  });
+                  if (uploadError) throw new Error("A return photo couldn't be uploaded. Please try again.");
+                  uploadedPaths.push(path);
+                }
+                await submitReturnEvidence({ data: {
+                  orderId: order.id,
+                  reason: returnReason as "defective_damaged" | "wrong_item_colour" | "not_as_described" | "size_fit" | "other",
+                  details: returnDetails.trim(),
+                  photos: uploadedPaths,
+                  evidenceUrl: returnEvidence.trim(),
+                } });
+                requestCreated = true;
+                toast.success("Return request and photo evidence submitted. The brand will review it.");
+                setReturnOrderId(""); setReturnDetails(""); setReturnEvidence(""); setReturnPhotoFiles([]);
                 await loadAccount();
               } catch (cause) {
                 console.error("Return request failed:", cause);
+                if (!requestCreated && uploadedPaths.length) {
+                  await supabase.storage.from(EVIDENCE_BUCKET).remove(uploadedPaths);
+                }
                 toast.error(cause instanceof Error ? cause.message : "Could not submit the return request. Please try again.");
               } finally { setReturnBusy(false); }
             }}>
@@ -340,11 +366,14 @@ function ProfilePage() {
               </select>
               <label className="block text-sm font-medium" htmlFor={`return-details-${order.id}`}>Details (optional)</label>
               <textarea id={`return-details-${order.id}`} value={returnDetails} onChange={(event) => setReturnDetails(event.target.value)} maxLength={2000} rows={3} className="w-full rounded-lg border border-border bg-background px-3 py-2.5" placeholder="Tell the brand what happened…"/>
-              <label className="block text-sm font-medium" htmlFor={`return-evidence-${order.id}`}>Photo/evidence link (optional)</label>
+              <label className="block text-sm font-medium" htmlFor={`return-photos-${order.id}`}>Photos of the item received (2–6 required)</label>
+              <input id={`return-photos-${order.id}`} type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={(event) => setReturnPhotoFiles(Array.from(event.target.files ?? []).slice(0, 6))} className="w-full rounded-lg border border-border bg-background px-3 py-2.5 text-sm"/>
+              <p className="text-xs text-muted-foreground">{returnPhotoFiles.length} photo(s) selected. JPG, PNG or WebP; maximum 12 MB each.</p>
+              <label className="block text-sm font-medium" htmlFor={`return-evidence-${order.id}`}>Additional evidence link (optional)</label>
               <input id={`return-evidence-${order.id}`} type="url" value={returnEvidence} onChange={(event) => setReturnEvidence(event.target.value)} maxLength={2048} className="w-full rounded-lg border border-border bg-background px-3 py-2.5" placeholder="https://…"/>
-              <p className="text-xs text-muted-foreground">Returns are reviewed by the brand. Submitting this form does not issue a refund automatically.</p>
+              <p className="text-xs text-muted-foreground">OFFFEED securely stores your photos for the brand's review. Submitting a return request does not issue a refund automatically.</p>
               <div className="flex gap-2"><Button type="submit" disabled={returnBusy}>{returnBusy ? <LoaderCircle className="mr-2 size-4 animate-spin"/> : null}{returnBusy ? "Submitting…" : "Submit return request"}</Button><Button type="button" variant="outline" onClick={() => setReturnOrderId("")}>Cancel</Button></div>
-            </form> : <Button variant="outline" onClick={() => { setReturnOrderId(order.id); setReturnReason("size_fit"); setReturnDetails(""); setReturnEvidence(""); }}>Request a return</Button>}
+            </form> : <Button variant="outline" onClick={() => { setReturnOrderId(order.id); setReturnReason("size_fit"); setReturnDetails(""); setReturnEvidence(""); setReturnPhotoFiles([]); }}>Request a return</Button>}
           </div>}</article>)}</div>}
         </section>}
 

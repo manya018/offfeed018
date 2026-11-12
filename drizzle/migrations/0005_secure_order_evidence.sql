@@ -105,11 +105,11 @@ BEGIN
   IF photo_count NOT BETWEEN 2 AND 6 THEN RAISE EXCEPTION 'Add between two and six return photos.'; END IF;
   IF EXISTS (
     SELECT 1 FROM jsonb_array_elements_text(p_photo_paths) AS submitted(path)
-    WHERE submitted.path !~ ('^' || auth.uid()::text || '/[^/]+\\.(jpg|jpeg|png|webp)$')
+    WHERE submitted.path !~ ('^' || auth.uid()::text || '/[^/]+\.(jpg|jpeg|png|webp)$')
        OR submitted.path LIKE '%..%'
        OR NOT EXISTS (
          SELECT 1 FROM storage.objects obj
-         WHERE obj.bucket_id = 'order-evidence' AND obj.name = submitted.path AND obj.owner = auth.uid()
+         WHERE obj.bucket_id = 'order-evidence' AND obj.name = submitted.path AND obj.owner = auth.uid()::text
        )
   ) THEN RAISE EXCEPTION 'A return photo is missing or does not belong to your account.'; END IF;
 

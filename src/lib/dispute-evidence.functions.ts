@@ -195,11 +195,13 @@ export const submitDispatchEvidence = createServerFn({ method: "POST" })
       .maybeSingle();
     if (orderError || !order) throw new Error("That order doesn't belong to your brand.");
 
-    const { data: existing } = await context.supabase
+    const { data: existing, error: existingError } = await context.supabase
       .from("dispatch_evidence")
       .select("id")
       .eq("order_id", data.orderId)
       .maybeSingle();
+    if (existingError) throw new Error("We couldn't check the existing dispatch proof.");
+    if (existing?.id) throw new Error("Dispatch evidence has already been submitted for this order. Contact OFFFEED support if it needs correction.");
 
     const row = {
       order_id: data.orderId,
@@ -215,12 +217,27 @@ export const submitDispatchEvidence = createServerFn({ method: "POST" })
       [],
       `Brand packing verification for OFFFEED order ${order.order_number}: product "${order.product_name}"${order.selected_size ? ` size ${order.selected_size}` : ""}${order.selected_color ? ` colour ${order.selected_color}` : ""}, quantity ${order.quantity}, shipping to PIN ${order.destination_pin_code}. The brand states: "${data.packingNote}". Judge whether these photos genuinely show this product being packed with the order details visible.`,
     );
-    const values = { ...row, status: scoreToStatus(report.trust_score), ai_report: report };
+    // Persist the server-generated report with the server-only service-role client.
+    // Authenticated users do not receive permission to set their own AI score or status.
+    const { data: videoFile, error: videoError } = await context.supabase.storage
+      .from(EVIDENCE_BUCKET)
+      .download(videoPath);
+    if (videoError || !videoFile) throw new Error("The packing video could not be found in your secure uploads.");
 
-    const { data: evidence, error } = existing?.id
-      ? await context.supabase.from("dispatch_evidence").update(values).eq("id", existing.id).select("id, status").single()
-      : await context.supabase.from("dispatch_evidence").insert(values).select("id, status").single();
-    if (error || !evidence) throw new Error("The packing proof couldn't be saved. Please try again.");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: evidence, error } = await supabaseAdmin
+      .from("dispatch_evidence")
+      .insert({
+        ...row,
+        status: scoreToStatus(report.trust_score),
+        ai_report: report,
+      })
+      .select("id, status")
+      .single();
+    if (error || !evidence) {
+      console.error("Dispatch evidence save failed:", error);
+      throw new Error("The packing proof couldn't be saved. Please try again.");
+    }
     return { evidenceId: evidence.id, status: evidence.status, report };
   });
 
@@ -249,11 +266,12 @@ export const submitReturnEvidence = createServerFn({ method: "POST" })
     if (order.status !== "delivered") throw new Error("Returns open once the order is delivered.");
 
     const { data: returnId, error: returnError } = await context.supabase
-      .rpc("request_offfeed_return", {
+      .rpc("request_offfeed_return_with_evidence", {
         p_order_id: data.orderId,
         p_reason: data.reason,
         p_details: data.details,
         p_evidence_url: data.evidenceUrl,
+        p_photo_paths: photos,
       });
     if (returnError || !returnId) throw new Error(returnError?.message ?? "The return request couldn't be submitted.");
 
@@ -271,24 +289,29 @@ export const submitReturnEvidence = createServerFn({ method: "POST" })
       referencePaths,
       `Customer return proof for OFFFEED order ${order.order_number}, product "${order.product_name}". Claimed reason: ${data.reason.replaceAll("_", " ")}. Customer says: "${data.details || "no details given"}". Compare the submitted photos with the brand's packing photos where provided and judge whether this looks like the genuine delivered item.`,
     );
-    const values = {
-      return_id: returnId,
-      order_id: data.orderId,
-      customer_user_id: context.userId,
-      photos: photos.map((path) => ({ path, kind: "return_proof" })),
-      notes: data.details,
-      trust_score: report.trust_score,
-      status: scoreToStatus(report.trust_score),
-      ai_report: report,
-      updated_at: new Date().toISOString(),
-    };
-    const { data: evidence, error } = await context.supabase
+    // Persist the initial report through the authenticated Edge Function.
+    // The function verifies that this caller is either the customer or responsible brand.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error: analysisSaveError } = await supabaseAdmin
       .from("return_evidence")
-      .insert(values)
+      .update({
+        trust_score: Math.round(report.trust_score),
+        status: scoreToStatus(report.trust_score),
+        ai_report: report,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("return_id", returnId);
+    if (analysisSaveError) {
+      console.error("Initial return analysis could not be persisted:", analysisSaveError);
+    }
+
+    // The secure RPC creates the evidence row atomically with the return request.
+    const { data: evidence } = await context.supabase
+      .from("return_evidence")
       .select("id, status, trust_score")
-      .single();
-    if (error || !evidence) throw new Error("The return proof couldn't be saved, but your return request was recorded.");
-    return { returnId, evidenceId: evidence.id, status: evidence.status, trustScore: evidence.trust_score, report };
+      .eq("return_id", returnId)
+      .maybeSingle();
+    return { returnId, evidenceId: evidence?.id ?? null, status: evidence?.status ?? "submitted", trustScore: report.trust_score, report };
   });
 
 export const rerunReturnAnalysis = createServerFn({ method: "POST" })
@@ -297,10 +320,11 @@ export const rerunReturnAnalysis = createServerFn({ method: "POST" })
   .handler(async ({ context, data }) => {
     const { data: returnRow, error } = await context.supabase
       .from("order_returns")
-      .select("id, reason, customer_details")
+      .select("id, reason, customer_details, brand_user_id")
       .eq("id", data.returnId)
       .maybeSingle();
     if (error || !returnRow) throw new Error("Return request not found.");
+    if (returnRow.brand_user_id !== context.userId) throw new Error("Only the brand responsible for this order can rerun its forensic analysis.");
     const { data: evidence } = await context.supabase
       .from("return_evidence")
       .select("id, order_id, photos, notes")
@@ -320,10 +344,16 @@ export const rerunReturnAnalysis = createServerFn({ method: "POST" })
       referencePaths,
       `Customer return proof re-check for OFFFEED. Claimed reason: ${returnRow.reason.replaceAll("_", " ")}. Customer says: "${returnRow.customer_details || evidence.notes || "no details given"}". Judge whether this looks like the genuine delivered item.`,
     );
-    const { error: updateError } = await context.supabase
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error: updateError } = await supabaseAdmin
       .from("return_evidence")
-      .update({ trust_score: report.trust_score, status: scoreToStatus(report.trust_score), ai_report: report, updated_at: new Date().toISOString() })
-      .eq("id", evidence.id);
+      .update({
+        trust_score: Math.round(report.trust_score),
+        status: scoreToStatus(report.trust_score),
+        ai_report: report,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("return_id", data.returnId);
     if (updateError) throw new Error("The analysis result couldn't be saved.");
     return { report };
   });
