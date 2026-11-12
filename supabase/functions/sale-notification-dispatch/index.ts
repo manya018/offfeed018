@@ -32,6 +32,13 @@ Deno.serve(async (request) => {
   if (vapidPublic && vapidPrivate) webpush.setVapidDetails(Deno.env.get("VAPID_SUBJECT") ?? "mailto:offfeeed@gmail.com", vapidPublic, vapidPrivate);
   const { data: jobs, error: claimError } = await db.rpc("claim_due_sale_notification_jobs", { p_limit: 20 });
   if (claimError) return reply({ error: "Could not claim due jobs" }, 500);
+  // Fail closed during rollout: only the configured test account receives notifications
+  // until an operator explicitly enables live customer delivery.
+  const liveSendingEnabled = Deno.env.get("SALE_NOTIFICATION_LIVE_SEND_ENABLED") === "true";
+  const testUserId = Deno.env.get("SALE_NOTIFICATION_TEST_USER_ID");
+  if (!liveSendingEnabled && !testUserId) {
+    return reply({ error: "Notification dispatch is locked: set SALE_NOTIFICATION_TEST_USER_ID for private testing, or explicitly enable live sending after validation." }, 423);
+  }
   const result = { claimed: jobs?.length ?? 0, inApp: 0, email: 0, push: 0, failed: 0, deliveryErrors: 0 };
   for (const job of jobs ?? []) {
     try {
@@ -54,7 +61,7 @@ Deno.serve(async (request) => {
       const destination = siteUrl + "/discover";
       const { data: prefs, error: prefError } = await db.from("customer_notification_preferences").select("user_id,email,account_type,in_app_enabled,sale_email_enabled,push_enabled").or("in_app_enabled.eq.true,sale_email_enabled.eq.true,push_enabled.eq.true");
       if (prefError) throw prefError;
-      const recipients = (prefs ?? []).filter((p) => p.account_type === "customer");
+      const recipients = (prefs ?? []).filter((p) => p.account_type === "customer" && (liveSendingEnabled || p.user_id === testUserId));
       const inbox = recipients.filter((p) => p.in_app_enabled).map((p) => ({ user_id: p.user_id, notification_type: job.event_type, title, body, data: { saleId: sale.id, url: destination }, dedupe_key: sale.id + ":" + job.event_type }));
       if (inbox.length) {
         const { error: inboxError } = await db.from("customer_notifications").upsert(inbox, { onConflict: "user_id,dedupe_key", ignoreDuplicates: true });
