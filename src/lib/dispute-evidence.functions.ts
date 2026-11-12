@@ -219,13 +219,20 @@ export const submitDispatchEvidence = createServerFn({ method: "POST" })
     );
     const values = { ...row, status: scoreToStatus(report.trust_score), ai_report: report };
 
-    const { data: evidence, error } = await context.supabase
-      .from("dispatch_evidence")
-      .insert(values)
-      .select("id, status")
-      .single();
-    if (error || !evidence) throw new Error("The packing proof couldn't be saved. Please try again.");
-    return { evidenceId: evidence.id, status: evidence.status, report };
+    const { data: savedEvidence, error: saveError } = await context.supabase.functions.invoke("save-dispatch-evidence", {
+      body: {
+        orderId: data.orderId,
+        photos: data.photos,
+        videoPath,
+        packingNote: data.packingNote,
+        report,
+      },
+    });
+    if (saveError || !savedEvidence?.evidenceId) {
+      console.error("Dispatch evidence save failed:", saveError);
+      throw new Error("The packing proof couldn't be saved. Please try again.");
+    }
+    return { evidenceId: savedEvidence.evidenceId as string, status: savedEvidence.status as string, report };
   });
 
 export const submitReturnEvidence = createServerFn({ method: "POST" })
