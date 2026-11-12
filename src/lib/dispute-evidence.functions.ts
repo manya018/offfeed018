@@ -316,11 +316,8 @@ export const rerunReturnAnalysis = createServerFn({ method: "POST" })
       referencePaths,
       `Customer return proof re-check for OFFFEED. Claimed reason: ${returnRow.reason.replaceAll("_", " ")}. Customer says: "${returnRow.customer_details || evidence.notes || "no details given"}". Judge whether this looks like the genuine delivered item.`,
     );
-    const { error: updateError } = await (context.supabase as any).rpc("save_offfeed_return_evidence_analysis", {
-      p_return_id: data.returnId,
-      p_trust_score: report.trust_score,
-      p_status: scoreToStatus(report.trust_score),
-      p_ai_report: report,
+    const { error: updateError } = await context.supabase.functions.invoke("save-return-analysis", {
+      body: { returnId: data.returnId, report },
     });
     if (updateError) throw new Error("The analysis result couldn't be saved.");
     return { report };
