@@ -28,10 +28,6 @@ Deno.serve(async (request) => {
   if (request.method !== "POST") return reply({ error: "Method not allowed" }, 405);
   const secret = Deno.env.get("SALE_NOTIFICATION_CRON_SECRET");
   if (!secret || request.headers.get("authorization") !== "Bearer " + secret) return reply({ error: "Unauthorized" }, 401);
-  const vapidPublic = Deno.env.get("VAPID_PUBLIC_KEY"), vapidPrivate = Deno.env.get("VAPID_PRIVATE_KEY");
-  if (vapidPublic && vapidPrivate) webpush.setVapidDetails(Deno.env.get("VAPID_SUBJECT") ?? "mailto:offfeeed@gmail.com", vapidPublic, vapidPrivate);
-  const { data: jobs, error: claimError } = await db.rpc("claim_due_sale_notification_jobs", { p_limit: 20 });
-  if (claimError) return reply({ error: "Could not claim due jobs" }, 500);
   // Fail closed during rollout: only the configured test account receives notifications
   // until an operator explicitly enables live customer delivery.
   const liveSendingEnabled = Deno.env.get("SALE_NOTIFICATION_LIVE_SEND_ENABLED") === "true";
@@ -39,6 +35,10 @@ Deno.serve(async (request) => {
   if (!liveSendingEnabled && !testUserId) {
     return reply({ error: "Notification dispatch is locked: set SALE_NOTIFICATION_TEST_USER_ID for private testing, or explicitly enable live sending after validation." }, 423);
   }
+  const vapidPublic = Deno.env.get("VAPID_PUBLIC_KEY"), vapidPrivate = Deno.env.get("VAPID_PRIVATE_KEY");
+  if (vapidPublic && vapidPrivate) webpush.setVapidDetails(Deno.env.get("VAPID_SUBJECT") ?? "mailto:offfeeed@gmail.com", vapidPublic, vapidPrivate);
+  const { data: jobs, error: claimError } = await db.rpc("claim_due_sale_notification_jobs", { p_limit: 20 });
+  if (claimError) return reply({ error: "Could not claim due jobs" }, 500);
   const result = { claimed: jobs?.length ?? 0, inApp: 0, email: 0, push: 0, failed: 0, deliveryErrors: 0 };
   for (const job of jobs ?? []) {
     try {
