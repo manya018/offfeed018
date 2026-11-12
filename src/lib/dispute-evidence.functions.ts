@@ -276,8 +276,16 @@ export const submitReturnEvidence = createServerFn({ method: "POST" })
       referencePaths,
       `Customer return proof for OFFFEED order ${order.order_number}, product "${order.product_name}". Claimed reason: ${data.reason.replaceAll("_", " ")}. Customer says: "${data.details || "no details given"}". Compare the submitted photos with the brand's packing photos where provided and judge whether this looks like the genuine delivered item.`,
     );
+    // Persist the initial report through the authenticated Edge Function.
+    // The function verifies that this caller is either the customer or responsible brand.
+    const { error: analysisSaveError } = await context.supabase.functions.invoke("save-return-analysis", {
+      body: { returnId, report },
+    });
+    if (analysisSaveError) {
+      console.error("Initial return analysis could not be persisted:", analysisSaveError);
+    }
+
     // The secure RPC creates the evidence row atomically with the return request.
-    // The customer receives the initial analysis, while only the brand can persist a re-analysis.
     const { data: evidence } = await context.supabase
       .from("return_evidence")
       .select("id, status, trust_score")
