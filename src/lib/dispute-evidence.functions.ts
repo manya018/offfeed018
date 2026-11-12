@@ -217,8 +217,6 @@ export const submitDispatchEvidence = createServerFn({ method: "POST" })
       [],
       `Brand packing verification for OFFFEED order ${order.order_number}: product "${order.product_name}"${order.selected_size ? ` size ${order.selected_size}` : ""}${order.selected_color ? ` colour ${order.selected_color}` : ""}, quantity ${order.quantity}, shipping to PIN ${order.destination_pin_code}. The brand states: "${data.packingNote}". Judge whether these photos genuinely show this product being packed with the order details visible.`,
     );
-    const values = { ...row, status: scoreToStatus(report.trust_score), ai_report: report };
-
     // Persist the server-generated report with the server-only service-role client.
     // Authenticated users do not receive permission to set their own AI score or status.
     const { data: videoFile, error: videoError } = await context.supabase.storage
