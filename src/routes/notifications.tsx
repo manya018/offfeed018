@@ -55,7 +55,7 @@ function CustomerNotificationsPage() {
   };
 
   const enablePush = async () => {
-    const publicKey = (import.meta as ImportMeta & { env: Record<string, string | undefined> }).env.VITE_VAPID_PUBLIC_KEY || "BG1gb7aOkjVOYxmLv8xA2akvpAmejgc9Gs-svgJYmHtVlkRhcAoOjPt0THDwf1BNzKDhsANqdVb7Y3fKvxIgqR4";
+    const publicKey = (import.meta as ImportMeta & { env: Record<string, string | undefined> }).env.VITE_VAPID_PUBLIC_KEY;
     if (!publicKey) { toast.error("OFFFEED push notifications are not configured yet."); return; }
     setBusy(true);
     try {
