@@ -872,7 +872,7 @@ function ReturnDisputeViewer({ orderId, open, onToggle }: { orderId: string; ope
               <div className="mt-2 grid grid-cols-3 gap-2">{item.evidence.photos.map((photo) => <img key={photo.path} src={photo.url} alt="Customer return proof" className="aspect-square w-full rounded object-cover"/>)}</div>
               {item.evidence.notes && <p className="mt-2 text-xs">{item.evidence.notes}</p>}
               <ForensicReportCard report={item.evidence.aiReport} title="AI fraud check of the return proof"/>
-              <Button type="button" variant="ghost" size="sm" className="mt-1" disabled={busyReturnId === item.id} onClick={() => void rerun(item.id)}><RefreshCw className={busyReturnId === item.id ? "animate-spin" : ""}/>Re-run AI check</Button>
+              <Button type="button" variant="ghost" size="sm" className="mt-1" disabled={busyReturnId === item.id} onClick={() => void rerun(item.id)}><RefreshCw className={busyReturnId === item.id ? "animate-spin" : ""}/>{item.evidence.aiReport ? "Re-run AI check" : "Run AI check"}</Button>
             </> : <p className="mt-2 text-sm text-muted-foreground">No photo proof attached to this request.</p>}
           </div>)}
         </div>
