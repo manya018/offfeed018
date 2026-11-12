@@ -291,9 +291,16 @@ export const submitReturnEvidence = createServerFn({ method: "POST" })
     );
     // Persist the initial report through the authenticated Edge Function.
     // The function verifies that this caller is either the customer or responsible brand.
-    const { error: analysisSaveError } = await context.supabase.functions.invoke("save-return-analysis", {
-      body: { returnId, report },
-    });
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error: analysisSaveError } = await supabaseAdmin
+      .from("return_evidence")
+      .update({
+        trust_score: Math.round(report.trust_score),
+        status: scoreToStatus(report.trust_score),
+        ai_report: report,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("return_id", returnId);
     if (analysisSaveError) {
       console.error("Initial return analysis could not be persisted:", analysisSaveError);
     }
@@ -337,9 +344,16 @@ export const rerunReturnAnalysis = createServerFn({ method: "POST" })
       referencePaths,
       `Customer return proof re-check for OFFFEED. Claimed reason: ${returnRow.reason.replaceAll("_", " ")}. Customer says: "${returnRow.customer_details || evidence.notes || "no details given"}". Judge whether this looks like the genuine delivered item.`,
     );
-    const { error: updateError } = await context.supabase.functions.invoke("save-return-analysis", {
-      body: { returnId: data.returnId, report },
-    });
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error: updateError } = await supabaseAdmin
+      .from("return_evidence")
+      .update({
+        trust_score: Math.round(report.trust_score),
+        status: scoreToStatus(report.trust_score),
+        ai_report: report,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("return_id", data.returnId);
     if (updateError) throw new Error("The analysis result couldn't be saved.");
     return { report };
   });
