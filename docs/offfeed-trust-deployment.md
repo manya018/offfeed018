@@ -14,17 +14,11 @@ The third migration is important: it locks evidence rows against direct client w
 
 The repository's Supabase migration folder does not currently contain these three Drizzle migrations. Verify the live database migration history before applying anything; do not blindly replay them against a database where they already ran.
 
-## Deploy the trusted analysis persistence function
+## Trusted analysis persistence
 
-Deploy `supabase/functions/save-return-analysis/index.ts` to the same Supabase project:
+Return forensic analysis is persisted inside authenticated TanStack Start server functions using the existing server-only Supabase admin client. The browser must never be given the service-role key or a callable endpoint that accepts a client-supplied trust score/report.
 
-```sh
-supabase functions deploy save-return-analysis
-```
-
-Keep JWT verification enabled. The function validates the caller's access token, confirms that the caller is the brand responsible for the return, and only then uses the server-side service-role client to persist the AI report. The service-role key must remain in Supabase Edge Function secrets and must never be exposed to the browser.
-
-Supabase's standard Edge Function environment must provide `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY`.
+Keep the service-role key in the existing server environment only. Verify the deployed server runtime has the existing `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` secrets configured. Do not create a second backend or a separate analysis Edge Function.
 
 ## Acceptance checks
 
