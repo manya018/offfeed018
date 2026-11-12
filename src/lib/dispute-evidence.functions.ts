@@ -219,20 +219,28 @@ export const submitDispatchEvidence = createServerFn({ method: "POST" })
     );
     const values = { ...row, status: scoreToStatus(report.trust_score), ai_report: report };
 
-    const { data: savedEvidence, error: saveError } = await context.supabase.functions.invoke("save-dispatch-evidence", {
-      body: {
-        orderId: data.orderId,
-        photos: data.photos,
-        videoPath,
-        packingNote: data.packingNote,
-        report,
-      },
-    });
-    if (saveError || !savedEvidence?.evidenceId) {
-      console.error("Dispatch evidence save failed:", saveError);
+    // Persist the server-generated report with the server-only service-role client.
+    // Authenticated users do not receive permission to set their own AI score or status.
+    const { data: videoFile, error: videoError } = await context.supabase.storage
+      .from(EVIDENCE_BUCKET)
+      .download(videoPath);
+    if (videoError || !videoFile) throw new Error("The packing video could not be found in your secure uploads.");
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: evidence, error } = await supabaseAdmin
+      .from("dispatch_evidence")
+      .insert({
+        ...row,
+        status: scoreToStatus(report.trust_score),
+        ai_report: report,
+      })
+      .select("id, status")
+      .single();
+    if (error || !evidence) {
+      console.error("Dispatch evidence save failed:", error);
       throw new Error("The packing proof couldn't be saved. Please try again.");
     }
-    return { evidenceId: savedEvidence.evidenceId as string, status: savedEvidence.status as string, report };
+    return { evidenceId: evidence.id, status: evidence.status, report };
   });
 
 export const submitReturnEvidence = createServerFn({ method: "POST" })
