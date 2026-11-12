@@ -55,14 +55,16 @@ Deno.serve(async (request) => {
   });
   const { data: returnRow, error: returnError } = await admin
     .from("order_returns")
-    .select("id, brand_user_id")
+    .select("id, brand_user_id, customer_user_id")
     .eq("id", returnId)
     .maybeSingle();
   if (returnError || !returnRow) {
     return Response.json({ error: "Return request not found." }, { status: 404, headers: corsHeaders });
   }
-  if (returnRow.brand_user_id !== userData.user.id) {
-    return Response.json({ error: "Only the responsible brand can save this analysis." }, { status: 403, headers: corsHeaders });
+  const isResponsibleBrand = returnRow.brand_user_id === userData.user.id;
+  const isRequestingCustomer = returnRow.customer_user_id === userData.user.id;
+  if (!isResponsibleBrand && !isRequestingCustomer) {
+    return Response.json({ error: "You are not a party to this return request." }, { status: 403, headers: corsHeaders });
   }
 
   const status = score >= 75 ? "verified" : score >= 40 ? "submitted" : "flagged";
