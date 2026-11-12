@@ -8,14 +8,14 @@
 - A protected Supabase Edge Function that dispatches due jobs.
 
 ## Required deployment configuration
-1. Apply the migration in `supabase/migrations/20261111120000_customer_sale_notifications.sql`.
+1. Apply migrations in order: `supabase/migrations/20261111120000_customer_sale_notifications.sql`, then `supabase/migrations/20261112130000_reschedule_sale_notification_jobs.sql` (the second keeps pending jobs aligned when a brand edits or cancels a sale).
 2. Deploy `supabase/functions/sale-notification-dispatch` with `supabase/config.toml` configured to disable platform JWT verification for this endpoint; the function validates its own bearer secret.
 3. Set Edge Function secrets: `SALE_NOTIFICATION_CRON_SECRET`, `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`, `SITE_URL`, `LOVABLE_API_KEY`, and `GOOGLE_MAIL_API_KEY`. Supabase supplies `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` to Edge Functions.
 4. Generate a VAPID key pair with `npx web-push generate-vapid-keys`. Use the public key as the deployment build variable `VITE_VAPID_PUBLIC_KEY`; keep the private key only in Edge Function secrets.
-5. Add GitHub Actions repository secrets `SUPABASE_URL` and `SALE_NOTIFICATION_CRON_SECRET`. The workflow `.github/workflows/dispatch-sale-notifications.yml` invokes the dispatcher every five minutes.
+5. Add GitHub Actions repository secrets `SUPABASE_URL` and `SALE_NOTIFICATION_CRON_SECRET`. The workflow is currently manual-only (`workflow_dispatch`); do not restore its five-minute schedule until the Edge Function is deployed, secrets are verified, and test delivery succeeds.
 6. Rebuild/redeploy the web app so the customer notification page and header link are published.
 
-The five-minute GitHub schedule only runs after this workflow is present on the repository's default branch. Keep the PR unmerged until the database migration, Edge Function and customer delivery paths have been validated; after merge, confirm the scheduled workflow is running.
+Live delivery is intentionally fail-closed. Keep `SALE_NOTIFICATION_LIVE_SEND_ENABLED` unset/false during testing and set `SALE_NOTIFICATION_TEST_USER_ID` to the approved test account. Only enable live sending after in-app, email consent, push consent, duplicate prevention, cancellation, and rescheduling tests pass. The current dispatcher has not yet been deployed to Lovable Cloud.
 
 ## Customer consent and audience
 - In-app alerts are enabled by default for registered customer accounts.
