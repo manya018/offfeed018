@@ -10,6 +10,7 @@ on:
       - "drizzle/migrations/0005_secure_order_evidence.sql"
   workflow_dispatch:
 
+# Read-only verification only; this workflow never applies migrations or changes database data.
 permissions:
   contents: read
 
