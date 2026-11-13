@@ -1,4 +1,4 @@
-name: Verify OFFFEED Trust database deployment
+name: Validate OFFFEED Trust migration assets
 
 on:
   push:
@@ -8,78 +8,42 @@ on:
       - "drizzle/migrations/0000_brand_fraud_evidence.sql"
       - "drizzle/migrations/0001_order_evidence_storage_policies.sql"
       - "drizzle/migrations/0005_secure_order_evidence.sql"
+      - "docs/offfeed-trust-deployment.md"
   workflow_dispatch:
 
-# Read-only verification only; this workflow never applies migrations or changes database data.
+# Lovable Cloud owns the managed backend. This workflow validates repository
+# assets only; it does not connect to or claim to verify the live database.
 permissions:
   contents: read
 
 jobs:
-  verify-trust-schema:
+  validate-trust-assets:
     runs-on: ubuntu-latest
     steps:
-      - name: Install PostgreSQL client
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y postgresql-client
+      - name: Check out repository
+        uses: actions/checkout@v4
 
-      - name: Verify existing OFFFEED Trust schema and security
-        env:
-          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+      - name: Validate OFFFEED Trust migration assets
+        shell: bash
         run: |
-          if [ -z "$SUPABASE_DB_URL" ]; then
-            echo "::error::Missing repository secret SUPABASE_DB_URL. No database changes were made."
-            exit 1
-          fi
-          psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 <<'SQL'
-          DO $verify$
-          DECLARE
-            missing text[] := ARRAY[]::text[];
-          BEGIN
-            IF to_regclass('public.dispatch_evidence') IS NULL THEN missing := array_append(missing, 'public.dispatch_evidence table'); END IF;
-            IF to_regclass('public.return_evidence') IS NULL THEN missing := array_append(missing, 'public.return_evidence table'); END IF;
-            IF to_regprocedure('public.request_offfeed_return_with_evidence(uuid,text,text,text,jsonb)') IS NULL THEN
-              missing := array_append(missing, 'request_offfeed_return_with_evidence(uuid,text,text,text,jsonb)');
-            END IF;
-            IF NOT EXISTS (SELECT 1 FROM storage.buckets WHERE id = 'order-evidence' AND public = false) THEN
-              missing := array_append(missing, 'private order-evidence storage bucket');
-            END IF;
-            IF EXISTS (
-              SELECT 1 FROM (VALUES ('dispatch_evidence'), ('return_evidence')) AS t(table_name)
-              WHERE NOT EXISTS (
-                SELECT 1 FROM pg_class c
-                JOIN pg_namespace n ON n.oid = c.relnamespace
-                WHERE n.nspname = 'public' AND c.relname = t.table_name AND c.relrowsecurity
-              )
-            ) THEN missing := array_append(missing, 'RLS enabled on both evidence tables'); END IF;
-            IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public' AND tablename='dispatch_evidence' AND policyname='Order parties can view dispatch evidence') THEN
-              missing := array_append(missing, 'dispatch evidence order-party SELECT policy');
-            END IF;
-            IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public' AND tablename='dispatch_evidence' AND policyname='Approved brands can submit dispatch evidence once') THEN
-              missing := array_append(missing, 'approved-brand insert-only dispatch policy');
-            END IF;
-            IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public' AND tablename='return_evidence' AND policyname='Order parties can view return evidence') THEN
-              missing := array_append(missing, 'return evidence order-party SELECT policy');
-            END IF;
-            IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='storage' AND tablename='objects' AND policyname='Order parties can view exact evidence files') THEN
-              missing := array_append(missing, 'exact-path evidence storage SELECT policy');
-            END IF;
-            IF NOT has_function_privilege('authenticated', 'public.request_offfeed_return_with_evidence(uuid,text,text,text,jsonb)', 'EXECUTE') THEN
-              missing := array_append(missing, 'authenticated execute grant on secure return RPC');
-            END IF;
-            IF has_table_privilege('authenticated', 'public.return_evidence', 'INSERT')
-               OR has_table_privilege('authenticated', 'public.return_evidence', 'UPDATE')
-               OR has_table_privilege('authenticated', 'public.return_evidence', 'DELETE') THEN
-              missing := array_append(missing, 'return_evidence direct writes revoked from authenticated');
-            END IF;
-            IF has_table_privilege('authenticated', 'public.dispatch_evidence', 'UPDATE')
-               OR has_table_privilege('authenticated', 'public.dispatch_evidence', 'DELETE') THEN
-              missing := array_append(missing, 'dispatch_evidence UPDATE/DELETE revoked from authenticated');
-            END IF;
-            IF cardinality(missing) > 0 THEN
-              RAISE EXCEPTION 'OFFFEED TRUST database verification failed. Missing/unsafe: %', array_to_string(missing, ', ');
-            END IF;
-            RAISE NOTICE 'OFFFEED TRUST database verification passed: evidence tables, RLS policies, secure return RPC, private bucket, and write restrictions are present.';
-          END
-          $verify$;
-          SQL
+          set -euo pipefail
+
+          for file in \
+            drizzle/migrations/0000_brand_fraud_evidence.sql \
+            drizzle/migrations/0001_order_evidence_storage_policies.sql \
+            drizzle/migrations/0005_secure_order_evidence.sql \
+            docs/offfeed-trust-deployment.md; do
+            if [[ ! -s "$file" ]]; then
+              echo "::error::Required OFFFEED Trust asset is missing or empty: $file"
+              exit 1
+            fi
+          done
+
+          grep -q "CREATE TABLE public.dispatch_evidence" drizzle/migrations/0000_brand_fraud_evidence.sql
+          grep -q "CREATE TABLE public.return_evidence" drizzle/migrations/0000_brand_fraud_evidence.sql
+          grep -q "CREATE POLICY" drizzle/migrations/0001_order_evidence_storage_policies.sql
+          grep -q "request_offfeed_return_with_evidence" drizzle/migrations/0005_secure_order_evidence.sql
+          grep -q "REVOKE INSERT, UPDATE, DELETE ON public.return_evidence" drizzle/migrations/0005_secure_order_evidence.sql
+
+          echo "OFFFEED Trust repository assets are present and contain the expected schema/security definitions."
+          echo "This is a source validation only. It does not prove that Lovable Cloud has applied the migrations.";
