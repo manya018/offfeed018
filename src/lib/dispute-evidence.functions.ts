@@ -289,23 +289,30 @@ export const submitReturnEvidence = createServerFn({ method: "POST" })
       referencePaths,
       `Customer return proof for OFFFEED order ${order.order_number}, product "${order.product_name}". Claimed reason: ${data.reason.replaceAll("_", " ")}. Customer says: "${data.details || "no details given"}". Compare the submitted photos with the brand's packing photos where provided and judge whether this looks like the genuine delivered item.`,
     );
-    // Persist the initial report through the authenticated Edge Function.
-    // The function verifies that this caller is either the customer or responsible brand.
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { error: analysisSaveError } = await supabaseAdmin
-      .from("return_evidence")
-      .update({
-        trust_score: Math.round(report.trust_score),
-        status: scoreToStatus(report.trust_score),
-        ai_report: report,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("return_id", returnId);
-    if (analysisSaveError) {
-      console.error("Initial return analysis could not be persisted:", analysisSaveError);
+    // The return and evidence row already exist after the secure RPC succeeds.
+    // AI-report persistence is best-effort: a missing server secret or transient
+    // database error must never turn a successful return submission into a failure,
+    // because the customer page would otherwise remove the uploaded evidence files.
+    try {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { error: analysisSaveError } = await supabaseAdmin
+        .from("return_evidence")
+        .update({
+          trust_score: Math.round(report.trust_score),
+          status: scoreToStatus(report.trust_score),
+          ai_report: report,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("return_id", returnId);
+      if (analysisSaveError) {
+        console.error("Initial return analysis could not be persisted:", analysisSaveError);
+      }
+    } catch (analysisSaveCause) {
+      console.error("Initial return analysis persistence was unavailable; return request remains submitted:", analysisSaveCause);
     }
 
-    // The secure RPC creates the evidence row atomically with the return request.
+    // The secure RPC creates the return and evidence row atomically. Read-back is
+    // informational only and must not undo or fail the already-created request.
     const { data: evidence } = await context.supabase
       .from("return_evidence")
       .select("id, status, trust_score")
