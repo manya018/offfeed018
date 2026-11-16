@@ -1,42 +1,25 @@
-name: Apply HOME collection audience migration
+name: Validate HOME collection audience migration
 
 on:
   workflow_dispatch:
 
+# Source validation only. Schema changes must be deployed through the existing
+# OFFFEED Lovable Cloud project after checking its live schema. This workflow
+# never connects to a database or applies SQL.
 permissions:
   contents: read
 
 jobs:
-  apply-home-audience:
+  validate-home-audience-migration:
     runs-on: ubuntu-latest
     steps:
-      - name: Install PostgreSQL client
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y postgresql-client
+      - name: Check out repository
+        uses: actions/checkout@v4
 
-      - name: Apply HOME audience schema change
-        env:
-          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+      - name: Validate migration source
+        shell: bash
         run: |
-          if [ -z "$SUPABASE_DB_URL" ]; then
-            echo "Missing repository secret: SUPABASE_DB_URL"
-            exit 1
-          fi
-          psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 <<'SQL'
-          BEGIN;
-          ALTER TABLE public.brand_applications
-            DROP CONSTRAINT IF EXISTS brand_applications_audience_check;
-          ALTER TABLE public.brand_applications
-            ADD CONSTRAINT brand_applications_audience_check
-            CHECK (cardinality(audience) > 0 AND audience <@ ARRAY['her', 'him', 'home']::text[]);
-          ALTER TABLE public.brand_products
-            DROP CONSTRAINT IF EXISTS brand_products_audience_check;
-          ALTER TABLE public.brand_products
-            ADD CONSTRAINT brand_products_audience_check
-            CHECK (cardinality(audience) > 0 AND audience <@ ARRAY['her', 'him', 'home']::text[]);
-          ALTER TABLE public.brand_applications
-            ALTER COLUMN audience_categories
-            SET DEFAULT '{"her": [], "him": [], "home": []}'::jsonb;
-          COMMIT;
-          SQL
+          set -euo pipefail
+          test -s "supabase/migrations/20261108000000_add_home_collection_audience.sql" || { echo "::error::Missing migration file: supabase/migrations/20261108000000_add_home_collection_audience.sql"; exit 1; }
+          grep -qi "home" "supabase/migrations/20261108000000_add_home_collection_audience.sql" || { echo "::error::Expected migration definition not found in supabase/migrations/20261108000000_add_home_collection_audience.sql"; exit 1; }
+          echo "Migration source validation passed. No database connection or schema changes were made."
