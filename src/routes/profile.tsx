@@ -143,6 +143,12 @@ function ProfilePage() {
         else setOrders(orderResult.data ?? []);
         if (addressResult.error) console.error("Could not load saved addresses", addressResult.error);
         else setAddresses(addressResult.data ?? []);
+        if (returnResult.error) {
+          console.error("Could not load return requests", returnResult.error);
+          setReturnRequests([]);
+        } else {
+          setReturnRequests(returnResult.data ?? []);
+        }
       } else { setOrders([]); setAddresses([]); setReturnRequests([]); }
     } catch (error) { console.error("Could not load account details", error); }
     finally { setAccountLoading(false); }
