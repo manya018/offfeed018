@@ -149,7 +149,8 @@ function OwnerAdminDashboard() {
             {section === "spotlight" ? <SpotlightAdminSection /> : null}
             {section === "notifications" ? <SaleNotificationsAdminSection /> : null}
             {section === "trust" ? <OwnerTrustSection /> : null}
-            {section === "returns" ? <OwnerReturnsSection /> : null}\n            {section === "products" ? <section>
+            {section === "returns" ? <OwnerReturnsSection /> : null}
+            {section === "products" ? <section>
               <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
                 <div>
                   <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#a28e84]">Marketplace catalogue</p>
