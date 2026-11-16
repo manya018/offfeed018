@@ -390,10 +390,11 @@ export const getDisputeViewerData = createServerFn({ method: "POST" })
       context.supabase.from("order_returns").select("id, reason, customer_details, evidence_url, status, brand_response, refund_status, created_at, updated_at").eq("order_id", data.orderId).order("created_at", { ascending: false }),
     ]);
     const returns = returnsResult.data ?? [];
-    const { data: returnEvidenceRows } = await Promise.all(
+    const returnEvidenceResults = await Promise.all(
       returns.map((item) => context.supabase.from("return_evidence").select("id, return_id, photos, notes, status, trust_score, ai_report, created_at").eq("return_id", item.id).maybeSingle()),
     );
-    const evidenceByReturn = new Map(returnEvidenceRows.map((result) => [result.data?.return_id, result.data]).filter((entry): entry is [string, NonNullable<(typeof entry)[1]>] => Boolean(entry[1])));
+    const returnEvidenceRows = returnEvidenceResults.map((result) => result.data).filter(Boolean);
+    const evidenceByReturn = new Map(returnEvidenceRows.map((evidence) => [evidence.return_id, evidence]));
 
     const paths: string[] = [];
     const collect = (path: string | null | undefined) => { if (path) paths.push(path); };
