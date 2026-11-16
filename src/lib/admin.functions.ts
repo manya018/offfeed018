@@ -164,3 +164,68 @@ export const updateAdminBrandStatus = createServerFn({ method: "POST" })
     }
     return { id: current.id, brand_name: current.brand_name, status: data.status, emailSent };
   });
+
+
+export const getAdminReturns = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    requireOwner(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: returns, error } = await supabaseAdmin
+      .from("order_returns")
+      .select("id, order_id, customer_user_id, brand_user_id, reason, customer_details, evidence_url, status, brand_response, return_tracking_provider, return_tracking_number, return_tracking_url, commission_decision, commission_amount, refund_amount, refund_status, refund_reference, created_at, updated_at")
+      .order("created_at", { ascending: false })
+      .limit(200);
+    if (error) {
+      console.error("[admin-returns] Failed to load return requests", error);
+      throw new Error("Return requests could not be loaded. Confirm the returns migration is applied.");
+    }
+    const orderIds = [...new Set((returns ?? []).map((item) => item.order_id))];
+    const [{ data: orders, error: ordersError }, { data: brands, error: brandsError }] = await Promise.all([
+      orderIds.length ? supabaseAdmin.from("brand_orders").select("id, order_number, product_name, quantity, unit_price, currency, status, customer_name, customer_email").in("id", orderIds) : Promise.resolve({ data: [], error: null }),
+      supabaseAdmin.from("brand_applications").select("user_id, brand_name, email"),
+    ]);
+    if (ordersError || brandsError) throw new Error("Return request details could not be loaded.");
+    const orderById = new Map((orders ?? []).map((order) => [order.id, order]));
+    const brandByUserId = new Map((brands ?? []).map((brand) => [brand.user_id, brand]));
+    return (returns ?? []).map((item) => ({
+      ...item,
+      order: orderById.get(item.order_id) ?? null,
+      brand: brandByUserId.get(item.brand_user_id) ?? null,
+    }));
+  });
+
+export const getAdminTrustCases = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    requireOwner(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const [{ data: dispatchRows, error: dispatchError }, { data: returnRows, error: returnError }] = await Promise.all([
+      supabaseAdmin.from("dispatch_evidence").select("id, order_id, brand_user_id, photos, video_path, packing_note, status, ai_report, created_at").order("created_at", { ascending: false }).limit(200),
+      supabaseAdmin.from("return_evidence").select("id, return_id, order_id, customer_user_id, photos, notes, status, trust_score, ai_report, created_at").order("created_at", { ascending: false }).limit(200),
+    ]);
+    if (dispatchError || returnError) {
+      console.error("[admin-trust] Failed to load evidence", { dispatchError, returnError });
+      throw new Error("OFFFEED Trust evidence could not be loaded. Apply the Trust database migration first.");
+    }
+    const orderIds = [...new Set([...(dispatchRows ?? []).map((item) => item.order_id), ...(returnRows ?? []).map((item) => item.order_id)])];
+    const { data: orders, error: ordersError } = orderIds.length
+      ? await supabaseAdmin.from("brand_orders").select("id, order_number, product_name, status, customer_name, customer_email, brand_user_id").in("id", orderIds)
+      : { data: [], error: null };
+    if (ordersError) throw new Error("Trust order details could not be loaded.");
+    const orderById = new Map((orders ?? []).map((order) => [order.id, order]));
+    const paths = [...new Set([
+      ...(dispatchRows ?? []).flatMap((item) => [item.video_path, ...((item.photos as Array<{ path?: string }> | null) ?? []).map((photo) => photo.path ?? "")]),
+      ...(returnRows ?? []).flatMap((item) => ((item.photos as Array<{ path?: string }> | null) ?? []).map((photo) => photo.path ?? "")),
+    ].filter(Boolean))];
+    const { data: signedFiles, error: signedError } = paths.length
+      ? await supabaseAdmin.storage.from("order-evidence").createSignedUrls(paths, 3600)
+      : { data: [], error: null };
+    if (signedError) console.error("[admin-trust] Evidence URL signing failed", signedError);
+    const urlByPath = new Map((signedFiles ?? []).map((file) => [file.path, file.signedUrl ?? ""]));
+    const withUrls = (photos: unknown) => ((photos as Array<{ path: string; kind?: string }> | null) ?? []).map((photo) => ({ ...photo, url: urlByPath.get(photo.path) ?? "" }));
+    return {
+      dispatch: (dispatchRows ?? []).map((item) => ({ ...item, photos: withUrls(item.photos), videoUrl: urlByPath.get(item.video_path) ?? "", order: orderById.get(item.order_id) ?? null })),
+      returns: (returnRows ?? []).map((item) => ({ ...item, photos: withUrls(item.photos), order: orderById.get(item.order_id) ?? null })),
+    };
+  });
