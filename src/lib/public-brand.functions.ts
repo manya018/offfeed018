@@ -158,7 +158,10 @@ export const getPublicBrandProfile = createServerFn({ method: "GET" })
       productPaths.length ? supabase.storage.from("brand-product-images").createSignedUrls(productPaths, 3600) : Promise.resolve({ data: [], error: null }),
       brandPaths.length ? supabase.storage.from("brand-applications").createSignedUrls(brandPaths, 604800) : Promise.resolve({ data: [], error: null }),
     ]);
-    if (productFiles.error || brandFiles.error) throw new Error("Some brand photos could not be loaded.");
+    // Product/brand imagery is optional presentation. A storage policy or stale
+    // object must never prevent an otherwise public, approved product from loading.
+    if (productFiles.error) console.warn("[OFFFEED storefront] Product images unavailable:", productFiles.error.message);
+    if (brandFiles.error) console.warn("[OFFFEED storefront] Brand images unavailable:", brandFiles.error.message);
     const productSigned = new Map((productFiles.data ?? []).flatMap((file) => file.path && file.signedUrl ? [[file.path, file.signedUrl] as const] : []));
     const brandSigned = new Map((brandFiles.data ?? []).flatMap((file) => file.path && file.signedUrl ? [[file.path, file.signedUrl] as const] : []));
 
@@ -237,8 +240,10 @@ export const getShopTheLookProducts = createServerFn({ method: "GET" })
     const { data: signedFiles, error: signedError } = productPaths.length
       ? await supabase.storage.from("brand-product-images").createSignedUrls(productPaths, 3600)
       : { data: [], error: null };
-    if (signedError) throw new Error("Product photos for this edit could not be loaded.");
-    const signedUrls = new Map((signedFiles ?? []).flatMap((file) => file.path && file.signedUrl ? [[file.path, file.signedUrl] as const] : []));
+    // Storage access is separate from product visibility. If an image cannot be
+    // signed, keep the product in Discover and let its card use its fallback artwork.
+    if (signedError) console.warn("[OFFFEED Lens] Product images unavailable:", signedError.message);
+    const signedUrls = new Map((signedError ? [] : signedFiles ?? []).flatMap((file) => file.path && file.signedUrl ? [[file.path, file.signedUrl] as const] : []));
 
     const products: ProductWithBrand[] = (rows ?? []).flatMap((row) => {
       const brand = brandById.get(row.brand_application_id);
