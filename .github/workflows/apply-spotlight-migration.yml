@@ -1,37 +1,29 @@
-name: Apply Spotlight campaign migration
+name: Validate Spotlight campaign migrations
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - main
-    paths:
-      - "supabase/migrations/20261110000000_spotlight_weekly_booking.sql"
-      - ".github/workflows/apply-spotlight-migration.yml"
 
+# Source validation only. Schema changes must be deployed through the existing
+# OFFFEED Lovable Cloud project after checking its live schema. This workflow
+# never connects to a database or applies SQL.
 permissions:
   contents: read
 
 jobs:
-  apply-spotlight-schema:
+  validate-spotlight-migrations:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Install PostgreSQL client
+      - name: Validate migration source
+        shell: bash
         run: |
-          sudo apt-get update
-          sudo apt-get install -y postgresql-client
-
-      - name: Apply Spotlight campaign schema
-        env:
-          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
-        run: |
-          if [ -z "$SUPABASE_DB_URL" ]; then
-            echo "Missing repository secret: SUPABASE_DB_URL"
-            exit 1
-          fi
-          psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -f supabase/migrations/20261109000000_add_spotlight_campaigns.sql
-          psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -f supabase/migrations/20261109010000_add_spotlight_analytics.sql
-          psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -f supabase/migrations/20261110000000_spotlight_weekly_booking.sql
+          set -euo pipefail
+          test -s "supabase/migrations/20261109000000_add_spotlight_campaigns.sql" || { echo "::error::Missing migration file: supabase/migrations/20261109000000_add_spotlight_campaigns.sql"; exit 1; }
+          test -s "supabase/migrations/20261109010000_add_spotlight_analytics.sql" || { echo "::error::Missing migration file: supabase/migrations/20261109010000_add_spotlight_analytics.sql"; exit 1; }
+          test -s "supabase/migrations/20261110000000_spotlight_weekly_booking.sql" || { echo "::error::Missing migration file: supabase/migrations/20261110000000_spotlight_weekly_booking.sql"; exit 1; }
+          grep -qi "spotlight_campaigns" "supabase/migrations/20261109000000_add_spotlight_campaigns.sql" || { echo "::error::Expected migration definition not found in supabase/migrations/20261109000000_add_spotlight_campaigns.sql"; exit 1; }
+          grep -qi "spotlight" "supabase/migrations/20261109010000_add_spotlight_analytics.sql" || { echo "::error::Expected migration definition not found in supabase/migrations/20261109010000_add_spotlight_analytics.sql"; exit 1; }
+          grep -qi "spotlight" "supabase/migrations/20261110000000_spotlight_weekly_booking.sql" || { echo "::error::Expected migration definition not found in supabase/migrations/20261110000000_spotlight_weekly_booking.sql"; exit 1; }
+          echo "Migration source validation passed. No database connection or schema changes were made."
