@@ -1,43 +1,53 @@
 # OFFFEED TRUST deployment and verification
 
-OFFFEED uses its existing Lovable Cloud-managed backend. The backend is managed through the OFFFEED project in Lovable; it is not expected to appear as a separately owned project in the user's Supabase dashboard.
+OFFFEED uses its existing Lovable Cloud-managed backend. Do not create a second backend, connect a replacement database, or create a separate evidence bucket.
 
-Do not create a second backend, connect a replacement database, or create a separate evidence bucket for this module.
+## Reconciled migration
 
-## Required database migrations
+The Trust schema is now packaged in the normal Supabase migration stream:
 
-These existing Drizzle migrations define the OFFFEED Trust database changes and must be present in the managed backend:
+- `supabase/migrations/20261116000000_add_offfeed_trust_evidence.sql`
 
-1. `drizzle/migrations/0000_brand_fraud_evidence.sql`
-2. `drizzle/migrations/0001_order_evidence_storage_policies.sql`
-3. `drizzle/migrations/0005_secure_order_evidence.sql`
+This migration consolidates the intended changes from the older Drizzle assets:
 
-The third migration locks evidence rows against direct client writes and introduces `request_offfeed_return_with_evidence`, which atomically creates a return request and its customer photo evidence. The customer return form calls that RPC through the authenticated server function.
+- Adds the shipping-profile parcel/pickup fields used by Trust.
+- Creates dispatch and return evidence tables if absent.
+- Adds one-evidence-row-per-order/return unique indexes. It deliberately stops if duplicate rows already exist; it never deletes evidence.
+- Restricts direct authenticated writes to evidence records. Brands can submit dispatch evidence once; return evidence is created only by the secure RPC.
+- Replaces the broad evidence-file read policy with exact-path access for the customer or brand on the associated order.
+- Creates the private `order-evidence` bucket only if it does not already exist. Existing bucket configuration is not overwritten.
+- Installs `request_offfeed_return_with_evidence`, which validates ownership, delivered status, 2–6 customer-owned photo paths, and atomically creates the return plus evidence row.
 
-The repository's `supabase/migrations` directory does not contain these three Drizzle migrations. They must not be blindly replayed: migrations 0000 and 0001 include non-idempotent table and policy creation. Confirm the deployed schema in the OFFFEED project's Lovable Cloud database interface before any manual application or repair.
+The original Drizzle files remain as historical source assets; do not replay them separately after applying the consolidated migration.
 
-## Database verification limitation
+## Important live-deployment boundary
 
-Lovable Cloud manages the underlying database and does not expose a direct PostgreSQL connection URL or service-role credentials through the user's separate Supabase dashboard. Therefore, a GitHub Actions job that expects `SUPABASE_DB_URL` cannot verify this managed database. Do not create or populate that secret as a workaround, and do not treat its absence as a database deployment failure.
+The migration is committed to GitHub, but a GitHub commit does not apply SQL to Lovable Cloud. Apply the new migration once through the existing OFFFEED project's managed database SQL interface when that interface is available. Do not run it against a different Supabase project.
 
-The GitHub workflow `.github/workflows/verify-offfeed-trust-database.yml` now performs repository-only validation of the Trust migration assets. A successful run confirms the SQL files and expected definitions are present in Git; it does **not** prove those migrations are deployed to Lovable Cloud.
+Before applying, inspect the live schema. The migration is idempotent for its table/policy/function setup and preserves existing evidence, but it intentionally fails if duplicate evidence rows prevent the one-per-order/return guarantees. Resolve any such duplicates through an audited process; do not delete them automatically.
 
-Live deployment must be confirmed in the OFFFEED project's Lovable Cloud database interface by checking the evidence tables, policies, private `order-evidence` bucket, and secure return RPC. If a required object is absent, reconcile the actual schema before applying any migration. Never replay 0000 or 0001 blindly.
+After application, verify:
+
+1. `dispatch_evidence` and `return_evidence` exist and RLS is enabled.
+2. The `order-evidence` bucket exists and is private. If it existed already, confirm its file-size and MIME settings are appropriate for images and packing videos.
+3. The policies permit owner-folder uploads and exact evidence reads only by the customer/brand on the order.
+4. `request_offfeed_return_with_evidence` exists and is executable by authenticated users, not anon/public.
+5. A test customer can submit a return for their own delivered order with 2–6 photos; another customer cannot.
+6. The responsible brand can view the evidence; unrelated brands/customers cannot.
+7. Dispatch evidence can be submitted once per order, and direct client updates/deletes are denied.
 
 ## Trusted analysis persistence
 
-Return forensic analysis is persisted inside authenticated TanStack Start server functions using the existing server-only Supabase admin client. The browser must never be given the service-role key or a callable endpoint that accepts a client-supplied trust score/report.
+Return forensic analysis is persisted inside authenticated TanStack Start server functions using the existing server-only Supabase admin client. The browser must never receive the service-role key or a callable endpoint that accepts a client-supplied trust score/report.
 
-Keep any runtime credentials in the existing Lovable Cloud server environment only. The server-side client expects `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`; do not add these to browser-exposed variables or GitHub secrets. Verify their availability through the existing Lovable Cloud environment configuration if this server-side operation is enabled.
+The existing server-side client expects `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`. Keep both only in the existing Lovable Cloud server environment. Do not add them to browser-exposed variables or GitHub secrets. Confirm both are configured there before testing report persistence. Initial AI analysis is best-effort: a successful return submission remains successful even if analysis persistence is temporarily unavailable. Brand-triggered re-analysis must save its report successfully.
 
-## Acceptance checks
+## Remaining non-database work
 
-- A signed-in customer can request a return only for their own delivered order.
-- The customer must upload 2–6 JPG, PNG, or WebP photos (maximum 12 MB each).
-- Uploads are stored under the customer's own folder in the private `order-evidence` bucket.
-- Return creation and evidence-row creation succeed together through `request_offfeed_return_with_evidence`.
-- A brand can view only evidence associated with its own orders.
-- Only the responsible brand can run and persist a return forensic re-analysis.
-- The analysis is advisory. A low or high score must not automatically approve, reject, or refund a return.
-- Dispatch evidence is submitted once per order; corrections require an audited support process rather than an unrestricted client-side update.
-- Refunds remain manual/tracked until a separately tested payment-provider refund integration is implemented.
+- Test a real customer return and brand dispute-view flow in the live project.
+- Confirm the existing AI gateway can analyze evidence and that the server-side report write succeeds.
+- Refunds remain manual/tracked. No automated Razorpay refund is implemented by this Trust migration.
+
+## Validation
+
+`.github/workflows/verify-offfeed-trust-database.yml` validates the committed migration source and expected security definitions. A passing run proves the repository assets are present; it does not prove the live Lovable Cloud database has applied them.
