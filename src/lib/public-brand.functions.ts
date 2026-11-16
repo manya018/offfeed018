@@ -147,8 +147,10 @@ export const getPublicBrandProfile = createServerFn({ method: "GET" })
       .limit(120);
     if (productsError) throw new Error("This brand’s products could not be loaded.");
     const { data: brandSizeGuides, error: sizeGuideError } = await supabase.from("brand_size_guides").select("category, size_chart").eq("brand_application_id", brand.id);
-    if (sizeGuideError) throw new Error("This brand’s size guides could not be loaded.");
-    const sizeGuideByCategory = new Map((brandSizeGuides ?? []).map((guide) => [guide.category, guide.size_chart]));
+    // Size guides are private to authenticated brand owners. Public storefronts must
+    // remain available when the anonymous client cannot read those optional records.
+    if (sizeGuideError) console.warn("[OFFFEED storefront] Optional size guides unavailable:", sizeGuideError.message);
+    const sizeGuideByCategory = new Map((sizeGuideError ? [] : brandSizeGuides ?? []).map((guide) => [guide.category, guide.size_chart]));
 
     const productPaths = [...new Set((rows ?? []).flatMap((row) => [row.image_path, ...(row.image_paths ?? [])]).filter((path): path is string => Boolean(path && !path.startsWith("https://"))))];
     const brandPaths = [...new Set([brand.logo_path, brand.cover_path].filter((path): path is string => Boolean(path)))];
@@ -227,8 +229,10 @@ export const getShopTheLookProducts = createServerFn({ method: "GET" })
     if (brandsError) throw new Error("Brand details for this edit could not be loaded.");
     const brandById = new Map((brands ?? []).filter((brand) => brand.public_handle).map((brand) => [brand.id, brand]));
     const { data: sharedGuides, error: sharedGuidesError } = await supabase.from("brand_size_guides").select("brand_application_id, category, size_chart").in("brand_application_id", applicationIds);
-    if (sharedGuidesError) throw new Error("Size guides for this edit could not be loaded.");
-    const guideByBrandCategory = new Map((sharedGuides ?? []).map((guide) => [`${guide.brand_application_id}:${guide.category}`, guide.size_chart]));
+    // Size guides are optional enrichment, not a prerequisite for public discovery.
+    // Keep the product feed visible when RLS correctly blocks anonymous guide access.
+    if (sharedGuidesError) console.warn("[OFFFEED Lens] Optional size guides unavailable:", sharedGuidesError.message);
+    const guideByBrandCategory = new Map((sharedGuidesError ? [] : sharedGuides ?? []).map((guide) => [`${guide.brand_application_id}:${guide.category}`, guide.size_chart]));
     const productPaths = [...new Set((rows ?? []).map((row) => row.image_path).filter((path): path is string => Boolean(path && !path.startsWith("https://"))))];
     const { data: signedFiles, error: signedError } = productPaths.length
       ? await supabase.storage.from("brand-product-images").createSignedUrls(productPaths, 3600)
