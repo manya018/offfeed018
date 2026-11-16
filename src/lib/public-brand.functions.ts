@@ -237,32 +237,20 @@ export const getShopTheLookProducts = createServerFn({ method: "GET" })
     if (sharedGuidesError) console.warn("[OFFFEED Lens] Optional size guides unavailable:", sharedGuidesError.message);
     const guideByBrandCategory = new Map((sharedGuidesError ? [] : sharedGuides ?? []).map((guide) => [`${guide.brand_application_id}:${guide.category}`, guide.size_chart]));
     const productPaths = [...new Set((rows ?? []).map((row) => row.image_path).filter((path): path is string => Boolean(path && !path.startsWith("https://"))))];
-    const { data: signedFiles, error: signedError } = productPaths.length
-      ? await supabase.storage.from("brand-product-images").createSignedUrls(productPaths, 3600)
-      : { data: [], error: null };
-    // Storage access is separate from product visibility. If an image cannot be
-    // signed, keep the product in Discover and let its card use its fallback artwork.
-    if (signedError) console.warn("[OFFFEED Lens] Product images unavailable:", signedError.message);
-    const signedUrls = new Map((signedError ? [] : signedFiles ?? []).flatMap((file) => {
-      if (file.error) console.warn("[OFFFEED Lens] Image signing failed for", file.path, file.error.message);
-      return file.path && file.signedUrl ? [[file.path, file.signedUrl] as const] : [];
-    }));
-    // Supabase may return per-file signing errors while the batch request itself
-    // succeeds. Retry missing URLs individually so one bad batch result does not
-    // leave otherwise valid product images blank.
-    const missingImagePaths = productPaths.filter((path) => !signedUrls.has(path));
-    const individualResults = await Promise.all(missingImagePaths.map(async (path) => {
-      const { data: signedFile, error: individualError } = await supabase.storage
+    // Product rows are public, but their image bucket is private. Sign images
+    // with the server-only service-role client so anonymous storage RLS cannot
+    // prevent Discover from rendering an approved product photo.
+    const signedUrls = new Map<string, string>();
+    if (productPaths.length) {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { data: signedFiles, error: signedError } = await supabaseAdmin.storage
         .from("brand-product-images")
-        .createSignedUrl(path, 3600);
-      if (individualError || !signedFile?.signedUrl) {
-        console.warn("[OFFFEED Lens] Individual image signing failed:", path, individualError?.message ?? "No signed URL returned");
-        return null;
+        .createSignedUrls(productPaths, 3600);
+      if (signedError) console.error("[OFFFEED Lens] Admin image signing failed:", signedError.message);
+      for (const file of signedFiles ?? []) {
+        if (file.path && file.signedUrl && !file.error) signedUrls.set(file.path, file.signedUrl);
+        else console.error("[OFFFEED Lens] Admin image signing failed for file:", file.path, file.error?.message ?? "No signed URL returned");
       }
-      return [path, signedFile.signedUrl] as const;
-    }));
-    for (const result of individualResults) {
-      if (result) signedUrls.set(result[0], result[1]);
     }
 
     const products: ProductWithBrand[] = (rows ?? []).flatMap((row) => {
