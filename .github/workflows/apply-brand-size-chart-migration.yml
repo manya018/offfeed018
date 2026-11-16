@@ -1,33 +1,25 @@
-name: Apply brand product size chart migration
+name: Validate brand product size chart migration
 
 on:
   workflow_dispatch:
 
+# Source validation only. Schema changes must be deployed through the existing
+# OFFFEED Lovable Cloud project after checking its live schema. This workflow
+# never connects to a database or applies SQL.
 permissions:
   contents: read
 
 jobs:
-  apply-size-chart-column:
+  validate-size-chart-migration:
     runs-on: ubuntu-latest
     steps:
-      - name: Install PostgreSQL client
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y postgresql-client
+      - name: Check out repository
+        uses: actions/checkout@v4
 
-      - name: Apply the size chart schema change
-        env:
-          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+      - name: Validate migration source
+        shell: bash
         run: |
-          if [ -z "$SUPABASE_DB_URL" ]; then
-            echo "Missing repository secret: SUPABASE_DB_URL"
-            exit 1
-          fi
-          psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 <<'SQL'
-          BEGIN;
-          ALTER TABLE public.brand_products
-            ADD COLUMN IF NOT EXISTS size_chart JSONB;
-          COMMENT ON COLUMN public.brand_products.size_chart IS
-            'Brand-authored product-specific size guide: columns, measurement rows, and optional unit.';
-          COMMIT;
-          SQL
+          set -euo pipefail
+          test -s "supabase/migrations/20261103214000_add_brand_product_size_charts.sql" || { echo "::error::Missing migration file: supabase/migrations/20261103214000_add_brand_product_size_charts.sql"; exit 1; }
+          grep -qi "size_chart" "supabase/migrations/20261103214000_add_brand_product_size_charts.sql" || { echo "::error::Expected migration definition not found in supabase/migrations/20261103214000_add_brand_product_size_charts.sql"; exit 1; }
+          echo "Migration source validation passed. No database connection or schema changes were made."
