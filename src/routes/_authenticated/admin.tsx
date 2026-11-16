@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { verifyAdminAccess, getAdminOverview, getAdminBrands, getAdminProducts, updateAdminBrandStatus } from "@/lib/admin.functions";
+import { verifyAdminAccess, getAdminOverview, getAdminBrands, getAdminProducts, updateAdminBrandStatus, getAdminReturns, getAdminTrustCases } from "@/lib/admin.functions";
 import { getOwnerSpotlightCampaigns, updateOwnerSpotlightCampaign } from "@/lib/spotlight.functions";
 import { getOwnerSaleNotificationOverview } from "@/lib/sale-notification-admin.functions";
 
@@ -147,7 +147,9 @@ function OwnerAdminDashboard() {
               </div>
             </section> : null}
             {section === "spotlight" ? <SpotlightAdminSection /> : null}
-            {section === "notifications" ? <SaleNotificationsAdminSection /> : null}\n            {section === "products" ? <section>
+            {section === "notifications" ? <SaleNotificationsAdminSection /> : null}
+            {section === "trust" ? <OwnerTrustSection /> : null}
+            {section === "returns" ? <OwnerReturnsSection /> : null}\n            {section === "products" ? <section>
               <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
                 <div>
                   <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#a28e84]">Marketplace catalogue</p>
@@ -193,7 +195,7 @@ function OwnerAdminDashboard() {
               </div>
               <p className="mt-3 text-[11px] text-[#a08e84]">Showing the latest 500 listings at most. No listing status or brand data is changed from this screen.</p>
             </section> : null}
-            {section !== "overview" && section !== "brands" && section !== "products" && section !== "spotlight" && section !== "notifications" ? <section className="rounded-2xl border border-[#e8dfd6] bg-[#fbf9f5] p-8 md:p-12">
+            {section !== "overview" && section !== "brands" && section !== "products" && section !== "spotlight" && section !== "notifications" && section !== "trust" && section !== "returns" ? <section className="rounded-2xl border border-[#e8dfd6] bg-[#fbf9f5] p-8 md:p-12">
               <div className="mx-auto max-w-lg text-center">
                 <div className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-[#efe4de] text-[#76534b]">{activeNav ? <ActiveSectionIcon className="size-6"/> : <ClipboardList className="size-6"/>}</div>
                 <p className="mt-5 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#a28e84]">Owner HQ module</p>
@@ -237,6 +239,30 @@ function OverviewSection({ overview, brands, onOpenBrands }: { overview: { data:
   </section>;
 }
 
+
+function OwnerReturnsSection() {
+  const requests = useQuery({ queryKey: ["owner-admin", "returns"], queryFn: () => getAdminReturns(), retry: 1 });
+  const rows = requests.data ?? [];
+  return <section>
+    <div className="mb-6 flex flex-wrap items-end justify-between gap-4"><div><p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#a28e84]">Customer care · owner review</p><h1 className="mt-1 font-serif text-3xl text-[#493a34]">Returns & Refunds</h1><p className="mt-2 text-sm text-[#887a72]">Customer requests, brand responses, commission decisions and refund tracking.</p></div><Button variant="outline" onClick={() => void requests.refetch()} className="border-[#e1d5cc] bg-[#fbf9f5] text-[#76534b]"><RefreshCw className="mr-2 size-4"/>Refresh</Button></div>
+    <div className="mb-5 grid gap-3 sm:grid-cols-3">{[{label:"All requests",value:rows.length},{label:"Awaiting review",value:rows.filter((r:any)=>["requested","disputed"].includes(r.status)).length},{label:"Refund pending",value:rows.filter((r:any)=>r.refund_status==="pending").length}].map((item)=><div key={item.label} className="rounded-xl border border-[#e8dfd6] bg-[#fbf9f5] p-4"><p className="text-xs text-[#8e7f76]">{item.label}</p><p className="mt-2 font-serif text-3xl text-[#493a34]">{requests.isLoading?"—":item.value}</p></div>)}</div>
+    {requests.isLoading?<div className="rounded-xl border border-[#e8dfd6] bg-[#fbf9f5] p-8 text-sm text-[#887a72]">Loading customer requests…</div>:requests.isError?<div className="rounded-xl border border-red-200 bg-red-50 p-5 text-sm text-red-800">{requests.error instanceof Error?requests.error.message:"Return requests could not be loaded."}<Button variant="outline" size="sm" className="ml-3" onClick={()=>void requests.refetch()}>Retry</Button></div>:!rows.length?<div className="rounded-xl border border-dashed border-[#e8dfd6] bg-[#fbf9f5] p-12 text-center text-sm text-[#887a72]">No customer return requests have been submitted.</div>:<div className="space-y-4">{rows.map((item:any)=><article key={item.id} className="rounded-2xl border border-[#e8dfd6] bg-[#fbf9f5] p-5"><div className="flex flex-wrap items-start justify-between gap-3"><div><p className="text-[10px] uppercase tracking-widest text-[#a08e84]">Order {item.order?.order_number??item.order_id}</p><h2 className="mt-1 font-serif text-xl text-[#493a34]">{item.order?.product_name??"Order item"}</h2><p className="mt-1 text-xs text-[#887a72]">{item.order?.customer_name??"Customer"} · {item.order?.customer_email??""}</p></div><Badge variant="outline" className="capitalize">{String(item.status).replaceAll("_"," ")}</Badge></div><div className="mt-4 grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-4"><div><p className="text-xs text-[#9a8a81]">Reason</p><p className="mt-1 text-[#57463e]">{String(item.reason).replaceAll("_"," ")}</p></div><div><p className="text-xs text-[#9a8a81]">Brand</p><p className="mt-1 text-[#57463e]">{item.brand?.brand_name??"Brand"}</p></div><div><p className="text-xs text-[#9a8a81]">Refund amount</p><p className="mt-1 text-[#57463e]">₹{Number(item.refund_amount??0).toLocaleString("en-IN")} · {String(item.refund_status).replaceAll("_"," ")}</p></div><div><p className="text-xs text-[#9a8a81]">Commission decision</p><p className="mt-1 text-[#57463e]">{String(item.commission_decision??"pending review").replaceAll("_"," ")}</p></div></div>{item.customer_details?<p className="mt-3 rounded-lg bg-[#f4eee8] p-3 text-sm leading-5 text-[#6f5c52]">{item.customer_details}</p>:null}{item.brand_response?<p className="mt-2 text-sm text-[#806e64]">Brand response: {item.brand_response}</p>:null}{item.return_tracking_number?<p className="mt-2 text-xs text-[#806e64]">Return tracking: {item.return_tracking_provider} · {item.return_tracking_number}</p>:null}<p className="mt-3 text-[11px] text-[#a08e84]">Submitted {new Date(item.created_at).toLocaleString("en-IN")} · Refunds are tracked here; this screen does not initiate a payment.</p></article>)}</div>}
+  </section>;
+}
+
+function OwnerTrustSection() {
+  const query = useQuery({ queryKey: ["owner-admin", "trust"], queryFn: () => getAdminTrustCases(), retry: 1 });
+  const data = query.data; const dispatch = data?.dispatch ?? []; const returns = data?.returns ?? [];
+  const PhotoStrip = ({ photos }: { photos: any[] }) => <div className="mt-3 flex flex-wrap gap-2">{photos.map((photo:any,index:number)=>photo.url?<a key={photo.path??index} href={photo.url} target="_blank" rel="noreferrer"><img src={photo.url} alt="Evidence photograph" className="size-20 rounded-lg border border-[#e8dfd6] object-cover"/></a>:null)}</div>;
+  return <section>
+    <div className="mb-6 flex flex-wrap items-end justify-between gap-4"><div><p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#a28e84]">Evidence & marketplace integrity</p><h1 className="mt-1 font-serif text-3xl text-[#493a34]">OFFFEED TRUST</h1><p className="mt-2 text-sm text-[#887a72]">Review brand dispatch proof, customer return evidence and advisory AI analysis.</p></div><Button variant="outline" onClick={()=>void query.refetch()} className="border-[#e1d5cc] bg-[#fbf9f5] text-[#76534b]"><RefreshCw className="mr-2 size-4"/>Refresh</Button></div>
+    <div className="mb-5 grid gap-3 sm:grid-cols-3">{[{label:"Evidence records",value:dispatch.length+returns.length},{label:"Dispatch submissions",value:dispatch.length},{label:"Return proof sets",value:returns.length}].map((item)=><div key={item.label} className="rounded-xl border border-[#e8dfd6] bg-[#fbf9f5] p-4"><p className="text-xs text-[#8e7f76]">{item.label}</p><p className="mt-2 font-serif text-3xl text-[#493a34]">{query.isLoading?"—":item.value}</p></div>)}</div>
+    {query.isLoading?<div className="rounded-xl border border-[#e8dfd6] bg-[#fbf9f5] p-8 text-sm text-[#887a72]">Loading Trust evidence…</div>:query.isError?<div className="rounded-xl border border-red-200 bg-red-50 p-5 text-sm text-red-800">{query.error instanceof Error?query.error.message:"Trust evidence could not be loaded."}<p className="mt-2 text-xs">The consolidated OFFFEED Trust migration must be applied to the live database before these records can appear.</p><Button variant="outline" size="sm" className="mt-3" onClick={()=>void query.refetch()}>Retry</Button></div>:<div className="space-y-6">
+      <div className="rounded-2xl border border-[#e8dfd6] bg-[#fbf9f5] p-5"><h2 className="font-serif text-2xl text-[#493a34]">Brand dispatch evidence</h2>{!dispatch.length?<p className="py-5 text-sm text-[#887a72]">No dispatch evidence submitted yet.</p>:<div className="mt-3 divide-y divide-[#eee6df]">{dispatch.map((item:any)=><article key={item.id} className="py-4"><div className="flex flex-wrap justify-between gap-2"><div><p className="text-sm font-medium text-[#57463e]">Order {item.order?.order_number??item.order_id} · {item.order?.product_name??"Order item"}</p><p className="mt-1 text-xs text-[#9a8a81]">{item.order?.customer_name??"Customer"} · {new Date(item.created_at).toLocaleString("en-IN")}</p></div><Badge variant="outline" className="capitalize">{item.status}</Badge></div>{item.packing_note?<p className="mt-2 text-sm text-[#806e64]">{item.packing_note}</p>:null}<PhotoStrip photos={item.photos}/>{item.videoUrl?<a className="mt-2 inline-block text-xs text-[#76534b] underline" href={item.videoUrl} target="_blank" rel="noreferrer">View dispatch video</a>:null}{item.ai_report?<pre className="mt-3 overflow-auto rounded-lg bg-[#f4eee8] p-3 text-xs text-[#6f5c52]">{JSON.stringify(item.ai_report,null,2)}</pre>:null}</article>)}</div>}</div>
+      <div className="rounded-2xl border border-[#e8dfd6] bg-[#fbf9f5] p-5"><h2 className="font-serif text-2xl text-[#493a34]">Customer return evidence</h2>{!returns.length?<p className="py-5 text-sm text-[#887a72]">No customer return photo evidence submitted yet.</p>:<div className="mt-3 divide-y divide-[#eee6df]">{returns.map((item:any)=><article key={item.id} className="py-4"><div className="flex flex-wrap justify-between gap-2"><div><p className="text-sm font-medium text-[#57463e]">Order {item.order?.order_number??item.order_id} · {item.order?.product_name??"Order item"}</p><p className="mt-1 text-xs text-[#9a8a81]">{item.order?.customer_name??"Customer"} · {new Date(item.created_at).toLocaleString("en-IN")}</p></div><Badge variant="outline" className="capitalize">{item.status} · {item.trust_score??0}/100</Badge></div>{item.notes?<p className="mt-2 text-sm text-[#806e64]">{item.notes}</p>:null}<PhotoStrip photos={item.photos}/>{item.ai_report?<pre className="mt-3 overflow-auto rounded-lg bg-[#f4eee8] p-3 text-xs text-[#6f5c52]">{JSON.stringify(item.ai_report,null,2)}</pre>:null}<p className="mt-2 text-[11px] text-[#a08e84]">AI analysis is advisory only; it does not approve/reject a return or issue a refund.</p></article>)}</div>}</div>
+    </div>}
+  </section>;
+}
 
 function SpotlightAdminSection() {
   const queryClient = useQueryClient();
