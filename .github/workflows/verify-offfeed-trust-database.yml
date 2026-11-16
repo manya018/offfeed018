@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - ".github/workflows/verify-offfeed-trust-database.yml"
+      - "supabase/migrations/20261116000000_add_offfeed_trust_evidence.sql"
       - "drizzle/migrations/0000_brand_fraud_evidence.sql"
       - "drizzle/migrations/0001_order_evidence_storage_policies.sql"
       - "drizzle/migrations/0005_secure_order_evidence.sql"
@@ -29,6 +30,7 @@ jobs:
           set -euo pipefail
 
           for file in \
+            supabase/migrations/20261116000000_add_offfeed_trust_evidence.sql \
             drizzle/migrations/0000_brand_fraud_evidence.sql \
             drizzle/migrations/0001_order_evidence_storage_policies.sql \
             drizzle/migrations/0005_secure_order_evidence.sql \
@@ -39,11 +41,15 @@ jobs:
             fi
           done
 
-          grep -q "CREATE TABLE public.dispatch_evidence" drizzle/migrations/0000_brand_fraud_evidence.sql
-          grep -q "CREATE TABLE public.return_evidence" drizzle/migrations/0000_brand_fraud_evidence.sql
-          grep -q "CREATE POLICY" drizzle/migrations/0001_order_evidence_storage_policies.sql
-          grep -q "request_offfeed_return_with_evidence" drizzle/migrations/0005_secure_order_evidence.sql
-          grep -q "REVOKE INSERT, UPDATE, DELETE ON public.return_evidence" drizzle/migrations/0005_secure_order_evidence.sql
+          migration="supabase/migrations/20261116000000_add_offfeed_trust_evidence.sql"
+          grep -q "CREATE TABLE IF NOT EXISTS public.dispatch_evidence" "$migration"
+          grep -q "CREATE TABLE IF NOT EXISTS public.return_evidence" "$migration"
+          grep -q "request_offfeed_return_with_evidence" "$migration"
+          grep -q "OFFFEED order parties can view exact evidence" "$migration"
+          grep -q "REVOKE INSERT, UPDATE, DELETE ON public.return_evidence FROM authenticated" "$migration"
+          grep -q "ON CONFLICT (id) DO NOTHING" "$migration"
+          grep -q "duplicate dispatch_evidence rows exist" "$migration"
+          grep -q "duplicate return_evidence rows exist" "$migration"
 
-          echo "OFFFEED Trust repository assets are present and contain the expected schema/security definitions."
-          echo "This is a source validation only. It does not prove that Lovable Cloud has applied the migrations.";
+          echo "OFFFEED Trust migration source and security guards are present."
+          echo "This is source validation only; it does not prove Lovable Cloud has applied the migration."
