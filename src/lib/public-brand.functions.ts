@@ -243,7 +243,27 @@ export const getShopTheLookProducts = createServerFn({ method: "GET" })
     // Storage access is separate from product visibility. If an image cannot be
     // signed, keep the product in Discover and let its card use its fallback artwork.
     if (signedError) console.warn("[OFFFEED Lens] Product images unavailable:", signedError.message);
-    const signedUrls = new Map((signedError ? [] : signedFiles ?? []).flatMap((file) => file.path && file.signedUrl ? [[file.path, file.signedUrl] as const] : []));
+    const signedUrls = new Map((signedError ? [] : signedFiles ?? []).flatMap((file) => {
+      if (file.error) console.warn("[OFFFEED Lens] Image signing failed for", file.path, file.error.message);
+      return file.path && file.signedUrl ? [[file.path, file.signedUrl] as const] : [];
+    }));
+    // Supabase may return per-file signing errors while the batch request itself
+    // succeeds. Retry missing URLs individually so one bad batch result does not
+    // leave otherwise valid product images blank.
+    const missingImagePaths = productPaths.filter((path) => !signedUrls.has(path));
+    const individualResults = await Promise.all(missingImagePaths.map(async (path) => {
+      const { data: signedFile, error: individualError } = await supabase.storage
+        .from("brand-product-images")
+        .createSignedUrl(path, 3600);
+      if (individualError || !signedFile?.signedUrl) {
+        console.warn("[OFFFEED Lens] Individual image signing failed:", path, individualError?.message ?? "No signed URL returned");
+        return null;
+      }
+      return [path, signedFile.signedUrl] as const;
+    }));
+    for (const result of individualResults) {
+      if (result) signedUrls.set(result[0], result[1]);
+    }
 
     const products: ProductWithBrand[] = (rows ?? []).flatMap((row) => {
       const brand = brandById.get(row.brand_application_id);
