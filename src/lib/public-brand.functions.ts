@@ -18,6 +18,27 @@ type Audience = "her" | "him" | "home";
 
 type ProductSizeChart = { columns: string[]; rows: Array<{ label: string; values: string[] }>; unit?: string };
 
+function normalizeProductSizeChart(value: unknown): ProductSizeChart | null {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  const chart = value as { columns?: unknown; rows?: unknown; unit?: unknown };
+  if (!Array.isArray(chart.columns) || !Array.isArray(chart.rows)) return null;
+  const columns = chart.columns.filter((item): item is string => typeof item === "string" && item.trim().length > 0);
+  const rows = chart.rows.flatMap((item) => {
+    if (!item || typeof item !== "object" || Array.isArray(item)) return [];
+    const row = item as { label?: unknown; values?: unknown };
+    if (typeof row.label !== "string" || !Array.isArray(row.values)) return [];
+    const values = row.values.map((cell) => cell == null ? "" : String(cell));
+    if (values.length !== columns.length) return [];
+    return [{ label: row.label, values }];
+  });
+  if (!columns.length || !rows.length) return null;
+  return {
+    columns,
+    rows,
+    ...(typeof chart.unit === "string" && chart.unit.trim() ? { unit: chart.unit.trim() } : {}),
+  };
+}
+
 type ProductWithBrand = {
   id: string;
   productName: string;
@@ -147,15 +168,9 @@ export const getPublicBrandProfile = createServerFn({ method: "GET" })
       .order("created_at", { ascending: false })
       .limit(120);
     if (productsError) throw new Error("This brand’s products could not be loaded.");
-    // Read product-specific charts explicitly by product ID. This keeps the
-    // public storefront independent of any category-guide fallback and ensures
-    // a saved product override wins over the reusable category chart.
-    const productIds = (rows ?? []).map((row) => row.id);
-    const { data: productCharts, error: productChartsError } = productIds.length
-      ? await supabase.from("brand_products").select("id, size_chart").in("id", productIds)
-      : { data: [], error: null };
-    if (productChartsError) console.error("[OFFFEED storefront] Product size charts unavailable:", productChartsError.message);
-    const productSizeChartById = new Map((productCharts ?? []).map((item) => [item.id, item.size_chart]));
+    // The published product query already selects size_chart. Use that exact
+    // row value as the source of truth; avoid a second lookup that can diverge
+    // from the product payload during storefront rendering.
     const { data: brandSizeGuides, error: sizeGuideError } = await supabase.from("brand_size_guides").select("category, size_chart").eq("brand_application_id", brand.id);
     if (sizeGuideError) console.warn("[OFFFEED storefront] Optional size guides unavailable:", sizeGuideError.message);
     const sizeGuideByCategory = new Map((sizeGuideError ? [] : brandSizeGuides ?? []).map((guide) => [guide.category, guide.size_chart]));
@@ -200,7 +215,7 @@ export const getPublicBrandProfile = createServerFn({ method: "GET" })
         imageUrl: getImageUrl(row.image_path, productSigned),
         imageUrls: (row.image_paths?.length ? row.image_paths : row.image_path ? [row.image_path] : []).map((path) => getImageUrl(path, productSigned)).filter((url): url is string => Boolean(url)),
         sizes: row.sizes,
-        sizeChart: (productSizeChartById.get(row.id) ?? row.size_chart ?? sizeGuideByCategory.get(row.category) ?? null) as unknown as ProductSizeChart | null,
+        sizeChart: normalizeProductSizeChart(row.size_chart) ?? normalizeProductSizeChart(sizeGuideByCategory.get(row.category)),
         colors: row.colors,
         tags: row.tags,
         audience: row.audience,
