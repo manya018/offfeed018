@@ -147,9 +147,16 @@ export const getPublicBrandProfile = createServerFn({ method: "GET" })
       .order("created_at", { ascending: false })
       .limit(120);
     if (productsError) throw new Error("This brand’s products could not be loaded.");
+    // Read product-specific charts explicitly by product ID. This keeps the
+    // public storefront independent of any category-guide fallback and ensures
+    // a saved product override wins over the reusable category chart.
+    const productIds = (rows ?? []).map((row) => row.id);
+    const { data: productCharts, error: productChartsError } = productIds.length
+      ? await supabase.from("brand_products").select("id, size_chart").in("id", productIds)
+      : { data: [], error: null };
+    if (productChartsError) console.error("[OFFFEED storefront] Product size charts unavailable:", productChartsError.message);
+    const productSizeChartById = new Map((productCharts ?? []).map((item) => [item.id, item.size_chart]));
     const { data: brandSizeGuides, error: sizeGuideError } = await supabase.from("brand_size_guides").select("category, size_chart").eq("brand_application_id", brand.id);
-    // Size guides are private to authenticated brand owners. Public storefronts must
-    // remain available when the anonymous client cannot read those optional records.
     if (sizeGuideError) console.warn("[OFFFEED storefront] Optional size guides unavailable:", sizeGuideError.message);
     const sizeGuideByCategory = new Map((sizeGuideError ? [] : brandSizeGuides ?? []).map((guide) => [guide.category, guide.size_chart]));
 
@@ -193,7 +200,7 @@ export const getPublicBrandProfile = createServerFn({ method: "GET" })
         imageUrl: getImageUrl(row.image_path, productSigned),
         imageUrls: (row.image_paths?.length ? row.image_paths : row.image_path ? [row.image_path] : []).map((path) => getImageUrl(path, productSigned)).filter((url): url is string => Boolean(url)),
         sizes: row.sizes,
-        sizeChart: (row.size_chart ?? sizeGuideByCategory.get(row.category) ?? null) as unknown as ProductSizeChart | null,
+        sizeChart: (productSizeChartById.get(row.id) ?? row.size_chart ?? sizeGuideByCategory.get(row.category) ?? null) as unknown as ProductSizeChart | null,
         colors: row.colors,
         tags: row.tags,
         audience: row.audience,
