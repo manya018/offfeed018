@@ -296,14 +296,35 @@ function ProductSizeGuideEditor({ productId, override, inherited }: {
   inherited: { columns: string[]; rows: Array<{ label: string; values: string[] }>; unit?: string } | null;
 }) {
   const queryClient = useQueryClient();
-  const [chartText, setChartText] = useState(formatSizeChart(override ?? inherited));
-  const [unit, setUnit] = useState((override ?? inherited)?.unit ?? "");
+  const current = override ?? inherited;
+  const [columns, setColumns] = useState<string[]>(current?.columns ?? ["XS", "S", "M", "L"]);
+  const [rows, setRows] = useState<Array<{ label: string; values: string[] }>>(current?.rows ?? [{ label: "Bust (cm)", values: ["", "", "", ""] }]);
+  const [unit, setUnit] = useState(current?.unit ?? "cm");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
-  useEffect(() => { setChartText(formatSizeChart(override ?? inherited)); setUnit((override ?? inherited)?.unit ?? ""); }, [override, inherited]);
+  useEffect(() => {
+    const chart = override ?? inherited;
+    setColumns(chart?.columns?.length ? chart.columns : ["XS", "S", "M", "L"]);
+    setRows(chart?.rows?.length ? chart.rows.map((row) => ({ label: row.label, values: columnsFromRow(row.values, chart.columns?.length ?? 4) })) : [{ label: "Bust (cm)", values: ["", "", "", ""] }]);
+    setUnit(chart?.unit ?? "cm");
+  }, [override, inherited]);
+  const updateColumn = (index: number, value: string) => setColumns((current) => current.map((item, i) => i === index ? value : item));
+  const updateRowLabel = (index: number, value: string) => setRows((current) => current.map((row, i) => i === index ? { ...row, label: value } : row));
+  const updateCell = (rowIndex: number, columnIndex: number, value: string) => setRows((current) => current.map((row, i) => i === rowIndex ? { ...row, values: row.values.map((cell, j) => j === columnIndex ? value : cell) } : row));
+  const addSize = () => { setColumns((current) => [...current, ""]); setRows((current) => current.map((row) => ({ ...row, values: [...row.values, ""] }))); };
+  const removeSize = (index: number) => { setColumns((current) => current.filter((_, i) => i !== index)); setRows((current) => current.map((row) => ({ ...row, values: row.values.filter((_, i) => i !== index) }))); };
+  const addMeasurement = () => setRows((current) => [...current, { label: "", values: columns.map(() => "") }]);
+  const removeMeasurement = (index: number) => setRows((current) => current.filter((_, i) => i !== index));
   const save = async (useDefault: boolean) => {
-    const chart = useDefault ? null : parseSizeChart(chartText, unit);
-    if (!useDefault && !chart) { setError("Check the table format and make sure each row has a value for every size."); return; }
+    const chart = useDefault ? null : {
+      columns: columns.map((item) => item.trim()),
+      rows: rows.map((row) => ({ label: row.label.trim(), values: row.values.map((value) => value.trim()) })),
+      ...(unit.trim() ? { unit: unit.trim() } : {}),
+    };
+    if (!useDefault && (!chart!.columns.length || chart!.columns.some((item) => !item) || chart!.rows.length === 0 || chart!.rows.some((row) => !row.label || row.values.length !== chart!.columns.length || row.values.some((value) => !value)))) {
+      setError("Add a name for every size and measurement, and fill every cell before saving.");
+      return;
+    }
     setSaving(true); setError("");
     try {
       await updateBrandProductSizeChart({ data: { productId, sizeChart: chart } });
@@ -314,13 +335,40 @@ function ProductSizeGuideEditor({ productId, override, inherited }: {
   };
   return <details className="mt-3 rounded-lg border border-border/70 p-3">
     <summary className="cursor-pointer text-xs font-medium">{override ? "Edit product-specific size guide" : "Customize size guide for this product"}</summary>
-    <p className="mt-2 text-xs text-muted-foreground">{override ? "This chart belongs only to this product. Other products are unchanged." : inherited ? "Currently using the shared category guide. Customize here to override it only for this product." : "No category guide is saved yet. You can create a custom chart here."}</p>
-    <Textarea value={chartText} onChange={(event) => setChartText(event.target.value)} className="mt-3 min-h-28 font-mono text-xs" placeholder="Measurement | XS | S | M&#10;Bust (cm) | 81 | 86 | 91"/>
-    <div className="mt-2 max-w-xs"><Label>Measurement unit</Label><Input value={unit} onChange={(event) => setUnit(event.target.value)} placeholder="cm, in, mm or custom" className={fieldClass}/></div>
+    <p className="mt-2 text-xs text-muted-foreground">{override ? "This chart belongs only to this product. Other products are unchanged." : inherited ? "Currently using the shared category guide. Customize here to override it only for this product." : "Create a product-specific measurement chart using the editable table below."}</p>
+    <div className="mt-3 max-w-full overflow-x-auto rounded-lg border border-border/80">
+      <table className="w-full min-w-[560px] border-collapse text-sm">
+        <thead className="bg-muted/40"><tr>
+          <th className="min-w-40 border-b border-r border-border/70 p-2 text-left font-medium">Measurement</th>
+          {columns.map((column, index) => <th key={index} className="min-w-24 border-b border-r border-border/70 p-2">
+            <div className="flex items-center gap-1">
+              <Input aria-label={`Size column ${index + 1}`} value={column} onChange={(event) => updateColumn(index, event.target.value)} placeholder="Size" className="h-9 min-w-0 bg-background text-center"/>
+              <Button type="button" size="icon" variant="ghost" aria-label={`Remove size ${column || index + 1}`} disabled={columns.length <= 1} onClick={() => removeSize(index)}><Trash2 className="size-3.5"/></Button>
+            </div>
+          </th>)}
+        </tr></thead>
+        <tbody>{rows.map((row, rowIndex) => <tr key={rowIndex} className="border-b border-border/60 last:border-0">
+          <th className="border-r border-border/70 p-2"><Input aria-label={`Measurement name ${rowIndex + 1}`} value={row.label} onChange={(event) => updateRowLabel(rowIndex, event.target.value)} placeholder="e.g. Bust (cm)" className="h-9 bg-background"/></th>
+          {columns.map((column, columnIndex) => <td key={columnIndex} className="border-r border-border/70 p-2"><Input aria-label={`${row.label || "Measurement"} for ${column || "size"}`} value={row.values[columnIndex] ?? ""} onChange={(event) => updateCell(rowIndex, columnIndex, event.target.value)} placeholder="Value" className="h-9 bg-background text-center"/></td>)}
+          <td className="w-10 p-1"><Button type="button" size="icon" variant="ghost" aria-label={`Remove measurement ${row.label || rowIndex + 1}`} disabled={rows.length <= 1} onClick={() => removeMeasurement(rowIndex)}><Trash2 className="size-3.5"/></Button></td>
+        </tr>)}</tbody>
+      </table>
+    </div>
+    <div className="mt-3 flex flex-wrap gap-2">
+      <Button type="button" size="sm" variant="outline" onClick={addMeasurement}><Plus className="size-3.5"/>Add measurement</Button>
+      <Button type="button" size="sm" variant="outline" onClick={addSize}><Plus className="size-3.5"/>Add size</Button>
+    </div>
+    <div className="mt-3 max-w-xs"><Label>Measurement unit</Label><Input value={unit} onChange={(event) => setUnit(event.target.value)} placeholder="cm, in, mm or custom" className={fieldClass}/></div>
+    <p className="mt-2 text-xs leading-5 text-muted-foreground">Edit sizes and measurements directly. Add or remove rows and columns as needed. This chart applies only to this product.</p>
     {error && <p role="alert" className="mt-2 text-xs text-destructive">{error}</p>}
     <div className="mt-3 flex flex-wrap gap-2"><Button type="button" size="sm" disabled={saving} onClick={() => void save(false)}>{saving ? <LoaderCircle className="animate-spin"/> : <Check/>}Save for this product</Button>{override && <Button type="button" size="sm" variant="outline" disabled={saving} onClick={() => void save(true)}>Use brand default</Button>}</div>
   </details>;
 }
+
+function columnsFromRow(values: string[], count: number) {
+  return Array.from({ length: count }, (_, index) => values[index] ?? "");
+}
+
 function BrandDashboard() {
   const queryClient = useQueryClient();
   const workspace = useQuery({ queryKey: ["brand-workspace"], queryFn: () => getBrandWorkspace() });
