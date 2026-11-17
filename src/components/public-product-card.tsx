@@ -79,18 +79,31 @@ export function PublicProductCard({ product, spotlightCampaignId }: { product: P
             {[product.sizes.length ? `Sizes ${product.sizes.join(", ")}` : "", product.colors.join(", ")].filter(Boolean).join(" · ")}
           </p>
         )}
-        {product.sizeChart && product.sizeChart.columns.length > 0 && product.sizeChart.rows.length > 0 && (
+        {product.sizes.length > 0 && (
           <div className="mt-2">
             <button type="button" onClick={() => setShowSizeGuide((value) => !value)} aria-expanded={showSizeGuide} className="text-xs font-medium text-primary underline underline-offset-4">
-              {showSizeGuide ? "Hide size guide" : "View brand size guide"}
+              {showSizeGuide ? "Hide size chart" : "View size chart"}
             </button>
             {showSizeGuide && (
-              <div className="mt-2 max-w-full overflow-x-auto rounded-lg border border-border/70 p-2">
-                <table className="w-full min-w-max text-left text-[11px]">
-                  <thead><tr><th className="px-2 py-1.5 font-semibold">Measurement</th>{product.sizeChart.columns.map((column) => <th key={column} className="px-2 py-1.5 font-semibold">{column}</th>)}</tr></thead>
-                  <tbody>{product.sizeChart.rows.map((row) => <tr key={row.label} className="border-t border-border/60"><th className="px-2 py-1.5 font-medium">{row.label}</th>{row.values.map((value, index) => <td key={`${row.label}-${index}`} className="px-2 py-1.5 text-muted-foreground">{value}</td>)}</tr>)}</tbody>
-                </table>
-                {product.sizeChart.unit && <p className="mt-2 text-[10px] text-muted-foreground">Unit: {product.sizeChart.unit}</p>}
+              <div className="mt-2 max-w-full overflow-x-auto rounded-lg border border-border/70 bg-card p-3">
+                {product.sizeChart && product.sizeChart.columns.length > 0 && product.sizeChart.rows.length > 0 ? (
+                  <>
+                    <p className="mb-2 text-xs font-semibold">Brand measurement chart</p>
+                    <table className="w-full min-w-max text-left text-[11px]">
+                      <thead><tr><th className="px-2 py-1.5 font-semibold">Measurement</th>{product.sizeChart.columns.map((column) => <th key={column} className="px-2 py-1.5 font-semibold">{column}</th>)}</tr></thead>
+                      <tbody>{product.sizeChart.rows.map((row) => <tr key={row.label} className="border-t border-border/60"><th className="px-2 py-1.5 font-medium">{row.label}</th>{row.values.map((value, index) => <td key={`${row.label}-${index}`} className="px-2 py-1.5 text-muted-foreground">{value || "—"}</td>)}</tr>)}</tbody>
+                    </table>
+                    {product.sizeChart.unit && <p className="mt-2 text-[10px] text-muted-foreground">Measurements in {product.sizeChart.unit}.</p>}
+                  </>
+                ) : (
+                  <>
+                    <p className="text-xs font-semibold">Available sizes</p>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {product.sizes.map((size) => <span key={size} className="rounded-md border border-border px-3 py-1.5 text-xs">{size}</span>)}
+                    </div>
+                    <p className="mt-3 text-xs leading-5 text-muted-foreground">The brand has not added measurement details for this product yet. These are the available sizes; please check with the brand if you need exact measurements.</p>
+                  </>
+                )}
               </div>
             )}
           </div>
