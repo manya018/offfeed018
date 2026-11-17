@@ -34,9 +34,12 @@ export function writeOfffeedCart(items: OfffeedCartItem[]) {
   window.dispatchEvent(new Event(CART_EVENT));
 }
 
-export function addToOfffeedCart(product: ProductWithBrand) {
+export function addToOfffeedCart(product: ProductWithBrand, selection: { size?: string; color?: string } = {}) {
+  const size = selection.size ?? "";
+  const color = selection.color ?? "";
   const items = readOfffeedCart();
-  const existing = items.find((item) => item.productId === product.id);
+  // Each size/colour combination is a distinct cart variant.
+  const existing = items.find((item) => item.productId === product.id && item.size === size && item.color === color);
   if (existing) {
     existing.quantity = Math.min(10, existing.quantity + 1);
   } else {
@@ -50,8 +53,8 @@ export function addToOfffeedCart(product: ProductWithBrand) {
       sizes: product.sizes,
       colors: product.colors,
       quantity: 1,
-      size: "",
-      color: "",
+      size,
+      color,
     });
   }
   writeOfffeedCart(items);
