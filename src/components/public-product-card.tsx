@@ -14,6 +14,9 @@ export function PublicProductCard({ product, spotlightCampaignId }: { product: P
   const [added, setAdded] = useState(false);
   const [liked, setLiked] = useState(false);
   const [showSizeGuide, setShowSizeGuide] = useState(false);
+  const [showVariantPicker, setShowVariantPicker] = useState(false);
+  const [selectedSize, setSelectedSize] = useState("");
+  const [selectedColor, setSelectedColor] = useState("");
   const [visitorId] = useState(() => { try { const key = "offfeed-analytics-visitor"; let id = localStorage.getItem(key); if (!id) { id = crypto.randomUUID(); localStorage.setItem(key, id); } return id; } catch { return crypto.randomUUID(); } });
 
   useEffect(() => { if (spotlightCampaignId) void recordSpotlightEvent({ data: { campaignId: spotlightCampaignId, productId: product.id, eventType: "view", visitorId } }); }, [spotlightCampaignId, product.id, visitorId]);
@@ -94,8 +97,18 @@ export function PublicProductCard({ product, spotlightCampaignId }: { product: P
         )}
         <FindMySize chart={product.sizeChart} productName={product.productName} category={product.category} availableSizes={product.sizes} />
         <div className="mt-3 flex items-center gap-1">
-          <Button variant="outline" size="sm" className="min-w-0 flex-1" onClick={() => { addToOfffeedCart(product); setAdded(true); }}>
-            {added ? <Check /> : <ShoppingBag />}{added ? "Saved" : "Save"}
+          <Button variant="outline" size="sm" className="min-w-0 flex-1" onClick={() => {
+            if (product.sizes.length > 0 || product.colors.length > 0) {
+              setSelectedSize(product.sizes.length === 1 ? product.sizes[0] : "");
+              setSelectedColor(product.colors.length === 1 ? product.colors[0] : "");
+              setShowVariantPicker(true);
+              return;
+            }
+            addToOfffeedCart(product);
+            setAdded(true);
+            toast.success("Added to your bag");
+          }}>
+            {added ? <Check /> : <ShoppingBag />}{added ? "Added" : "Save"}
           </Button>
           <MoodboardSaveButton item={{ id: product.id, type: "product", title: product.productName, image: product.imageUrl ?? product.imageUrls[0] ?? "", subtitle: product.brand.name, href: `/brand/${product.brand.handle}`, price: product.price }} />
           <Button variant="ghost" size="icon" aria-label={liked ? "Remove product from wishlist" : "Like product"} onClick={toggleWishlist}>
@@ -104,6 +117,41 @@ export function PublicProductCard({ product, spotlightCampaignId }: { product: P
           <Button variant="ghost" size="icon" aria-label={`Share ${product.productName}`} onClick={shareProduct}><Share2 /></Button>
         </div>
       </div>
+      {showVariantPicker && (
+        <div className="fixed inset-0 z-[100] grid place-items-center bg-black/45 p-4" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setShowVariantPicker(false); }}>
+          <section role="dialog" aria-modal="true" aria-labelledby={"variant-title-" + product.id} className="w-full max-w-sm rounded-2xl border border-border bg-background p-5 shadow-xl">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h3 id={"variant-title-" + product.id} className="font-display text-xl">Choose your options</h3>
+                <p className="mt-1 text-sm text-muted-foreground">{product.productName}</p>
+              </div>
+              <button type="button" aria-label="Close" className="rounded-md px-2 py-1 text-muted-foreground hover:bg-secondary" onClick={() => setShowVariantPicker(false)}>✕</button>
+            </div>
+            {product.sizes.length > 0 && (
+              <label className="mt-5 block text-sm font-medium">Select size <span className="text-destructive">*</span>
+                <select value={selectedSize} onChange={(event) => setSelectedSize(event.target.value)} className="mt-2 h-11 w-full rounded-lg border border-input bg-background px-3 text-sm">
+                  <option value="">Choose a size</option>
+                  {product.sizes.map((size) => <option key={size} value={size}>{size}</option>)}
+                </select>
+              </label>
+            )}
+            {product.colors.length > 0 && (
+              <label className="mt-4 block text-sm font-medium">Select colour {product.colors.length > 1 && <span className="text-destructive">*</span>}
+                <select value={selectedColor} onChange={(event) => setSelectedColor(event.target.value)} className="mt-2 h-11 w-full rounded-lg border border-input bg-background px-3 text-sm">
+                  <option value="">Choose a colour</option>
+                  {product.colors.map((color) => <option key={color} value={color}>{color}</option>)}
+                </select>
+              </label>
+            )}
+            <Button type="button" className="mt-6 w-full" disabled={(product.sizes.length > 0 && !selectedSize) || (product.colors.length > 1 && !selectedColor)} onClick={() => {
+              addToOfffeedCart(product, { size: selectedSize, color: selectedColor || product.colors[0] || "" });
+              setShowVariantPicker(false);
+              setAdded(true);
+              toast.success("Added to your bag");
+            }}>Add to bag</Button>
+          </section>
+        </div>
+      )}
     </article>
   );
 }
