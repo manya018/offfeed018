@@ -115,10 +115,11 @@ function relevanceScore(product: ProductWithBrand, aesthetic: string) {
 export const getPublicBrandProfile = createServerFn({ method: "GET" })
   .inputValidator((input) => profileInput.parse(input))
   .handler(async ({ data }) => {
-    const url = process.env["SUPABASE_URL"];
-    const key = process.env["SUPABASE_PUBLISHABLE_KEY"];
-    if (!url || !key) throw new Error("The brand storefront is temporarily unavailable.");
-    const supabase = createPublicClient(url, key);
+    // This handler runs only on the server. Use the existing service-role client
+    // for explicitly filtered public storefront records and private-bucket signing;
+    // never return the client or its key to the browser.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const supabase = supabaseAdmin;
 
     const { data: brand, error } = await supabase
       .from("brand_applications")
@@ -182,7 +183,7 @@ export const getPublicBrandProfile = createServerFn({ method: "GET" })
         processingDaysMax: safeShippingProfile?.processing_days_max ?? null,
         shippingNote: safeShippingProfile?.shipping_note ?? null,
       },
-      products: await attachActiveSalePrices(supabase, (rows ?? []).map((row) => ({
+      products: await attachActiveSalePrices(supabase as ReturnType<typeof createPublicClient>, (rows ?? []).map((row) => ({
         id: row.id,
         productName: row.product_name,
         description: row.description,
