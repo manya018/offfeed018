@@ -39,6 +39,7 @@ function BrandProfilePage() {
   const { space } = useStyleSpace();
   const availableAudience = brand.audience.includes(space) ? space : brand.audience[0] ?? "her";
   const visibleProducts = products.filter((product) => product.audience.includes(availableAudience));
+  const brandHasActiveSale = visibleProducts.some((product) => product.salePrice != null && product.salePrice > 0 && product.salePrice < product.price);
   const socialUrl = brand.socialHandle
     ? `https://www.instagram.com/${brand.socialHandle.replace(/^@/, "").replace(/^https?:\/\/(www\.)?instagram\.com\//i, "").replace(/\/$/, "")}`
     : null;
@@ -61,7 +62,10 @@ function BrandProfilePage() {
 
         <div className="grid gap-7 border-b border-border/70 py-7 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
           <div className="max-w-3xl">
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">{brand.category}</p>
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">{brand.category}</p>
+              {brandHasActiveSale && <Badge className="bg-[#30231f] text-[#fffaf4] hover:bg-[#30231f]">ON SALE</Badge>}
+            </div>
             <h1 className="mt-2 font-display text-5xl font-medium sm:text-6xl">{brand.name}</h1>
             <p className="mt-4 max-w-2xl whitespace-pre-line text-sm leading-7 text-muted-foreground">{brand.description}</p>
             {brand.dispatchPinCode && <div className="mt-5 max-w-xl border-y border-border/70 py-4">
