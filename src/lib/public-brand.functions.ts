@@ -309,3 +309,15 @@ export const getShopTheLookProducts = createServerFn({ method: "GET" })
   });
 
 export type { ProductWithBrand };
+
+export const getActiveSaleProducts = createServerFn({ method: "GET" })
+  .inputValidator((input) => z.object({ audience: z.enum(["her", "him", "home"]) }).parse(input))
+  .handler(async ({ data }) => {
+    const products = await getShopTheLookProducts({ data: {
+      audience: data.audience,
+      aesthetic: "sale",
+      categoryOnly: false,
+      resultLimit: 60,
+    } });
+    return products.filter((product) => product.salePrice != null && product.salePrice > 0 && product.salePrice < product.price);
+  });
