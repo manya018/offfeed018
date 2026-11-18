@@ -7,9 +7,12 @@ export function HomeSaleBanner({ audience }: { audience: "her" | "him" }) {
   const [hasSale, setHasSale] = useState(false);
   useEffect(() => {
     let active = true;
-    getActiveSaleProducts({ data: { audience } })
-      .then((products) => { if (active) setHasSale(products.length > 0); })
-      .catch(() => { if (active) setHasSale(false); });
+    // The shared banner is shown in every style space if any collection has an active offer.
+    const audiences = [...new Set([audience, "her", "him", "home"])] as Array<"her" | "him" | "home">;
+    Promise.allSettled(audiences.map((saleAudience) => getActiveSaleProducts({ data: { audience: saleAudience } })))
+      .then((results) => {
+        if (active) setHasSale(results.some((result) => result.status === "fulfilled" && result.value.length > 0));
+      });
     return () => { active = false; };
   }, [audience]);
 
