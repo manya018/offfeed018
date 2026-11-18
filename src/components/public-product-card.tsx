@@ -64,6 +64,7 @@ export function PublicProductCard({ product, spotlightCampaignId }: { product: P
             <div className="grid aspect-[4/5] w-full place-items-center text-muted-foreground"><ImageOff className="size-6" /></div>
           )}
         </Link>
+        {product.salePrice != null && product.salePrice > 0 && product.salePrice < product.price && <span className="absolute left-3 top-3 z-10 rounded-full bg-[#49382f] px-3 py-1.5 text-[9px] font-semibold uppercase tracking-[0.18em] text-white shadow-sm">SALE</span>}
         {product.imageUrls && product.imageUrls.length > 1 && (
           <>
             <button type="button" aria-label="Previous product photo" onClick={() => setImageIndex((index) => (index - 1 + product.imageUrls.length) % product.imageUrls.length)} className="absolute left-2 top-1/2 z-10 grid size-8 -translate-y-1/2 place-items-center rounded-full bg-background/90 shadow hover:bg-background"><ChevronLeft className="size-4"/></button>
