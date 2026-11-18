@@ -24,6 +24,7 @@ function CustomerNotificationsPage() {
   const [signedIn, setSignedIn] = useState(false);
   const [preferences, setPreferences] = useState({ in_app_enabled: true, sale_email_enabled: false, push_enabled: false });
   const [pushSupported, setPushSupported] = useState(false);
+  const [pushSubscribedOnDevice, setPushSubscribedOnDevice] = useState(false);
   const pushPublicKey = (import.meta as ImportMeta & { env: Record<string, string | undefined> }).env.VITE_VAPID_PUBLIC_KEY;
   const pushConfigured = Boolean(pushPublicKey);
 
@@ -42,7 +43,14 @@ function CustomerNotificationsPage() {
   }, []);
 
   useEffect(() => {
-    setPushSupported(typeof window !== "undefined" && "serviceWorker" in navigator && "PushManager" in window && "Notification" in window);
+    const supported = typeof window !== "undefined" && "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
+    setPushSupported(supported);
+    if (supported) {
+      void navigator.serviceWorker.getRegistration()
+        .then((registration) => registration?.pushManager.getSubscription())
+        .then((subscription) => setPushSubscribedOnDevice(Boolean(subscription)))
+        .catch(() => setPushSubscribedOnDevice(false));
+    }
     void load();
   }, [load]);
 
@@ -68,6 +76,7 @@ function CustomerNotificationsPage() {
       const json = subscription.toJSON();
       if (!json.endpoint || !json.keys?.p256dh || !json.keys?.auth) throw new Error("The browser returned an incomplete push subscription.");
       await saveCustomerPushSubscription({ data: { endpoint: json.endpoint, p256dh: json.keys.p256dh, auth: json.keys.auth, userAgent: navigator.userAgent } });
+      setPushSubscribedOnDevice(true);
       setPreferences((current) => ({ ...current, push_enabled: true }));
       toast.success("This device is enabled for OFFFEED sale alerts.");
     } catch (error) { toast.error(error instanceof Error ? error.message : "Push notifications could not be enabled."); }
@@ -80,12 +89,11 @@ function CustomerNotificationsPage() {
       const registration = await navigator.serviceWorker.getRegistration();
       const subscription = await registration?.pushManager.getSubscription();
       if (subscription) {
-        await removeCustomerPushSubscription({ data: { endpoint: subscription.endpoint } });
+        const result = await removeCustomerPushSubscription({ data: { endpoint: subscription.endpoint } });
         await subscription.unsubscribe();
-      } else {
-        await updateCustomerNotificationPreferences({ data: { inAppEnabled: preferences.in_app_enabled, saleEmailEnabled: preferences.sale_email_enabled, pushEnabled: false } });
+        setPreferences((current) => ({ ...current, push_enabled: result.pushEnabled }));
       }
-      setPreferences((current) => ({ ...current, push_enabled: false }));
+      setPushSubscribedOnDevice(false);
       toast.success("Push notifications disabled on this device.");
     } catch (error) { toast.error(error instanceof Error ? error.message : "Push notifications could not be disabled."); }
     finally { setBusy(false); }
@@ -110,7 +118,7 @@ function CustomerNotificationsPage() {
         <div className="mt-5 divide-y">
           <label className="flex items-center justify-between gap-4 py-4"><span className="flex items-center gap-3"><Bell className="size-5 text-primary"/><span><span className="block text-sm font-medium">In-app notifications</span><span className="text-xs text-muted-foreground">Updates in your OFFFEED notification centre</span></span></span><input type="checkbox" checked={preferences.in_app_enabled} disabled={busy || loading} onChange={(e) => void savePreferences({ ...preferences, in_app_enabled: e.target.checked })} className="size-4 accent-primary"/></label>
           <label className="flex items-center justify-between gap-4 py-4"><span className="flex items-center gap-3"><Mail className="size-5 text-primary"/><span><span className="block text-sm font-medium">Sale emails</span><span className="text-xs text-muted-foreground">Sale launches, reminders and ending-soon emails</span></span></span><input type="checkbox" checked={preferences.sale_email_enabled} disabled={busy || loading} onChange={(e) => void savePreferences({ ...preferences, sale_email_enabled: e.target.checked })} className="size-4 accent-primary"/></label>
-          <div className="flex items-center justify-between gap-4 py-4"><span className="flex items-center gap-3"><Smartphone className="size-5 text-primary"/><span><span className="block text-sm font-medium">Browser push notifications</span><span className="text-xs text-muted-foreground">{!pushSupported ? "This browser does not support push notifications" : !pushConfigured ? "Push alerts are not configured on this site yet" : "Alerts on this device, even when OFFFEED is closed"}</span></span></span>{preferences.push_enabled ? <Button size="sm" variant="outline" disabled={busy} onClick={() => void disablePush()}><BellOff className="mr-2 size-4"/>Disable</Button> : <Button size="sm" disabled={busy || loading || !pushSupported || !pushConfigured} onClick={() => void enablePush()}>{busy ? <LoaderCircle className="mr-2 size-4 animate-spin"/> : <Bell className="mr-2 size-4"/>}Enable</Button>}</div>
+          <div className="flex items-center justify-between gap-4 py-4"><span className="flex items-center gap-3"><Smartphone className="size-5 text-primary"/><span><span className="block text-sm font-medium">Browser push notifications</span><span className="text-xs text-muted-foreground">{!pushSupported ? "This browser does not support push notifications" : !pushConfigured ? "Push alerts are not configured on this site yet" : "Alerts on this device, even when OFFFEED is closed"}</span></span></span>{pushSubscribedOnDevice ? <Button size="sm" variant="outline" disabled={busy} onClick={() => void disablePush()}><BellOff className="mr-2 size-4"/>Disable</Button> : <Button size="sm" disabled={busy || loading || !pushSupported || !pushConfigured} onClick={() => void enablePush()}>{busy ? <LoaderCircle className="mr-2 size-4 animate-spin"/> : <Bell className="mr-2 size-4"/>}Enable</Button>}</div>
         </div>
         <p className="mt-2 text-xs text-muted-foreground">{preferences.sale_email_enabled ? "Sale emails are on for your account. You can change this setting at any time." : "Email sale updates are off until you opt in. You can change this setting at any time."}</p>
       </section>
