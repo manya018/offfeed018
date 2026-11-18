@@ -46,6 +46,7 @@ function styleBudgetRange(budget?: string) {
 }
 import { IndianWearEdit } from "@/components/indian-wear-edit";
 import { OfffeedNote } from "@/components/offfeed-note";
+import { HomeSaleBanner } from "@/components/home-sale-banner";
 import { HomeLivingEdit, HomeLivingDiscover } from "@/components/home-living-edit";
 import gulaboBanner from "@/assets/indian-wear/Gulabo_The_Desi_Girl_Edit.webp";
 import nawabBanner from "@/assets/indian-wear/Nawab_The_Desi_Gentleman_Edit.webp";
@@ -171,7 +172,7 @@ function DiscoverPage() {
     return results;
   }, [collection, filter, query, activeStyleDNA]);
 
-  if (category === "home") return view === "discover" ? <HomeLivingDiscover products={categoryProducts} loading={categoryLoading} /> : <HomeLivingEdit products={categoryProducts} loading={categoryLoading} />;
+  if (category === "home") return <><HomeSaleBanner audience="home" />{view === "discover" ? <HomeLivingDiscover products={categoryProducts} loading={categoryLoading} /> : <HomeLivingEdit products={categoryProducts} loading={categoryLoading} />}</>;
 
   if (category === "jewellery" || category === "accessories" || category === "indian-wear") {
     const indianWear = category === "indian-wear";
@@ -398,6 +399,7 @@ function DiscoverPage() {
     </section>
 
     <OfffeedNote audience={isHim ? "him" : "her"} placement="discover" />
+    <HomeSaleBanner audience={isHim ? "him" : "her"} />
 
     <section className="mx-auto max-w-[1440px] px-5 pt-12 lg:px-10 lg:pt-16">
       <div className="mb-5"><p className="text-[10px] font-semibold uppercase tracking-[.23em] text-[#a17e75]">What's catching eyes</p><h2 className="mt-2 font-display text-3xl sm:text-4xl">Trending discoveries</h2></div>
