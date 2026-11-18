@@ -227,14 +227,14 @@ export const getPublicBrandProfile = createServerFn({ method: "GET" })
 export const getShopTheLookProducts = createServerFn({ method: "GET" })
   .inputValidator((input) => shopInput.parse(input))
   .handler(async ({ data }) => {
-    const url = process.env["SUPABASE_URL"];
-    const key = process.env["SUPABASE_PUBLISHABLE_KEY"];
-    if (!url || !key) throw new Error("Shop the Look is temporarily unavailable.");
-    const supabase = createPublicClient(url, key);
+    // Server-only catalog query with explicit public filters. Discover must not
+    // depend on anonymous RLS access to approved, published product rows.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const supabase = supabaseAdmin;
 
     const { data: rows, error } = await supabase
       .from("brand_products")
-      .select("id, brand_application_id, product_name, description, category, price, product_url, image_path, image_paths, sizes, colors, tags, audience, created_at")
+      .select("id, brand_application_id, product_name, description, category, price, product_url, image_path, image_paths, sizes, colors, tags, audience, created_at, size_chart")
       .eq("status", "published")
       .eq("brand_approved", true)
       .contains("audience", [data.audience])
@@ -246,18 +246,6 @@ export const getShopTheLookProducts = createServerFn({ method: "GET" })
     }
     const applicationIds = [...new Set((rows ?? []).map((row) => row.brand_application_id))];
     if (!applicationIds.length) return [] as ProductWithBrand[];
-
-    // Fetch optional product charts separately with the server-only admin client.
-    // This prevents an unavailable/stale public schema-cache column from breaking
-    // the entire Discover feed and keeps the shopper query lean.
-    const productIds = (rows ?? []).map((row) => row.id);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: productCharts, error: productChartsError } = await supabaseAdmin
-      .from("brand_products")
-      .select("id, size_chart")
-      .in("id", productIds);
-    if (productChartsError) console.error("[OFFFEED Lens] Product size charts unavailable:", productChartsError.message);
-    const productChartById = new Map((productCharts ?? []).map((row) => [row.id, row.size_chart]));
 
     const { data: brands, error: brandsError } = await supabase
       .from("brand_applications")
@@ -301,7 +289,7 @@ export const getShopTheLookProducts = createServerFn({ method: "GET" })
         imageUrl: getImageUrl(row.image_path, signedUrls),
         imageUrls: (row.image_paths?.length ? row.image_paths : row.image_path ? [row.image_path] : []).map((path) => getImageUrl(path, signedUrls)).filter((url): url is string => Boolean(url)),
         sizes: row.sizes,
-        sizeChart: normalizeProductSizeChart(productChartById.get(row.id)) ?? (guideByBrandCategory.get(`${row.brand_application_id}:${row.category}`) ?? null) as unknown as ProductSizeChart | null,
+        sizeChart: normalizeProductSizeChart(row.size_chart) ?? normalizeProductSizeChart(guideByBrandCategory.get(`${row.brand_application_id}:${row.category}`)),
         colors: row.colors,
         tags: row.tags,
         audience: row.audience,
