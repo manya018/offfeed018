@@ -39,7 +39,7 @@ function BrandProfilePage() {
   const { space } = useStyleSpace();
   const availableAudience = brand.audience.includes(space) ? space : brand.audience[0] ?? "her";
   const visibleProducts = products.filter((product) => product.audience.includes(availableAudience));
-  const brandHasActiveSale = visibleProducts.some((product) => product.salePrice != null && product.salePrice > 0 && product.salePrice < product.price);
+  const brandHasActiveSale = products.some((product) => product.salePrice != null && product.salePrice > 0 && product.salePrice < product.price);
   const socialUrl = brand.socialHandle
     ? `https://www.instagram.com/${brand.socialHandle.replace(/^@/, "").replace(/^https?:\/\/(www\.)?instagram\.com\//i, "").replace(/\/$/, "")}`
     : null;
