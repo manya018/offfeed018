@@ -10,6 +10,7 @@ import { getCustomerNotifications } from "@/lib/customer-notifications.functions
 const links = [
   { label: "Home", to: "/" as const },
   { label: "Discover", to: "/discover" as const },
+  { label: "SALE", to: "/sale" as const },
   { label: "The EDIT", to: "/edit" as const },
   { label: "Explore", to: "/explore" as const },
   { label: "Create", to: "/create" as const },
