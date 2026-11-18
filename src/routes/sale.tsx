@@ -36,7 +36,7 @@ function matchesCategory(product: SaleProduct, category: SaleCategory) {
 }
 
 function SalePage() {
-  const [products, setProducts] = useState<ProductWithBrand[]>([]);
+  const [products, setProducts] = useState<SaleProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [failed, setFailed] = useState(false);
   const [category, setCategory] = useState<SaleCategory>("all");
