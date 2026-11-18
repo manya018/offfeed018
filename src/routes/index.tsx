@@ -32,6 +32,7 @@ function Index() {
   const collage = isHim ? [himTailoring, himGorpcore, himStreetwear] : [oldMoney, coquette, minimal];
   return (
     <main className="overflow-hidden">
+      <HomeSaleBanner />
       <section className="mx-auto grid min-h-[calc(100svh-5rem)] max-w-[1440px] items-center gap-12 px-5 py-12 lg:grid-cols-[.9fr_1.1fr] lg:px-10 lg:py-16">
         <div className="relative z-10 max-w-2xl animate-fade-in">
           <p className="mb-6 text-xs font-semibold uppercase tracking-[0.22em] text-primary">{isHim ? "A more personal menswear edit" : "Fashion discovery, reimagined"}</p>
@@ -49,8 +50,6 @@ function Index() {
           <span className="absolute left-[73%] top-[87%] z-10 rounded-full border border-border bg-card/90 px-3 py-1.5 text-xs shadow-sm backdrop-blur">{isHim ? "streetwear" : "minimal"}</span>
         </div>
       </section>
-
-      <HomeSaleBanner />
 
       <OfffeedNote audience={isHim ? "him" : "her"} placement="home" />
 
