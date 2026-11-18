@@ -4,7 +4,7 @@ import { ArrowRight, Search, Tag } from "lucide-react";
 import { PublicProductCard } from "@/components/public-product-card";
 import { Button } from "@/components/ui/button";
 import { getActiveSaleProducts, getSaleDiscountPercent } from "@/lib/sale-discovery";
-import type { ProductWithBrand } from "@/lib/public-brand.functions";
+type SaleProduct = Awaited<ReturnType<typeof getActiveSaleProducts>>[number];
 
 export const Route = createFileRoute("/sale")({
   head: () => ({ meta: [
@@ -27,7 +27,7 @@ const categories: Array<{ value: SaleCategory; label: string }> = [
   { value: "accessories", label: "Accessories" },
 ];
 
-function matchesCategory(product: ProductWithBrand, category: SaleCategory) {
+function matchesCategory(product: SaleProduct, category: SaleCategory) {
   if (category === "all") return true;
   const text = (product.category + " " + product.tags.join(" ")).toLowerCase();
   if (category === "her" || category === "him" || category === "home") return product.audience.includes(category);
