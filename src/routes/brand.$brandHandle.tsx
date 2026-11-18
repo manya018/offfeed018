@@ -81,6 +81,14 @@ function BrandProfilePage() {
         </div>
       </section>
 
+      {visibleProducts.some((product) => product.salePrice != null && product.salePrice > 0 && product.salePrice < product.price) && (
+        <section className="mt-7 rounded-2xl border border-primary/25 bg-primary/5 px-5 py-5 sm:px-7" aria-label="Active brand sale">
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">Limited-time brand sale</p>
+          <h2 className="mt-1 font-display text-2xl sm:text-3xl">A little something on sale</h2>
+          <p className="mt-2 text-sm text-muted-foreground">Selected pieces from {brand.name} are currently on offer. Look for the sale labels and reduced prices below.</p>
+        </section>
+      )}
+
       <section className="pt-8" aria-labelledby="brand-products-heading">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
