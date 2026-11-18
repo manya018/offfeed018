@@ -57,6 +57,9 @@ export function PublicProductCard({ product, spotlightCampaignId }: { product: P
   return (
     <article className="min-w-0 border-b border-border/70 pb-4">
       <div className="group relative overflow-hidden bg-secondary/30">
+        {product.salePrice != null && product.salePrice > 0 && product.salePrice < product.price && (
+          <span className="absolute left-2 top-2 z-20 rounded-full bg-primary px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-primary-foreground shadow">On sale · {product.saleDiscountLabel ?? "Offer"}</span>
+        )}
         <Link to="/brand/$brandHandle" params={{ brandHandle: product.brand.handle }} className="block w-full" onClick={() => { if (spotlightCampaignId) void recordSpotlightEvent({ data: { campaignId: spotlightCampaignId, productId: product.id, eventType: "click", visitorId } }); }}>
           {((product.imageUrls?.length ? product.imageUrls : product.imageUrl ? [product.imageUrl] : [])[imageIndex]) ? (
             <img src={(product.imageUrls?.length ? product.imageUrls : [product.imageUrl]).filter(Boolean)[imageIndex] ?? product.imageUrl ?? ""} alt={`${product.productName} photo ${imageIndex + 1}`} loading="lazy" className="block h-auto w-full object-contain transition-opacity duration-300" />
