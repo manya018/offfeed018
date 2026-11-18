@@ -33,7 +33,26 @@ export const saveCustomerPushSubscription = createServerFn({ method: "POST" }).m
   const db = await dbFor();
   const { error } = await db.from("customer_push_subscriptions").upsert({ user_id: context.userId, endpoint: data.endpoint, p256dh: data.p256dh, auth: data.auth, user_agent: data.userAgent ?? null, updated_at: new Date().toISOString() }, { onConflict: "endpoint" });
   if (error) throw new Error("This device could not be registered for push notifications.");
-  await db.from("customer_notification_preferences").upsert({ user_id: context.userId, push_enabled: true, updated_at: new Date().toISOString() });
+  const { data: existingPreferences, error: preferenceLookupError } = await db.from("customer_notification_preferences").select("user_id").eq("user_id", context.userId).maybeSingle();
+  if (preferenceLookupError) throw new Error("Push notification preferences could not be loaded.");
+  if (existingPreferences) {
+    const { error: preferenceUpdateError } = await db.from("customer_notification_preferences").update({ push_enabled: true, updated_at: new Date().toISOString() }).eq("user_id", context.userId);
+    if (preferenceUpdateError) throw new Error("Push notification preferences could not be saved.");
+  } else {
+    const { data: authUser, error: authUserError } = await db.auth.admin.getUserById(context.userId);
+    if (authUserError) throw new Error("Your account could not be loaded.");
+    const metadata = authUser.user?.user_metadata ?? {};
+    const { error: preferenceInsertError } = await db.from("customer_notification_preferences").insert({
+      user_id: context.userId,
+      email: authUser.user?.email ?? null,
+      account_type: metadata.account_type === "brand" ? "brand" : "customer",
+      in_app_enabled: true,
+      sale_email_enabled: false,
+      push_enabled: true,
+      updated_at: new Date().toISOString(),
+    });
+    if (preferenceInsertError) throw new Error("Push notification preferences could not be saved.");
+  }
   return { success: true };
 });
 
