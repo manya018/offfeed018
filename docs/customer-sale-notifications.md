@@ -8,14 +8,14 @@
 - A protected Supabase Edge Function that dispatches due jobs.
 
 ## Required deployment configuration
-1. Apply migrations in order: `supabase/migrations/20261111120000_customer_sale_notifications.sql`, then `supabase/migrations/20261112130000_reschedule_sale_notification_jobs.sql` (the second keeps pending jobs aligned when a brand edits or cancels a sale).
-2. Deploy `supabase/functions/sale-notification-dispatch` with `supabase/config.toml` configured to disable platform JWT verification for this endpoint; the function validates its own bearer secret.
-3. Set Edge Function secrets: `SALE_NOTIFICATION_CRON_SECRET`, `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`, `SITE_URL`, `LOVABLE_API_KEY`, and `GOOGLE_MAIL_API_KEY`. Supabase supplies `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` to Edge Functions.
-4. Generate a VAPID key pair with `npx web-push generate-vapid-keys`. Use the public key as the deployment build variable `VITE_VAPID_PUBLIC_KEY`; keep the private key only in Edge Function secrets.
-5. Add GitHub Actions repository secrets `SUPABASE_URL` and `SALE_NOTIFICATION_CRON_SECRET`. The workflow is currently manual-only (`workflow_dispatch`); do not restore its five-minute schedule until the Edge Function is deployed, secrets are verified, and test delivery succeeds.
-6. Rebuild/redeploy the web app so the customer notification page and header link are published.
+1. Apply migrations in order: `supabase/migrations/20261111120000_customer_sale_notifications.sql`, then `supabase/migrations/20261112130000_reschedule_sale_notification_jobs.sql`. Confirm both are applied before enabling dispatch.
+2. Add the GitHub Actions secret `SUPABASE_ACCESS_TOKEN`. The `Deploy OFFFEED sale notification dispatcher` workflow deploys the Edge Function when its code changes on `main`; run it manually once for the initial deployment. It uses project ref `wrqkpxvbbdsvfgvisyte`.
+3. Set Edge Function secrets: `SALE_NOTIFICATION_CRON_SECRET`, `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`, `SITE_URL`, `LOVABLE_API_KEY`, and `GOOGLE_MAIL_API_KEY`. Supabase supplies `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY) to Edge Functions.
+4. Generate a VAPID key pair with `npx web-push generate-vapid-keys`. Set the public key as the web app build variable `VITE_VAPID_PUBLIC_KEY`; keep the private key only in Edge Function secrets. Rebuild/redeploy the web app after setting it.
+5. Add GitHub Actions secrets `SUPABASE_URL` and `SALE_NOTIFICATION_CRON_SECRET`. The dispatch workflow runs every five minutes after the repository variable `SALE_NOTIFICATION_AUTOMATION_ENABLED` is set to `true`; it can also be run manually.
+6. For private testing, set Edge Function secret `SALE_NOTIFICATION_TEST_USER_ID` to the test account and leave `SALE_NOTIFICATION_LIVE_SEND_ENABLED) unset. After verifying in-app, opted-in email, push, duplicate prevention, cancellation, and rescheduling behavior, set `SALE_NOTIFICATION_LIVE_SEND_ENABLED=true` to enable delivery to customers who opted into each channel.
 
-Live delivery is intentionally fail-closed. Keep `SALE_NOTIFICATION_LIVE_SEND_ENABLED` unset/false during testing and set `SALE_NOTIFICATION_TEST_USER_ID` to the approved test account. Only enable live sending after in-app, email consent, push consent, duplicate prevention, cancellation, and rescheduling tests pass. The current dispatcher has not yet been deployed to Lovable Cloud.
+The schedule is guarded by the repository variable so it remains idle until deployment and validation are complete. Sale email remains opt-in, in-app notifications use the saved preference, and browser push only goes to devices that have granted permission and registered a subscription.
 
 ## Customer consent and audience
 - In-app alerts are enabled by default for registered customer accounts.
