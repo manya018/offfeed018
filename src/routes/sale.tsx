@@ -1,7 +1,6 @@
 import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, SlidersHorizontal, Tag } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { PublicProductCard } from "@/components/public-product-card";
 import { getShopTheLookProducts, type ProductWithBrand } from "@/lib/public-brand.functions";
