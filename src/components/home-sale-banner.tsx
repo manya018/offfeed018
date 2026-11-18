@@ -3,7 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { ArrowRight, Sparkles } from "lucide-react";
 import { getActiveSaleProducts } from "@/lib/public-brand.functions";
 
-export function HomeSaleBanner({ audience }: { audience: "her" | "him" }) {
+export function HomeSaleBanner({ audience }: { audience: "her" | "him" | "home" }) {
   const [hasSale, setHasSale] = useState(false);
   useEffect(() => {
     let active = true;
