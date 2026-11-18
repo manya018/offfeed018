@@ -1,4 +1,4 @@
-import { ImageOff, ShoppingBag, Check, Heart, Share2 } from "lucide-react";
+import { ImageOff, ShoppingBag, Check, Heart, Share2, ChevronLeft, ChevronRight } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -17,6 +17,7 @@ export function PublicProductCard({ product, spotlightCampaignId }: { product: P
   const [showVariantPicker, setShowVariantPicker] = useState(false);
   const [selectedSize, setSelectedSize] = useState("");
   const [selectedColor, setSelectedColor] = useState("");
+  const [imageIndex, setImageIndex] = useState(0);
   const [visitorId] = useState(() => { try { const key = "offfeed-analytics-visitor"; let id = localStorage.getItem(key); if (!id) { id = crypto.randomUUID(); localStorage.setItem(key, id); } return id; } catch { return crypto.randomUUID(); } });
 
   useEffect(() => { if (spotlightCampaignId) void recordSpotlightEvent({ data: { campaignId: spotlightCampaignId, productId: product.id, eventType: "view", visitorId } }); }, [spotlightCampaignId, product.id, visitorId]);
@@ -55,15 +56,24 @@ export function PublicProductCard({ product, spotlightCampaignId }: { product: P
 
   return (
     <article className="min-w-0 border-b border-border/70 pb-4">
-      <Link to="/brand/$brandHandle" params={{ brandHandle: product.brand.handle }} className="group block" onClick={() => { if (spotlightCampaignId) void recordSpotlightEvent({ data: { campaignId: spotlightCampaignId, productId: product.id, eventType: "click", visitorId } }); }}>
-        <div className="relative aspect-[4/5] overflow-hidden bg-secondary">
-          {product.imageUrl ? (
-            <img src={product.imageUrl} alt={product.productName} loading="lazy" className="size-full object-cover transition-transform duration-500 group-hover:scale-[1.03]" />
+      <div className="group relative aspect-[4/5] overflow-hidden bg-secondary">
+        <Link to="/brand/$brandHandle" params={{ brandHandle: product.brand.handle }} className="absolute inset-0 block" onClick={() => { if (spotlightCampaignId) void recordSpotlightEvent({ data: { campaignId: spotlightCampaignId, productId: product.id, eventType: "click", visitorId } }); }}>
+          {((product.imageUrls?.length ? product.imageUrls : product.imageUrl ? [product.imageUrl] : [])[imageIndex]) ? (
+            <img src={(product.imageUrls?.length ? product.imageUrls : [product.imageUrl]).filter(Boolean)[imageIndex] ?? product.imageUrl ?? ""} alt={`${product.productName} photo ${imageIndex + 1}`} loading="lazy" className="size-full object-cover transition-transform duration-500 group-hover:scale-[1.02]" />
           ) : (
             <div className="grid size-full place-items-center text-muted-foreground"><ImageOff className="size-6" /></div>
           )}
-        </div>
-      </Link>
+        </Link>
+        {product.imageUrls && product.imageUrls.length > 1 && (
+          <>
+            <button type="button" aria-label="Previous product photo" onClick={() => setImageIndex((index) => (index - 1 + product.imageUrls.length) % product.imageUrls.length)} className="absolute left-2 top-1/2 z-10 grid size-8 -translate-y-1/2 place-items-center rounded-full bg-background/90 shadow hover:bg-background"><ChevronLeft className="size-4"/></button>
+            <button type="button" aria-label="Next product photo" onClick={() => setImageIndex((index) => (index + 1) % product.imageUrls.length)} className="absolute right-2 top-1/2 z-10 grid size-8 -translate-y-1/2 place-items-center rounded-full bg-background/90 shadow hover:bg-background"><ChevronRight className="size-4"/></button>
+            <div className="absolute bottom-2 left-1/2 z-10 flex -translate-x-1/2 gap-1.5 rounded-full bg-background/75 px-2 py-1">
+              {product.imageUrls.map((_, index) => <button key={index} type="button" aria-label={`Show product photo ${index + 1}`} onClick={() => setImageIndex(index)} className={`size-1.5 rounded-full ${imageIndex === index ? "bg-foreground" : "bg-foreground/35"}`}/>)}
+            </div>
+          </>
+        )}
+      </div>
       <div className="pt-3">
         <Link to="/brand/$brandHandle" params={{ brandHandle: product.brand.handle }} className="text-xs text-muted-foreground hover:text-foreground">{product.brand.name}</Link>
         <h3 className="mt-1 line-clamp-2 text-sm font-medium">{product.productName}</h3>
