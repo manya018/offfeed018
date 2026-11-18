@@ -2,9 +2,13 @@ name: Dispatch OFFFEED sale notifications
 
 on:
   workflow_dispatch:
+  schedule:
+    # GitHub Actions runs on UTC; automation stays off until its repo variable is enabled.
+    - cron: "*/5 * * * *"
 
 jobs:
   dispatch:
+    if: github.event_name == 'workflow_dispatch' || vars.SALE_NOTIFICATION_AUTOMATION_ENABLED == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Dispatch due sale notifications
