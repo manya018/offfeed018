@@ -50,7 +50,7 @@ function Index() {
         </div>
       </section>
 
-      <HomeSaleBanner audience={isHim ? "him" : "her"} />
+      <HomeSaleBanner />
 
       <OfffeedNote audience={isHim ? "him" : "her"} placement="home" />
 
