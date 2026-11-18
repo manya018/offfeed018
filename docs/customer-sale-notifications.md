@@ -9,7 +9,8 @@
 
 ## Required deployment configuration
 1. Apply migrations in order: `supabase/migrations/20261111120000_customer_sale_notifications.sql`, then `supabase/migrations/20261112130000_reschedule_sale_notification_jobs.sql` (the second keeps pending jobs aligned when a brand edits or cancels a sale).
-2. Apply `supabase/migrations/20261118100000_sale_discovery_notifications.sql` after the two notification migrations above. It adds the halfway event and moves the final reminder to three hours before the sale ends.\n3. Deploy `supabase/functions/sale-notification-dispatch` with `supabase/config.toml` configured to disable platform JWT verification for this endpoint; the function validates its own bearer secret.
+2. Apply `supabase/migrations/20261118100000_sale_discovery_notifications.sql` after the two notification migrations above. It adds the halfway event and moves the final reminder to three hours before the sale ends.
+3. Deploy `supabase/functions/sale-notification-dispatch` with `supabase/config.toml` configured to disable platform JWT verification for this endpoint; the function validates its own bearer secret.
 4. Set Edge Function secrets: `SALE_NOTIFICATION_CRON_SECRET`, `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`, `SITE_URL`, `LOVABLE_API_KEY`, and `GOOGLE_MAIL_API_KEY`. Supabase supplies `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` to Edge Functions.
 5. Generate a VAPID key pair with `npx web-push generate-vapid-keys`. Use the public key as the deployment build variable `VITE_VAPID_PUBLIC_KEY`; keep the private key only in Edge Function secrets.
 6. Add GitHub Actions repository secrets `SUPABASE_URL` and `SALE_NOTIFICATION_CRON_SECRET`. The workflow is currently manual-only (`workflow_dispatch`); do not restore its five-minute schedule until the Edge Function is deployed, secrets are verified, and test delivery succeeds.
