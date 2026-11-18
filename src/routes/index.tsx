@@ -9,6 +9,7 @@ import himGorpcore from "@/assets/offfeed-him-gorpcore.jpg";
 import himStreetwear from "@/assets/offfeed-him-streetwear.jpg";
 import { useStyleSpace } from "@/lib/style-space";
 import { OfffeedNote } from "@/components/offfeed-note";
+import { SaleDiscoveryBanner } from "@/components/sale-discovery-banner";
 
 // No head() here: the home route inherits title/description/og/twitter from
 // __root.tsx, and ships no og:image so serve-time hosting can inject the
@@ -48,6 +49,8 @@ function Index() {
           <span className="absolute left-[73%] top-[87%] z-10 rounded-full border border-border bg-card/90 px-3 py-1.5 text-xs shadow-sm backdrop-blur">{isHim ? "streetwear" : "minimal"}</span>
         </div>
       </section>
+
+      <SaleDiscoveryBanner audience={space} />
 
       <OfffeedNote audience={isHim ? "him" : "her"} placement="home" />
 
