@@ -56,12 +56,12 @@ export function PublicProductCard({ product, spotlightCampaignId }: { product: P
 
   return (
     <article className="min-w-0 border-b border-border/70 pb-4">
-      <div className="group relative aspect-[4/5] overflow-hidden bg-secondary">
-        <Link to="/brand/$brandHandle" params={{ brandHandle: product.brand.handle }} className="absolute inset-0 block" onClick={() => { if (spotlightCampaignId) void recordSpotlightEvent({ data: { campaignId: spotlightCampaignId, productId: product.id, eventType: "click", visitorId } }); }}>
+      <div className="group relative overflow-hidden bg-secondary/30">
+        <Link to="/brand/$brandHandle" params={{ brandHandle: product.brand.handle }} className="block w-full" onClick={() => { if (spotlightCampaignId) void recordSpotlightEvent({ data: { campaignId: spotlightCampaignId, productId: product.id, eventType: "click", visitorId } }); }}>
           {((product.imageUrls?.length ? product.imageUrls : product.imageUrl ? [product.imageUrl] : [])[imageIndex]) ? (
-            <img src={(product.imageUrls?.length ? product.imageUrls : [product.imageUrl]).filter(Boolean)[imageIndex] ?? product.imageUrl ?? ""} alt={`${product.productName} photo ${imageIndex + 1}`} loading="lazy" className="size-full object-cover transition-transform duration-500 group-hover:scale-[1.02]" />
+            <img src={(product.imageUrls?.length ? product.imageUrls : [product.imageUrl]).filter(Boolean)[imageIndex] ?? product.imageUrl ?? ""} alt={`${product.productName} photo ${imageIndex + 1}`} loading="lazy" className="block h-auto w-full object-contain transition-opacity duration-300" />
           ) : (
-            <div className="grid size-full place-items-center text-muted-foreground"><ImageOff className="size-6" /></div>
+            <div className="grid aspect-[4/5] w-full place-items-center text-muted-foreground"><ImageOff className="size-6" /></div>
           )}
         </Link>
         {product.imageUrls && product.imageUrls.length > 1 && (
