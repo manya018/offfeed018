@@ -87,7 +87,7 @@ function BrandProfilePage() {
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">The collection</p>
             <h2 id="brand-products-heading" className="mt-2 font-display text-3xl">Published pieces</h2>
           </div>
-          <Badge variant="secondary">{availableAudience === "her" ? "Her space" : "Him space"}</Badge>
+          <div className="flex items-center gap-2"><Badge variant="secondary">{availableAudience === "her" ? "Her space" : availableAudience === "him" ? "Him space" : "Living space"}</Badge>{visibleProducts.some((product) => product.salePrice != null && product.salePrice > 0 && product.salePrice < product.price) && <Badge>ON SALE</Badge>}</div>
         </div>
         {visibleProducts.length ? (
           <div className="mt-6 grid grid-cols-2 gap-x-4 gap-y-7 sm:grid-cols-3 sm:gap-x-6 lg:grid-cols-4">
