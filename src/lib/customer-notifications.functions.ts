@@ -75,7 +75,12 @@ export const removeCustomerPushSubscription = createServerFn({ method: "POST" })
   const db = await dbFor();
   const { error } = await db.from("customer_push_subscriptions").delete().eq("user_id", context.userId).eq("endpoint", data.endpoint);
   if (error) throw new Error("Push notifications could not be disabled on this device.");
-  const { count } = await db.from("customer_push_subscriptions").select("id", { count: "exact", head: true }).eq("user_id", context.userId);
-  if (!count) await db.from("customer_notification_preferences").update({ push_enabled: false, updated_at: new Date().toISOString() }).eq("user_id", context.userId);
-  return { success: true };
+  const { count, error: countError } = await db.from("customer_push_subscriptions").select("id", { count: "exact", head: true }).eq("user_id", context.userId);
+  if (countError) throw new Error("Remaining push subscriptions could not be checked.");
+  const pushEnabled = Boolean(count);
+  if (!pushEnabled) {
+    const { error: preferenceError } = await db.from("customer_notification_preferences").update({ push_enabled: false, updated_at: new Date().toISOString() }).eq("user_id", context.userId);
+    if (preferenceError) throw new Error("Push notification preferences could not be saved.");
+  }
+  return { success: true, pushEnabled };
 });
