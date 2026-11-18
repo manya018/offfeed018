@@ -234,7 +234,7 @@ export const getShopTheLookProducts = createServerFn({ method: "GET" })
 
     const { data: rows, error } = await supabase
       .from("brand_products")
-      .select("id, brand_application_id, product_name, description, category, price, product_url, image_path, sizes, colors, tags, audience, created_at")
+      .select("id, brand_application_id, product_name, description, category, price, product_url, image_path, image_paths, sizes, size_chart, colors, tags, audience, created_at")
       .eq("status", "published")
       .eq("brand_approved", true)
       .contains("audience", [data.audience])
@@ -289,7 +289,7 @@ export const getShopTheLookProducts = createServerFn({ method: "GET" })
         imageUrl: getImageUrl(row.image_path, signedUrls),
         imageUrls: (row.image_paths?.length ? row.image_paths : row.image_path ? [row.image_path] : []).map((path) => getImageUrl(path, signedUrls)).filter((url): url is string => Boolean(url)),
         sizes: row.sizes,
-        sizeChart: (guideByBrandCategory.get(`${row.brand_application_id}:${row.category}`) ?? null) as unknown as ProductSizeChart | null,
+        sizeChart: (row.size_chart ?? guideByBrandCategory.get(`${row.brand_application_id}:${row.category}`) ?? null) as unknown as ProductSizeChart | null,
         colors: row.colors,
         tags: row.tags,
         audience: row.audience,
