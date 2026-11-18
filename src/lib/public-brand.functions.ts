@@ -11,7 +11,7 @@ const shopInput = z.object({
   minPrice: z.number().nonnegative().optional(),
   maxPrice: z.number().positive().optional(),
   requireMatch: z.boolean().optional(),
-  resultLimit: z.number().int().min(1).max(60).optional(),
+  resultLimit: z.number().int().min(1).max(200).optional(),
 });
 
 type Audience = "her" | "him" | "home";
@@ -239,7 +239,7 @@ export const getShopTheLookProducts = createServerFn({ method: "GET" })
       .eq("brand_approved", true)
       .contains("audience", [data.audience])
       .order("created_at", { ascending: false })
-      .limit(60);
+      .limit(data.resultLimit ?? 60);
     if (error) {
       console.error("[OFFFEED Lens] Published product query failed:", error.code, error.message, error.details);
       throw new Error("OFFFEED could not load published brand products. Please try again shortly.");
