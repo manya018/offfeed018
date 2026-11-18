@@ -52,13 +52,15 @@ Deno.serve(async (request) => {
       let title = "", body = "", subject = "";
       if (job.event_type === "sale_started") {
         title = brand + "'s sale is live"; body = sale.name + " has started. Discover the offer on OFFFEED."; subject = brand + "'s sale is now live on OFFFEED";
+      } else if (job.event_type === "sale_midway") {
+        title = "Halfway through: " + sale.name; body = brand + "'s sale has reached its halfway point. There is still time to discover something you love."; subject = "Halfway through " + sale.name + " on OFFFEED";
       } else if (job.event_type === "sale_reminder") {
-        title = "A sale worth revisiting"; body = sale.name + " from " + brand + " is still on. Take another look before it ends."; subject = "A reminder: " + sale.name + " on OFFFEED";
+        title = "A sale worth revisiting"; body = sale.name + " from " + brand + " ends in about 24 hours. Take another look before it ends."; subject = "24 hours left: " + sale.name + " on OFFFEED";
       } else {
-        title = "Last call: " + sale.name; body = brand + "'s sale is ending soon. Explore it before time runs out."; subject = "Ending soon: " + sale.name + " on OFFFEED";
+        title = "Last call: " + sale.name; body = brand + "'s sale is ending in about 3 hours. Explore it before time runs out."; subject = "3 hours left: " + sale.name + " on OFFFEED";
       }
       const siteUrl = Deno.env.get("SITE_URL") ?? "https://offfeed018.lovable.app";
-      const destination = siteUrl + "/discover";
+      const destination = siteUrl + "/sale";
       const { data: prefs, error: prefError } = await db.from("customer_notification_preferences").select("user_id,email,account_type,in_app_enabled,sale_email_enabled,push_enabled").or("in_app_enabled.eq.true,sale_email_enabled.eq.true,push_enabled.eq.true");
       if (prefError) throw prefError;
       const recipients = (prefs ?? []).filter((p) => p.account_type === "customer" && (liveSendingEnabled || p.user_id === testUserId));

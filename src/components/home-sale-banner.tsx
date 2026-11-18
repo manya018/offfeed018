@@ -1,17 +1,17 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, Sparkles } from "lucide-react";
-import { getActiveSaleProducts } from "@/lib/public-brand.functions";
+import { getAllActiveSaleProducts } from "@/lib/sale-discovery";
 
-export function HomeSaleBanner({ audience }: { audience: "her" | "him" }) {
+export function HomeSaleBanner() {
   const [hasSale, setHasSale] = useState(false);
   useEffect(() => {
     let active = true;
-    getActiveSaleProducts({ data: { audience } })
+    getAllActiveSaleProducts()
       .then((products) => { if (active) setHasSale(products.length > 0); })
       .catch(() => { if (active) setHasSale(false); });
     return () => { active = false; };
-  }, [audience]);
+  }, []);
 
   if (!hasSale) return null;
   return (

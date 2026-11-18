@@ -39,6 +39,7 @@ function BrandProfilePage() {
   const { space } = useStyleSpace();
   const availableAudience = brand.audience.includes(space) ? space : brand.audience[0] ?? "her";
   const visibleProducts = products.filter((product) => product.audience.includes(availableAudience));
+  const hasActiveSale = products.some((product) => product.salePrice != null && product.salePrice > 0 && product.salePrice < product.price);
   const socialUrl = brand.socialHandle
     ? `https://www.instagram.com/${brand.socialHandle.replace(/^@/, "").replace(/^https?:\/\/(www\.)?instagram\.com\//i, "").replace(/\/$/, "")}`
     : null;
@@ -53,7 +54,7 @@ function BrandProfilePage() {
           <div className="absolute bottom-4 left-4 flex items-end gap-4 sm:bottom-7 sm:left-8">
             {brand.logoUrl && <img src={brand.logoUrl} alt={`${brand.name} logo`} className="size-16 rounded-full border-2 border-background object-cover sm:size-24" />}
             <div className="pb-1 text-background">
-              <Badge variant="secondary" className="mb-2">OFFFEED brand</Badge>
+              <div className="mb-2 flex flex-wrap gap-2"><Badge variant="secondary">OFFFEED brand</Badge>{hasActiveSale && <Badge className="border-0 bg-[#49382f] text-white">ON SALE</Badge>}</div>
               <p className="text-xs font-medium uppercase tracking-[0.16em]">@{brand.handle}</p>
             </div>
           </div>
