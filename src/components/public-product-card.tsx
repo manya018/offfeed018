@@ -8,6 +8,7 @@ import { addToOfffeedCart } from "@/lib/cart";
 import { readLikedProductIds, setWishlistItem } from "@/lib/look-collections";
 import { MoodboardSaveButton } from "@/components/moodboard-save-button";
 import { FindMySize } from "@/components/find-my-size";
+import { ProductReviews } from "@/components/product-reviews";
 import { recordSpotlightEvent } from "@/lib/spotlight.functions";
 
 export function PublicProductCard({ product, spotlightCampaignId }: { product: ProductWithBrand; spotlightCampaignId?: string }) {
@@ -142,6 +143,7 @@ export function PublicProductCard({ product, spotlightCampaignId }: { product: P
           </Button>
           <Button variant="ghost" size="icon" aria-label={`Share ${product.productName}`} onClick={shareProduct}><Share2 /></Button>
         </div>
+        <ProductReviews productId={product.id} productName={product.productName} />
       </div>
       {showVariantPicker && (
         <div className="fixed inset-0 z-[100] grid place-items-center bg-black/45 p-4" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setShowVariantPicker(false); }}>
