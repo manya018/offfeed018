@@ -232,7 +232,18 @@ function BrandApplicationPage() {
         setErrors(Object.fromEntries(parsed.error.issues.map((issue) => [issue.path[0]?.toString() ?? "form", issue.message])));
         return;
       }
-      setNotice(""); setStep(2); return;
+      setBusy(true); setNotice("");
+      try {
+        const application = await getMyBrandApplication();
+        if (application) {
+          setConfirmation({ brandName: application.brand_name, status: application.status });
+          return;
+        }
+        setStep(2);
+      } catch {
+        setNotice("We couldn't check your application yet. Please try again shortly.");
+      } finally { setBusy(false); }
+      return;
     }
     if (!validateStep()) return;
     setBusy(true); setNotice("");
@@ -265,9 +276,14 @@ function BrandApplicationPage() {
         if (roleError) throw roleError;
       }
       setUserId(session.user.id);
+      const application = await getMyBrandApplication();
+      if (application) {
+        setConfirmation({ brandName: application.brand_name, status: application.status });
+        return;
+      }
       setStep(2);
     } catch {
-      setNotice("We couldn't connect securely. Please try again.");
+      setNotice("We couldn't check your saved application. Please try signing in again shortly.");
     } finally { setBusy(false); }
   };
 
