@@ -195,14 +195,9 @@ export const submitDispatchEvidence = createServerFn({ method: "POST" })
       .maybeSingle();
     if (orderError || !order) throw new Error("That order doesn't belong to your brand.");
 
-    const { data: existing, error: existingError } = await context.supabase
-      .from("dispatch_evidence")
-      .select("id")
-      .eq("order_id", data.orderId)
-      .maybeSingle();
-    if (existingError) throw new Error("We couldn't check the existing dispatch proof.");
-    if (existing?.id) throw new Error("Dispatch evidence has already been submitted for this order. Contact OFFFEED support if it needs correction.");
-
+    // A brand may correct its own dispatch proof from the dashboard. The order
+    // ownership check above prevents a different brand from replacing it, and the
+    // server-only write below keeps AI status/report fields out of client control.
     const row = {
       order_id: data.orderId,
       brand_user_id: context.userId,
@@ -227,11 +222,11 @@ export const submitDispatchEvidence = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: evidence, error } = await supabaseAdmin
       .from("dispatch_evidence")
-      .insert({
+      .upsert({
         ...row,
         status: scoreToStatus(report.trust_score),
         ai_report: report,
-      })
+      }, { onConflict: "order_id" })
       .select("id, status")
       .single();
     if (error || !evidence) {
