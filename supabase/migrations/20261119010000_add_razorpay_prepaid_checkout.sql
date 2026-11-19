@@ -238,3 +238,6 @@ revoke all on function public.complete_offfeed_razorpay_session(uuid,text,text) 
 grant execute on function public.prepare_offfeed_razorpay_session(text,text,text,jsonb,text,jsonb) to service_role;
 grant execute on function public.attach_offfeed_razorpay_order(uuid,text) to service_role;
 grant execute on function public.complete_offfeed_razorpay_session(uuid,text,text) to service_role;
+
+-- Disable the legacy public COD order endpoint. Historical COD orders remain readable.
+revoke all on function public.create_offfeed_cod_orders(text,text,text,jsonb,text,jsonb) from public, anon, authenticated;
