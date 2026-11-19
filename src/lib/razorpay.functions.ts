@@ -1,5 +1,4 @@
 import { createServerFn } from "@tanstack/react-start";
-import { createHmac, timingSafeEqual } from "node:crypto";
 import { z } from "zod";
 
 const checkoutSchema = z.object({
@@ -140,6 +139,7 @@ export const verifyOfffeedRazorpayPayment = createServerFn({ method: "POST" })
   .inputValidator((input) => verifySchema.parse(input))
   .handler(async ({ data }) => {
     const { keySecret } = getRazorpayConfig();
+    const { createHmac, timingSafeEqual } = await import("node:crypto");
     const expected = createHmac("sha256", keySecret).update(`${data.orderId}|${data.paymentId}`).digest();
     let received: Buffer;
     try {
