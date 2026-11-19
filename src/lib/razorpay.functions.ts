@@ -22,7 +22,7 @@ const checkoutSchema = z.object({
   })).min(1).max(20),
 });
 
-type OrderResult = {
+export type OfffeedCheckoutResult = {
   order_id: string;
   order_number: string;
   brand_name: string;
@@ -31,7 +31,7 @@ type OrderResult = {
   line_total: number;
 };
 type PaymentSessionRow = { session_id: string; amount_paise: number };
-type FinalizedOrderRow = OrderResult & { newly_created: boolean };
+type FinalizedOrderRow = OfffeedCheckoutResult & { newly_created: boolean };
 
 function getRazorpayConfig() {
   const keyId = process.env["RAZORPAY_KEY_ID"];
