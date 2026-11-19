@@ -1,34 +1,42 @@
 # OFFFEED customer sale notifications
 
-## What this branch adds
-- Customer inbox rows and read state in Supabase.
+OFFFEED uses Lovable Cloud for its managed backend. Its database and Edge Functions use Supabase technology underneath, but OFFFEED does not need a separately created Supabase account or project.
+
+## What the code provides
+
+- Customer inbox notifications and read state.
 - Per-customer in-app, sale-email and browser-push preferences.
-- Browser push subscription storage and a service worker at /sw.js.
-- A sale notification queue that schedules launch, 24-hour reminder (only for sufficiently long sales), and two-hour ending-soon events.
-- A protected Supabase Edge Function that dispatches due jobs.
+- Push subscription storage and a service worker at `/sw.js`.
+- A sale notification queue for launch, 24-hour reminder (for sufficiently long sales), and ending-soon events.
+- A protected Edge Function at `supabase/functions/sale-notification-dispatch` that sends due notifications.
+- Sale create/edit triggers that populate or reschedule queue rows.
 
-## Required deployment configuration
-1. Apply migrations in order: `supabase/migrations/20261111120000_customer_sale_notifications.sql`, then `supabase/migrations/20261112130000_reschedule_sale_notification_jobs.sql`. Confirm both are applied before enabling dispatch.
-2. Add the GitHub Actions secret `SUPABASE_ACCESS_TOKEN`. The `Deploy OFFFEED sale notification dispatcher` workflow deploys the Edge Function when its code changes on `main`; run it manually once for the initial deployment. It uses project ref `wrqkpxvbbdsvfgvisyte`.
-3. Set Edge Function secrets: `SALE_NOTIFICATION_CRON_SECRET`, `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`, `SITE_URL`, `LOVABLE_API_KEY`, and `GOOGLE_MAIL_API_KEY`. Supabase supplies `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` to Edge Functions.
-4. Generate a VAPID key pair with `npx web-push generate-vapid-keys`. Set the public key as the web app build variable `VITE_VAPID_PUBLIC_KEY`; keep the private key only in Edge Function secrets. Rebuild/redeploy the web app after setting it.
-5. Add GitHub Actions secrets `SUPABASE_URL` and `SALE_NOTIFICATION_CRON_SECRET`. The dispatch workflow runs every five minutes after the repository variable `SALE_NOTIFICATION_AUTOMATION_ENABLED` is set to `true`; it can also be run manually.
-6. For private testing, set Edge Function secret `SALE_NOTIFICATION_TEST_USER_ID` to the test account and leave `SALE_NOTIFICATION_LIVE_SEND_ENABLED` unset. After verifying in-app, opted-in email, push, duplicate prevention, cancellation, and rescheduling behavior, set `SALE_NOTIFICATION_LIVE_SEND_ENABLED=true` to enable delivery to customers who opted into each channel.
+## Lovable Cloud setup
 
-The schedule is guarded by the repository variable so it remains idle until deployment and validation are complete. Sale email remains opt-in, in-app notifications use the saved preference, and browser push only goes to devices that have granted permission and registered a subscription.
+Use the OFFFEED project’s built-in Cloud controls:
 
-## Customer consent and audience
+1. Open **More → Database → Manage → SQL editor**. Check that migrations `20261111120000_customer_sale_notifications.sql` and `20261112130000_reschedule_sale_notification_jobs.sql` are applied. The tables `customer_notification_preferences`, `customer_push_subscriptions`, `customer_notifications`, and `sale_notification_jobs` should be present.
+2. Open **More → Database → Manage → Edge functions** and deploy `sale-notification-dispatch` from the project’s synced code.
+3. Add the backend values under **More → Settings → Secrets**:
+   - `SALE_NOTIFICATION_CRON_SECRET`: a strong random secret used only by the scheduled dispatcher.
+   - `SITE_URL`: `https://offfeed018.lovable.app`.
+   - `LOVABLE_API_KEY` and `GOOGLE_MAIL_API_KEY`: use the values provided by the connected OFFFEED Gmail integration.
+   - For browser push, set `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, and `VAPID_SUBJECT` (for example `mailto:offfeeed@gmail.com`). Keep the private key only in backend secrets.
+   - Leave `SALE_NOTIFICATION_LIVE_SEND_ENABLED` unset while privately verifying the flow. The function will not dispatch until a test user is configured with `SALE_NOTIFICATION_TEST_USER_ID` or live sending is explicitly enabled after verification.
+4. Set the frontend build variable `VITE_VAPID_PUBLIC_KEY` to the matching public VAPID key and rebuild/publish the app. This value is public; never put the private key in a `VITE_` variable.
+5. In **More → Database → Manage → Jobs**, create a recurring job to POST to the deployed `sale-notification-dispatch` function every five minutes, with the `Authorization: Bearer <SALE_NOTIFICATION_CRON_SECRET>` header and JSON body `{}`. Confirm the job appears in the Jobs list and check Edge Function logs after a run.
+
+Lovable Cloud’s Jobs panel currently has no scheduled job for the dispatcher, so notifications are not yet automatic until step 5 is completed. If the project’s Cloud UI requires an AI action to create or deploy the job, Lovable credits must be available; GitHub code sync alone does not deploy backend functions or schedule recurring jobs.
+
+## Consent and audience
+
 - In-app alerts are enabled by default for registered customer accounts.
-- Sale email is opt-in and disabled by default. Do not send promotional email to a customer who has not enabled it.
-- Browser push requires the customer to enable it on each device/browser.
-- The current OFFFEED checkout supports guest orders. Guest checkout email addresses are not automatically enrolled in promotional messaging; account creation and explicit email opt-in are required before sale emails are sent.
+- Sale email is opt-in and disabled by default. Only send to customers who explicitly enabled it.
+- Browser push requires permission and a subscription on each device/browser.
+- Guest checkout email addresses are not enrolled in promotional messaging.
 
-## Operational checks
-- Create a test sale with a start time a few minutes ahead and verify a notification row, email (only for opted-in test account), and push delivery.
-- Verify reminder and ending-soon jobs for a multi-day test sale.
-- Check `sale_notification_jobs` for failed jobs and `customer_notifications` for inbox records.
-- Confirm the approved Gmail sender is still `offfeeed@gmail.com`.
+## Operational verification
 
+Use a dedicated test account and a test sale. Verify launch, reminder, ending-soon, cancellation, rescheduling, duplicate prevention, in-app delivery, opted-in email, and push delivery. Check `sale_notification_jobs`, `customer_notifications`, and the Edge Function logs. Do not enable live sending until private delivery checks pass. Confirm the approved Gmail sender is `offfeeed@gmail.com`.
 
-## Automated build validation
-The pull request is checked by the GitHub Actions workflow `.github/workflows/pull-request-build.yml`, which installs dependencies from `bun.lock` and runs the production build. A successful build does not replace Lovable Cloud deployment or end-to-end notification delivery tests.
+The GitHub pull-request build checks code compilation; a successful build does not confirm Lovable Cloud deployment or end-to-end message delivery.
