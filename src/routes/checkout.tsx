@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { ArrowLeft, Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { clearOfffeedCart, offfeedCartEventName, readOfffeedCart, writeOfffeedCart, type OfffeedCartItem } from "@/lib/cart";
-import { createOfffeedRazorpayOrder, verifyOfffeedRazorpayPayment } from "@/lib/razorpay.functions";
+import { createOfffeedRazorpayOrder, verifyOfffeedRazorpayPayment, type OfffeedCheckoutResult } from "@/lib/razorpay.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { getOfffeedShippingPolicy, OFFFEED_FREE_SHIPPING_THRESHOLD } from "@/lib/shipping-policy";
 
@@ -262,6 +262,7 @@ function CheckoutPage() {
       paymentWindow.open();
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "We couldn't start online payment. Please try again.");
+      setLoading(false);
     } finally {
       if (!paymentWindowOpened) setLoading(false);
     }
