@@ -3,9 +3,37 @@ import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { ArrowLeft, Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { clearOfffeedCart, offfeedCartEventName, readOfffeedCart, writeOfffeedCart, type OfffeedCartItem } from "@/lib/cart";
-import { createOfffeedCheckoutOrders, type OfffeedCheckoutResult } from "@/lib/checkout.functions";
+import { createOfffeedRazorpayOrder, verifyOfffeedRazorpayPayment, type OfffeedCheckoutResult } from "@/lib/razorpay.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { getOfffeedShippingPolicy, OFFFEED_FREE_SHIPPING_THRESHOLD } from "@/lib/shipping-policy";
+
+type RazorpayOptions = {
+  key: string; amount: number; currency: string; name: string; description: string;
+  order_id: string; prefill: { name: string; email: string; contact: string };
+  handler: (response: { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string }) => void | Promise<void>;
+  modal?: { ondismiss?: () => void };
+  theme?: { color?: string };
+};
+type RazorpayFailure = { error?: { description?: string; reason?: string } };
+declare global {
+  interface Window {
+    Razorpay?: new (options: RazorpayOptions) => {
+      open: () => void;
+      on: (event: string, handler: (response: RazorpayFailure) => void) => void;
+    };
+  }
+}
+function loadRazorpayCheckout(): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (window.Razorpay) { resolve(); return; }
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.async = true;
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error("Razorpay Checkout could not be loaded. Check your connection and try again."));
+    document.body.appendChild(script);
+  });
+}
 
 type SavedAddress = { id: string; label: string; line1: string; line2: string; city: string; state: string; landmark: string; pinCode: string; isDefault: boolean };
 const ADDRESS_BOOK_KEY = "offfeed-address-book-v1";
@@ -176,45 +204,67 @@ function CheckoutPage() {
     setError("");
     if (!items.length) return;
     for (const item of items) {
-      if (item.sizes.length && !item.size) {
-        setError(`Choose a size for ${item.productName}.`);
-        return;
-      }
-      if (item.colors.length && !item.color) {
-        setError(`Choose a colour for ${item.productName}.`);
-        return;
-      }
+      if (item.sizes.length && !item.size) { setError(`Choose a size for ${item.productName}.`); return; }
+      if (item.colors.length && !item.color) { setError(`Choose a colour for ${item.productName}.`); return; }
     }
     setLoading(true);
+    let paymentWindowOpened = false;
     try {
-      const created = await createOfffeedCheckoutOrders({
+      const checkout = await createOfffeedRazorpayOrder({
         data: {
           customerName: form.customerName,
           customerEmail: form.customerEmail,
           customerPhone: form.customerPhone,
-          address: {
-            line1: form.line1,
-            line2: form.line2,
-            city: form.city,
-            state: form.state,
-            landmark: form.landmark,
-          },
+          address: { line1: form.line1, line2: form.line2, city: form.city, state: form.state, landmark: form.landmark },
           pinCode: form.pinCode,
-          items: items.map((item) => ({
-            productId: item.productId,
-            quantity: item.quantity,
-            size: item.size,
-            color: item.color,
-          })),
+          items: items.map((item) => ({ productId: item.productId, quantity: item.quantity, size: item.size, color: item.color })),
         },
       });
-      setOrders(created);
-      clearOfffeedCart();
-      setItems([]);
+      await loadRazorpayCheckout();
+      if (!window.Razorpay) throw new Error("Razorpay Checkout is unavailable. Please try again.");
+      const paymentWindow = new window.Razorpay({
+        key: checkout.keyId,
+        amount: checkout.amount,
+        currency: checkout.currency,
+        name: "OFFFEED",
+        description: "Prepaid order",
+        order_id: checkout.orderId,
+        prefill: { name: checkout.customerName, email: checkout.customerEmail, contact: checkout.customerPhone },
+        theme: { color: "#111111" },
+        handler: async (payment) => {
+          setLoading(true);
+          setError("");
+          try {
+            const savedOrders = await verifyOfffeedRazorpayPayment({
+              data: {
+                sessionId: checkout.sessionId,
+                orderId: payment.razorpay_order_id,
+                paymentId: payment.razorpay_payment_id,
+                signature: payment.razorpay_signature,
+              },
+            });
+            setOrders(savedOrders);
+            clearOfffeedCart();
+            setItems([]);
+          } catch (cause) {
+            setError(cause instanceof Error ? cause.message : "Payment verification is still pending. Please retry or contact OFFFEED support.");
+          } finally {
+            setLoading(false);
+          }
+        },
+        modal: { ondismiss: () => setLoading(false) },
+      });
+      paymentWindow.on("payment.failed", (response) => {
+        setError(response.error?.description ?? "Payment failed. You can try again.");
+        setLoading(false);
+      });
+      paymentWindowOpened = true;
+      paymentWindow.open();
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "We couldn't place your order. Please try again.");
-    } finally {
+      setError(cause instanceof Error ? cause.message : "We couldn't start online payment. Please try again.");
       setLoading(false);
+    } finally {
+      if (!paymentWindowOpened) setLoading(false);
     }
   }
 
@@ -225,7 +275,7 @@ function CheckoutPage() {
         <div className="border border-border/70 p-7 sm:p-10">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Order placed</p>
           <h1 className="mt-3 font-display text-4xl sm:text-5xl">Your finds are on their way to becoming yours.</h1>
-          <p className="mt-4 text-sm leading-6 text-muted-foreground">Your Cash on Delivery order has been created on OFFFEED. Each independent brand will prepare and dispatch its own item.</p>
+          <p className="mt-4 text-sm leading-6 text-muted-foreground">Your prepaid payment has been confirmed by Razorpay. Each independent brand will prepare and dispatch its own item.</p>
           <div className="mt-7 divide-y divide-border/70 border-y border-border/70">
             {orders.map((order) => (
               <div key={order.order_id} className="flex flex-wrap items-start justify-between gap-3 py-4">
@@ -317,8 +367,8 @@ function CheckoutPage() {
                 <p className="mt-2 text-xs leading-5 text-muted-foreground">The ₹{OFFFEED_FREE_SHIPPING_THRESHOLD} threshold applies to the combined product subtotal across all brands. This checkout currently displays the policy only: live courier quotes and automated brand-cost settlement are not connected yet, so no exact shipping amount is being calculated or charged here.</p>
               </div>
               <div className="flex items-center justify-between text-base font-semibold"><span>Product subtotal</span><span>₹{total.toLocaleString("en-IN")}</span></div>
-              <Button type="submit" className="w-full" disabled={!items.length || loading}>{loading ? "Placing order…" : "Place COD order"}</Button>
-              <p className="text-center text-[11px] leading-5 text-muted-foreground">Cash on Delivery · Shipping policy is shown above. Live courier pricing and automatic brand settlement must be enabled before shipping charges can be collected automatically.</p>
+              <Button type="submit" className="w-full" disabled={!items.length || loading}>{loading ? "Placing order…" : "Pay securely with Razorpay"}</Button>
+              <p className="text-center text-[11px] leading-5 text-muted-foreground">Online payment required before your order is confirmed. Cash payments are not accepted. Shipping policy is shown above.</p>
             </form>
           </div>
         </aside>
