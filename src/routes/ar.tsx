@@ -3,6 +3,7 @@ import { Camera, CameraOff, Glasses, Gem, House, Shirt, Sparkles, X } from "luci
 import { FaceLandmarker, FilesetResolver } from "@mediapipe/tasks-vision";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { removeBackgroundLocally } from "@/lib/local-ar-cutout";
 
 export const Route = createFileRoute("/ar")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -116,6 +117,7 @@ function ARStudio() {
   const [cameraError, setCameraError] = useState("");
   const [cameraReady, setCameraReady] = useState(false);
   const [trackingState, setTrackingState] = useState<TrackingState>("idle");
+  const [cutoutState, setCutoutState] = useState<"loading" | "ready" | "error">("loading");
   const [earringStyle, setEarringStyle] = useState<EarringStyle>("hoop");
   const [metal, setMetal] = useState<Metal>("gold");
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -131,14 +133,55 @@ function ARStudio() {
 
   useEffect(() => {
     productEarringRef.current = null;
-    if (!arImageUrl) return;
-    const image = new Image();
-    image.crossOrigin = "anonymous";
-    image.onload = () => { productEarringRef.current = image; };
-    image.onerror = () => { productEarringRef.current = null; };
-    image.src = arImageUrl;
-    return () => { image.onload = null; image.onerror = null; productEarringRef.current = null; };
-  }, [arImageUrl]);
+    let cancelled = false;
+    let objectUrl: string | null = null;
+    const loadImage = (url: string) => new Promise<HTMLImageElement>((resolve, reject) => {
+      const image = new Image();
+      image.crossOrigin = "anonymous";
+      image.onload = () => resolve(image);
+      image.onerror = () => reject(new Error("The product image could not be loaded."));
+      image.src = url;
+    });
+    const prepareProductCutout = async () => {
+      if (arImageUrl) {
+        try {
+          const image = await loadImage(arImageUrl);
+          if (!cancelled) {
+            productEarringRef.current = image;
+            setCutoutState("ready");
+          }
+        } catch {
+          if (!cancelled) setCutoutState("error");
+        }
+        return;
+      }
+      if (!imageUrl) {
+        setCutoutState("error");
+        return;
+      }
+      setCutoutState("loading");
+      try {
+        const response = await fetch(imageUrl, { mode: "cors", credentials: "omit" });
+        if (!response.ok) throw new Error("The product photo could not be downloaded.");
+        const cutout = await removeBackgroundLocally(await response.blob());
+        if (cancelled) return;
+        objectUrl = URL.createObjectURL(cutout);
+        const image = await loadImage(objectUrl);
+        if (!cancelled) {
+          productEarringRef.current = image;
+          setCutoutState("ready");
+        }
+      } catch {
+        if (!cancelled) setCutoutState("error");
+      }
+    };
+    void prepareProductCutout();
+    return () => {
+      cancelled = true;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+      productEarringRef.current = null;
+    };
+  }, [arImageUrl, imageUrl]);
 
   const stopCamera = () => {
     streamRef.current?.getTracks().forEach((track) => track.stop());
@@ -281,7 +324,7 @@ function ARStudio() {
                   };
                   drawProductAt(leftX, left.y, false);
                   drawProductAt(rightX, right.y, true);
-                } else {
+                } else if (!productName || !imageUrl) {
                   drawEarring(ctx, leftX, left.y, size, styleRef.current, metalRef.current);
                   drawEarring(ctx, rightX, right.y, size, styleRef.current, metalRef.current);
                 }
@@ -387,7 +430,7 @@ function ARStudio() {
                   <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-primary">Selected jewellery</p>
                   <h3 className="mt-1 line-clamp-2 font-medium">{productName}</h3>
                   <p className="mt-1 text-xs text-muted-foreground">This is the product you selected from Discover.</p>
-                  <p className="mt-1 text-xs text-muted-foreground">{arImageUrl ? "Product-specific cutout loaded for the live preview." : "A sample overlay is shown until this brand adds a transparent AR cutout."}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">{cutoutState === "loading" ? "Preparing this product’s free cutout on your device…" : cutoutState === "ready" ? "This product’s cutout is ready for the live preview." : "The cutout could not be prepared from this photo. The sample overlay is hidden."}</p>
                 </div>
               </div>
             )}
@@ -443,7 +486,7 @@ function ARStudio() {
                 </div>
               </div>
               <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
-                <p className="max-w-sm text-xs leading-5 text-muted-foreground">{arImageUrl ? "The uploaded transparent product cutout is positioned over both earlobes. Alignment is an approximate 2D preview and may vary by camera angle." : productName ? "Your selected product is shown above. This sample overlay is illustrative until the brand uploads a transparent AR cutout for this item." : "Preview shapes are illustrative overlays. Select a published jewellery product with an AR cutout for a product-specific preview."}</p>
+                <p className="max-w-sm text-xs leading-5 text-muted-foreground">{cutoutState === "ready" && productName ? "This product image is cut out on your device and aligned over both earlobes. Alignment is an approximate 2D preview and may vary by camera angle." : cutoutState === "loading" && productName ? "Creating a free product cutout on this device. The first use downloads the image model; the product photo is not sent to a cutout service." : cutoutState === "error" && productName ? "No generic earrings are shown. Try a clear product photo with the jewellery separated from the background." : "Preview shapes are illustrative overlays. Select an earring from Discover to preview that product."}</p>
 
               </div>
               {cameraError && <p role="alert" className="rounded-xl border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">{cameraError}</p>}
