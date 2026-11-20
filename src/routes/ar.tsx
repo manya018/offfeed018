@@ -50,11 +50,6 @@ function ARStudio() {
       });
       streamRef.current = stream;
       setCameraOpen(true);
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        await videoRef.current.play();
-        setCameraReady(true);
-      }
     } catch (error) {
       const name = error instanceof Error ? error.name : "";
       setCameraError(
@@ -66,6 +61,15 @@ function ARStudio() {
       );
     }
   };
+
+  useEffect(() => {
+    if (!cameraOpen || !videoRef.current || !streamRef.current) return;
+    const video = videoRef.current;
+    video.srcObject = streamRef.current;
+    void video.play().then(() => setCameraReady(true)).catch(() => {
+      setCameraError("The camera opened, but video playback was blocked. Check browser permissions and try again.");
+    });
+  }, [cameraOpen]);
 
   useEffect(() => () => {
     streamRef.current?.getTracks().forEach((track) => track.stop());
