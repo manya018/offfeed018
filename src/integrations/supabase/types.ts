@@ -191,6 +191,7 @@ export type Database = {
       brand_products: {
         Row: {
           audience: string[]
+          ar_image_path: string | null
           brand_application_id: string
           brand_approved: boolean
           category: string
@@ -214,6 +215,7 @@ export type Database = {
         }
         Insert: {
           audience: string[]
+          ar_image_path?: string | null
           brand_application_id: string
           brand_approved?: boolean
           category: string
@@ -237,6 +239,7 @@ export type Database = {
         }
         Update: {
           audience?: string[]
+          ar_image_path?: string | null
           brand_application_id?: string
           brand_approved?: boolean
           category?: string
