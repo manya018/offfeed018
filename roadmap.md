@@ -1,4 +1,6 @@
-# OFFFEED brand registration
+# OFFFEED development roadmap
+
+## Brand registration
 
 - [x] Create private, applicant-scoped upload storage and protected application records.
 - [x] Build validated four-step account and brand application flow with uploads.
@@ -13,3 +15,10 @@
 - [ ] Build public storefronts for approved brands with audience-separated published products.
 - [ ] Add relevant approved brand products to outfit pages under “Shop the Look.”
 - [ ] Validate storefront visibility, product links, and Her/Him audience separation.
+
+## AR Studio
+- [x] Add the AR Studio route and navigation entry.
+- [x] Add on-device MediaPipe face landmark tracking for live camera preview.
+- [x] Add selectable stud, hoop, and drop earring overlays with gold, silver, and rose-gold finishes.
+- [ ] Validate camera permissions, face tracking, and earring alignment on real iOS and Android devices.
+- [ ] Replace illustrative overlays with brand-supplied, product-specific earring assets and calibration controls.

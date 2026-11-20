@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ARRouteImport } from './routes/ar'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as BrandReviewRouteImport } from './routes/brand-review'
@@ -34,6 +35,11 @@ import { Route as AuthenticatedBrandSalesRouteImport } from './routes/_authentic
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ARRoute = ARRouteImport.update({
+  id: '/ar',
+  path: '/ar',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
@@ -138,6 +144,7 @@ const AuthenticatedBrandSalesRoute = AuthenticatedBrandSalesRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/ar': typeof ARRoute
   '/about': typeof AboutRoute
   '/brand-review': typeof BrandReviewRoute
   '/checkout': typeof CheckoutRoute
@@ -183,6 +190,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/ar': typeof ARRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/about': typeof AboutRoute
   '/brand-review': typeof BrandReviewRoute
@@ -208,6 +216,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/ar'
     | '/about'
     | '/brand-review'
     | '/checkout'
@@ -229,6 +238,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/ar'
     | '/about'
     | '/brand-review'
     | '/checkout'
@@ -249,6 +259,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/ar'
     | '/_authenticated'
     | '/about'
     | '/brand-review'
@@ -272,6 +283,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ARRoute: typeof ARRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AboutRoute: typeof AboutRoute
   BrandReviewRoute: typeof BrandReviewRoute
@@ -296,6 +308,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ar': {
+      id: '/ar'
+      path: '/ar'
+      fullPath: '/ar'
+      preLoaderRoute: typeof ARRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated': {
@@ -472,6 +491,7 @@ const ForBrandsRouteWithChildren = ForBrandsRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ARRoute: ARRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AboutRoute: AboutRoute,
   BrandReviewRoute: BrandReviewRoute,
