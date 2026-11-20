@@ -147,7 +147,7 @@ export function PublicProductCard({ product, spotlightCampaignId }: { product: P
         </div>
         {supportsEarringTryOn && (
           <Button asChild variant="outline" className="mt-2 w-full border-primary/40 text-primary hover:bg-primary/5">
-            <Link to="/ar" search={{ productName: product.productName, imageUrl: product.imageUrl ?? product.imageUrls?.[0] ?? "", arImageUrl: product.arImageUrl ?? "" }}><Sparkles className="mr-2 size-4" /> Try in AR</Link>
+            <Link to="/ar" search={{ productName: product.productName, imageUrl: product.imageUrl ?? product.imageUrls?.[0] ?? "", arImageUrl: product.arImageUrl ?? "", arWidthMm: product.arWidthMm ?? undefined, arHeightMm: product.arHeightMm ?? undefined }}><Sparkles className="mr-2 size-4" /> Try in AR</Link>
           </Button>
         )}
         <ProductReviews productId={product.id} productName={product.productName} />
