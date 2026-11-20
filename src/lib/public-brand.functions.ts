@@ -51,6 +51,8 @@ type ProductWithBrand = {
   imageUrl: string | null;
   imageUrls: string[];
   arImageUrl: string | null;
+  arWidthMm: number | null;
+  arHeightMm: number | null;
   sizes: string[];
   sizeChart: ProductSizeChart | null;
   colors: string[];
@@ -162,7 +164,7 @@ export const getPublicBrandProfile = createServerFn({ method: "GET" })
 
     const { data: rows, error: productsError } = await supabase
       .from("brand_products")
-      .select("id, product_name, description, category, price, product_url, image_path, image_paths, ar_image_path, sizes, size_chart, colors, tags, audience, created_at")
+      .select("id, product_name, description, category, price, product_url, image_path, image_paths, ar_image_path, ar_width_mm, ar_height_mm, sizes, size_chart, colors, tags, audience, created_at")
       .eq("brand_application_id", brand.id)
       .eq("status", "published")
       .eq("brand_approved", true)
@@ -216,6 +218,8 @@ export const getPublicBrandProfile = createServerFn({ method: "GET" })
         imageUrl: getImageUrl(row.image_path, productSigned),
         imageUrls: (row.image_paths?.length ? row.image_paths : row.image_path ? [row.image_path] : []).map((path) => getImageUrl(path, productSigned)).filter((url): url is string => Boolean(url)),
         arImageUrl: getImageUrl(row.ar_image_path, productSigned),
+        arWidthMm: row.ar_width_mm,
+        arHeightMm: row.ar_height_mm,
         sizes: row.sizes,
         sizeChart: normalizeProductSizeChart(row.size_chart) ?? normalizeProductSizeChart(sizeGuideByCategory.get(row.category)),
         colors: row.colors,
