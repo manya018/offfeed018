@@ -12,7 +12,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { removeBackgroundLocally } from "@/lib/local-ar-cutout";
-import { createBrandProduct, getBrandWorkspace, importShopifyCatalog, saveBrandShippingProfile, saveBrandSizeGuide, saveImportedShopifyProducts, updateBrandOrderTracking, updateBrandProductArImage, updateBrandProductSizeChart, updateBrandProductStatus } from "@/lib/brand-products.functions";
+import { createBrandProduct, getBrandWorkspace, importShopifyCatalog, saveBrandShippingProfile, saveBrandSizeGuide, saveImportedShopifyProducts, updateBrandOrderTracking, updateBrandProductArDimensions, updateBrandProductArImage, updateBrandProductSizeChart, updateBrandProductStatus } from "@/lib/brand-products.functions";
 import { submitDispatchEvidence, getDisputeViewerData, rerunReturnAnalysis, type DisputeViewerData, type ForensicReport } from "@/lib/dispute-evidence.functions";
 import { submitSpotlightCampaign, submitSpotlightProducts, getSpotlightAvailability, getMySpotlightCampaigns, getMySpotlightPerformance } from "@/lib/spotlight.functions";
 
@@ -44,6 +44,8 @@ type DraftProduct = {
   colors: string;
   tags: string;
   audience: Array<"her" | "him" | "home">;
+  arWidthMm: string;
+  arHeightMm: string;
 };
 
 type ImportedProduct = {
@@ -59,7 +61,7 @@ type ImportedProduct = {
 };
 
 const aestheticOptions = ["Romantic & Dreamy", "Minimalist", "Old Money", "Streetwear", "Coquette", "Y2K", "Boho", "Elegant & Classic", "Edgy", "Cottagecore", "Vintage / Retro", "Dark Academia", "Sporty", "Casual Everyday", "Party / Glam", "Ethnic / Traditional", "Gothic", "Quiet Luxury", "Experimental / Avant-Garde", "Other"];
-const blankProduct: DraftProduct = { listingType: "product", bundleItems: "", department: "Clothing", name: "", description: "", category: "Tops", aesthetic: "Romantic & Dreamy", price: "", productUrl: "", sizes: "XS, S, M, L, XL", colors: "", tags: "", audience: ["her"] };
+const blankProduct: DraftProduct = { listingType: "product", bundleItems: "", department: "Clothing", name: "", description: "", category: "Tops", aesthetic: "Romantic & Dreamy", price: "", productUrl: "", sizes: "XS, S, M, L, XL", colors: "", tags: "", audience: ["her"], arWidthMm: "", arHeightMm: "" };
 const herOnlyCategories = new Set(["Dresses", "Skirts", "Blouses", "Sarees", "Lehengas", "Anarkalis", "Sharara Sets", "Dupattas", "Lingerie & Loungewear", "Heels", "Flats", "Clutches", "Tote Bags", "Hair Accessories", "Bangles", "Maang Tikkas", "Nose Pins"]);
 const himOnlyCategories = new Set(["T-shirts & Polos", "Sherwanis", "Nehru Jackets", "Bandhgalas", "Dhoti Pants", "Waistcoats", "Loafers", "Formal Shoes", "Backpacks", "Wallets"]);
 const categoryOptions: Record<ProductDepartment, string[]> = {
@@ -381,6 +383,8 @@ function BrandDashboard() {
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const [arImageBusy, setArImageBusy] = useState<string | null>(null);
+  const [arSizeSaving, setArSizeSaving] = useState<string | null>(null);
+  const [arDimensionDrafts, setArDimensionDrafts] = useState<Record<string, { width: string; height: string }>>({});
   const [importBusy, setImportBusy] = useState(false);
   const [imported, setImported] = useState<ImportedProduct[]>([]);
   const [selectedImports, setSelectedImports] = useState<string[]>([]);
@@ -555,6 +559,24 @@ function BrandDashboard() {
     }
   };
 
+  const saveArDimensions = async (productId: string, savedWidth: number | null, savedHeight: number | null) => {
+    const values = arDimensionDrafts[productId] ?? { width: String(savedWidth ?? ""), height: String(savedHeight ?? "") };
+    const width = Number(values.width);
+    const height = Number(values.height);
+    if (!Number.isFinite(width) || !Number.isFinite(height) || width <= 0 || height <= 0 || width > 500 || height > 500) {
+      toast.error("Enter the real width and height for one earring, from 0.1 to 500 mm.");
+      return;
+    }
+    setArSizeSaving(productId);
+    try {
+      await updateBrandProductArDimensions({ data: { productId, arWidthMm: width, arHeightMm: height } });
+      await queryClient.invalidateQueries({ queryKey: ["brand-workspace"] });
+      toast.success("Measured AR size saved.");
+    } catch (saveError) {
+      toast.error(saveError instanceof Error ? saveError.message : "The AR dimensions couldn't be saved.");
+    } finally { setArSizeSaving(null); }
+  };
+
   const uploadProductArImage = async (productId: string, file: File) => {
     if (file.type !== "image/png" || file.size > 8 * 1024 * 1024) {
       toast.error("Choose a transparent PNG up to 8 MB.");
@@ -644,6 +666,8 @@ function BrandDashboard() {
         imagePaths: uploadedPaths,
         sizes: availableSizes,
         sizeChart: null,
+        arWidthMm: draft.arWidthMm.trim() ? Number(draft.arWidthMm) : null,
+        arHeightMm: draft.arHeightMm.trim() ? Number(draft.arHeightMm) : null,
         colors: parseList(draft.colors),
         tags: [...new Set([...parseList(draft.tags), draft.aesthetic].filter(Boolean))],
         audience: draft.audience,
