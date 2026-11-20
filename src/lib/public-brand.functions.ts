@@ -50,6 +50,7 @@ type ProductWithBrand = {
   productUrl: string | null;
   imageUrl: string | null;
   imageUrls: string[];
+  arImageUrl: string | null;
   sizes: string[];
   sizeChart: ProductSizeChart | null;
   colors: string[];
@@ -161,7 +162,7 @@ export const getPublicBrandProfile = createServerFn({ method: "GET" })
 
     const { data: rows, error: productsError } = await supabase
       .from("brand_products")
-      .select("id, product_name, description, category, price, product_url, image_path, image_paths, sizes, size_chart, colors, tags, audience, created_at")
+      .select("id, product_name, description, category, price, product_url, image_path, image_paths, ar_image_path, sizes, size_chart, colors, tags, audience, created_at")
       .eq("brand_application_id", brand.id)
       .eq("status", "published")
       .eq("brand_approved", true)
@@ -175,7 +176,7 @@ export const getPublicBrandProfile = createServerFn({ method: "GET" })
     if (sizeGuideError) console.warn("[OFFFEED storefront] Optional size guides unavailable:", sizeGuideError.message);
     const sizeGuideByCategory = new Map((sizeGuideError ? [] : brandSizeGuides ?? []).map((guide) => [guide.category, guide.size_chart]));
 
-    const productPaths = [...new Set((rows ?? []).flatMap((row) => [row.image_path, ...(row.image_paths ?? [])]).filter((path): path is string => Boolean(path && !path.startsWith("https://"))))];
+    const productPaths = [...new Set((rows ?? []).flatMap((row) => [row.image_path, row.ar_image_path, ...(row.image_paths ?? [])]).filter((path): path is string => Boolean(path && !path.startsWith("https://"))))];
     const brandPaths = [...new Set([brand.logo_path, brand.cover_path].filter((path): path is string => Boolean(path)))];
     const [productFiles, brandFiles] = await Promise.all([
       productPaths.length ? supabase.storage.from("brand-product-images").createSignedUrls(productPaths, 3600) : Promise.resolve({ data: [], error: null }),
@@ -214,6 +215,7 @@ export const getPublicBrandProfile = createServerFn({ method: "GET" })
         productUrl: row.product_url,
         imageUrl: getImageUrl(row.image_path, productSigned),
         imageUrls: (row.image_paths?.length ? row.image_paths : row.image_path ? [row.image_path] : []).map((path) => getImageUrl(path, productSigned)).filter((url): url is string => Boolean(url)),
+        arImageUrl: getImageUrl(row.ar_image_path, productSigned),
         sizes: row.sizes,
         sizeChart: normalizeProductSizeChart(row.size_chart) ?? normalizeProductSizeChart(sizeGuideByCategory.get(row.category)),
         colors: row.colors,
@@ -234,7 +236,7 @@ export const getShopTheLookProducts = createServerFn({ method: "GET" })
 
     const { data: rows, error } = await supabase
       .from("brand_products")
-      .select("id, brand_application_id, product_name, description, category, price, product_url, image_path, image_paths, sizes, colors, tags, audience, created_at, size_chart")
+      .select("id, brand_application_id, product_name, description, category, price, product_url, image_path, image_paths, ar_image_path, sizes, colors, tags, audience, created_at, size_chart")
       .eq("status", "published")
       .eq("brand_approved", true)
       .contains("audience", [data.audience])
@@ -288,6 +290,7 @@ export const getShopTheLookProducts = createServerFn({ method: "GET" })
         productUrl: row.product_url,
         imageUrl: getImageUrl(row.image_path, signedUrls),
         imageUrls: (row.image_paths?.length ? row.image_paths : row.image_path ? [row.image_path] : []).map((path) => getImageUrl(path, signedUrls)).filter((url): url is string => Boolean(url)),
+        arImageUrl: getImageUrl(row.ar_image_path, signedUrls),
         sizes: row.sizes,
         sizeChart: normalizeProductSizeChart(row.size_chart) ?? normalizeProductSizeChart(guideByBrandCategory.get(`${row.brand_application_id}:${row.category}`)),
         colors: row.colors,
