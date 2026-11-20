@@ -10,6 +10,8 @@ export const Route = createFileRoute("/ar")({
     productName: typeof search.productName === "string" ? search.productName : undefined,
     imageUrl: typeof search.imageUrl === "string" && search.imageUrl.startsWith("https://") ? search.imageUrl : undefined,
     arImageUrl: typeof search.arImageUrl === "string" && search.arImageUrl.startsWith("https://") ? search.arImageUrl : undefined,
+    arWidthMm: parsePositiveDimension(search.arWidthMm),
+    arHeightMm: parsePositiveDimension(search.arHeightMm),
   }),
   head: () => ({
     meta: [
@@ -110,8 +112,99 @@ function drawEarring(
   ctx.restore();
 }
 
+type EarringPairAssets = { left: HTMLImageElement; right: HTMLImageElement; mirrorRight: boolean; urls: string[] };
+
+async function createEarringPairAssets(source: HTMLImageElement): Promise<EarringPairAssets> {
+  const width = source.naturalWidth;
+  const height = source.naturalHeight;
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  const context = canvas.getContext("2d", { willReadFrequently: true });
+  if (!context || !width || !height) throw new Error("The transparent earring image couldn't be read.");
+  context.drawImage(source, 0, 0);
+  const data = context.getImageData(0, 0, width, height).data;
+
+  const boundsIn = (rangeStart: number, rangeEnd: number) => {
+    let minX = rangeEnd;
+    let minY = height;
+    let maxX = rangeStart - 1;
+    let maxY = -1;
+    for (let y = 0; y < height; y++) {
+      for (let x = rangeStart; x < rangeEnd; x++) {
+        if (data[(y * width + x) * 4 + 3] <= 32) continue;
+        minX = Math.min(minX, x);
+        minY = Math.min(minY, y);
+        maxX = Math.max(maxX, x);
+        maxY = Math.max(maxY, y);
+      }
+    }
+    return maxX < minX || maxY < minY ? null : { x: minX, y: minY, width: maxX - minX + 1, height: maxY - minY + 1 };
+  };
+  const fullBounds = boundsIn(0, width);
+  if (!fullBounds) throw new Error("No earring pixels were found in the transparent image.");
+
+  const alphaByColumn = new Uint32Array(width);
+  for (let x = fullBounds.x; x < fullBounds.x + fullBounds.width; x++) {
+    for (let y = fullBounds.y; y < fullBounds.y + fullBounds.height; y++) {
+      if (data[(y * width + x) * 4 + 3] > 32) alphaByColumn[x]++;
+    }
+  }
+  const start = fullBounds.x;
+  const end = start + fullBounds.width;
+  const bandStart = Math.floor(start + fullBounds.width * 0.32);
+  const bandEnd = Math.ceil(start + fullBounds.width * 0.68);
+  let splitX = Math.floor((start + end) / 2);
+  let valley = Infinity;
+  for (let x = bandStart; x < bandEnd; x++) {
+    if (alphaByColumn[x] < valley) {
+      valley = alphaByColumn[x];
+      splitX = x;
+    }
+  }
+  const leftPeak = Math.max(...alphaByColumn.slice(start, splitX));
+  const rightPeak = Math.max(...alphaByColumn.slice(splitX, end));
+  const hasPairGap = leftPeak > 0 && rightPeak > 0 && valley < Math.min(leftPeak, rightPeak) * 0.35;
+  const regions = hasPairGap
+    ? [[start, splitX], [splitX, end]] as const
+    : [[start, end], [start, end]] as const;
+
+  const loadImage = (url: string) => new Promise<HTMLImageElement>((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => resolve(image);
+    image.onerror = () => reject(new Error("A cropped earring image couldn't be loaded."));
+    image.src = url;
+  });
+  const makeCroppedImage = async (rangeStart: number, rangeEnd: number) => {
+    const bounds = boundsIn(rangeStart, rangeEnd);
+    if (!bounds) throw new Error("An earring couldn't be separated from its pair photo.");
+    const padding = Math.max(2, Math.round(Math.max(bounds.width, bounds.height) * 0.025));
+    const x = Math.max(rangeStart, bounds.x - padding);
+    const y = Math.max(0, bounds.y - padding);
+    const right = Math.min(rangeEnd, bounds.x + bounds.width + padding);
+    const bottom = Math.min(height, bounds.y + bounds.height + padding);
+    const crop = document.createElement("canvas");
+    crop.width = right - x;
+    crop.height = bottom - y;
+    const cropContext = crop.getContext("2d");
+    if (!cropContext) throw new Error("The earring crop couldn't be created.");
+    cropContext.drawImage(canvas, x, y, crop.width, crop.height, 0, 0, crop.width, crop.height);
+    const blob = await new Promise<Blob>((resolve, reject) => crop.toBlob((value) => value ? resolve(value) : reject(new Error("The earring crop couldn't be saved.")), "image/png"));
+    const url = URL.createObjectURL(blob);
+    return { image: await loadImage(url), url };
+  };
+  const left = await makeCroppedImage(...regions[0]);
+  const right = hasPairGap ? await makeCroppedImage(...regions[1]) : left;
+  return { left: left.image, right: right.image, mirrorRight: !hasPairGap, urls: hasPairGap ? [left.url, right.url] : [left.url] };
+}
+
+function parsePositiveDimension(value: unknown): number | undefined {
+  const number = typeof value === "number" ? value : typeof value === "string" ? Number(value) : NaN;
+  return Number.isFinite(number) && number > 0 && number <= 500 ? number : undefined;
+}
+
 function ARStudio() {
-  const { productName, imageUrl, arImageUrl } = Route.useSearch();
+  const { productName, imageUrl, arImageUrl, arWidthMm, arHeightMm } = Route.useSearch();
   const [active, setActive] = useState<(typeof experiences)[number]["id"]>("jewellery");
   const [cameraOpen, setCameraOpen] = useState(false);
   const [cameraError, setCameraError] = useState("");
@@ -123,7 +216,7 @@ function ARStudio() {
   const [metal, setMetal] = useState<Metal>("gold");
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const productEarringRef = useRef<HTMLImageElement | null>(null);
+  const productEarringRef = useRef<EarringPairAssets | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const styleRef = useRef<EarringStyle>(earringStyle);
   const metalRef = useRef<Metal>(metal);
@@ -136,26 +229,34 @@ function ARStudio() {
     productEarringRef.current = null;
     setCutoutError("");
     let cancelled = false;
-    let objectUrl: string | null = null;
+    const objectUrls: string[] = [];
     const loadImage = (url: string) => new Promise<HTMLImageElement>((resolve, reject) => {
       const image = new Image();
       image.crossOrigin = "anonymous";
       image.onload = () => resolve(image);
-      image.onerror = () => reject(new Error("The product image could not be loaded."));
+      image.onerror = () => reject(new Error("The product image couldn't be loaded."));
       image.src = url;
     });
+    const finishPair = async (image: HTMLImageElement) => {
+      const pair = await createEarringPairAssets(image);
+      objectUrls.push(...pair.urls);
+      if (!cancelled) {
+        productEarringRef.current = pair;
+        setCutoutState("ready");
+      }
+    };
     const prepareProductCutout = async () => {
       if (arImageUrl) {
         try {
-          const image = await loadImage(arImageUrl);
-          if (!cancelled) {
-            productEarringRef.current = image;
-            setCutoutState("ready");
-          }
-        } catch {
+          const response = await fetch(arImageUrl, { mode: "cors", credentials: "omit" });
+          if (!response.ok) throw new Error("The saved product cutout could not be downloaded.");
+          const url = URL.createObjectURL(await response.blob());
+          objectUrls.push(url);
+          await finishPair(await loadImage(url));
+        } catch (error) {
           if (!cancelled) {
             setCutoutState("error");
-            setCutoutError("The saved product cutout could not be loaded. Try refreshing this page.");
+            setCutoutError(error instanceof Error ? error.message : "The saved product cutout could not be loaded.");
           }
         }
         return;
@@ -171,12 +272,9 @@ function ARStudio() {
         if (!response.ok) throw new Error("The product photo could not be downloaded.");
         const cutout = await removeBackgroundLocally(await response.blob());
         if (cancelled) return;
-        objectUrl = URL.createObjectURL(cutout);
-        const image = await loadImage(objectUrl);
-        if (!cancelled) {
-          productEarringRef.current = image;
-          setCutoutState("ready");
-        }
+        const url = URL.createObjectURL(cutout);
+        objectUrls.push(url);
+        await finishPair(await loadImage(url));
       } catch (error) {
         if (!cancelled) {
           setCutoutState("error");
@@ -187,7 +285,7 @@ function ARStudio() {
     void prepareProductCutout();
     return () => {
       cancelled = true;
-      if (objectUrl) URL.revokeObjectURL(objectUrl);
+      objectUrls.forEach((url) => URL.revokeObjectURL(url));
       productEarringRef.current = null;
     };
   }, [arImageUrl, imageUrl]);
@@ -319,20 +417,23 @@ function ARStudio() {
                 const leftX = left.x + (left.x < rect.width / 2 ? -outward : outward);
                 const rightX = right.x + (right.x < rect.width / 2 ? -outward : outward);
                 const productEarring = productEarringRef.current;
-                if (productEarring?.complete && productEarring.naturalWidth > 0) {
-                  const overlayWidth = Math.max(22, Math.min(96, faceWidth * 0.16));
-                  const overlayHeight = overlayWidth * (productEarring.naturalHeight / productEarring.naturalWidth);
-                  const drawProductAt = (x: number, y: number, mirror: boolean) => {
+                if (productEarring?.left.complete && productEarring.left.naturalWidth > 0 && productEarring.right.complete && productEarring.right.naturalWidth > 0) {
+                  const referenceFaceWidthMm = 145;
+                  const measuredWidth = arWidthMm && arHeightMm ? (faceWidth * arWidthMm) / referenceFaceWidthMm : faceWidth * 0.10;
+                  const measuredHeight = arWidthMm && arHeightMm ? (faceWidth * arHeightMm) / referenceFaceWidthMm : measuredWidth * (productEarring.left.naturalHeight / productEarring.left.naturalWidth);
+                  const overlayWidth = Math.max(8, Math.min(faceWidth * 0.42, measuredWidth));
+                  const overlayHeight = Math.max(10, Math.min(faceWidth * 0.9, measuredHeight));
+                  const drawProductAt = (image: HTMLImageElement, x: number, y: number, mirror: boolean) => {
                     ctx.save();
                     if (mirror) {
                       ctx.translate(x * 2, 0);
                       ctx.scale(-1, 1);
                     }
-                    ctx.drawImage(productEarring, x - overlayWidth / 2, y - overlayHeight * 0.08, overlayWidth, overlayHeight);
+                    ctx.drawImage(image, x - overlayWidth / 2, y - overlayHeight * 0.06, overlayWidth, overlayHeight);
                     ctx.restore();
                   };
-                  drawProductAt(leftX, left.y, false);
-                  drawProductAt(rightX, right.y, true);
+                  drawProductAt(productEarring.left, leftX, left.y, false);
+                  drawProductAt(productEarring.right, rightX, right.y, productEarring.mirrorRight);
                 } else if (!productName || !imageUrl) {
                   drawEarring(ctx, leftX, left.y, size, styleRef.current, metalRef.current);
                   drawEarring(ctx, rightX, right.y, size, styleRef.current, metalRef.current);
@@ -439,7 +540,7 @@ function ARStudio() {
                   <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-primary">Selected jewellery</p>
                   <h3 className="mt-1 line-clamp-2 font-medium">{productName}</h3>
                   <p className="mt-1 text-xs text-muted-foreground">This is the product you selected from Discover.</p>
-                  <p className="mt-1 text-xs text-muted-foreground">{cutoutState === "loading" ? "Preparing this product’s free cutout on your device…" : cutoutState === "ready" ? "This product’s cutout is ready for the live preview." : cutoutError || "The cutout could not be prepared from this photo."}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">{cutoutState === "loading" ? "Preparing this product’s free cutout on your device…" : cutoutState === "ready" ? arWidthMm && arHeightMm ? `Measured size: ${arWidthMm} × ${arHeightMm} mm per earring.` : "Cutout ready. Add exact earring measurements in Brand Workspace for measured scale." : cutoutError || "The cutout could not be prepared from this photo."}</p>
                 </div>
               </div>
             )}
@@ -495,7 +596,7 @@ function ARStudio() {
                 </div>
               </div>
               <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
-                <p className="max-w-sm text-xs leading-5 text-muted-foreground">{cutoutState === "ready" && productName ? "This product image is cut out on your device and aligned over both earlobes. Alignment is an approximate 2D preview and may vary by camera angle." : cutoutState === "loading" && productName ? "Creating a free product cutout on this device. The first use downloads the image model; the product photo is not sent to a cutout service." : cutoutState === "error" && productName ? "No generic earrings are shown. Try a clear product photo with the jewellery separated from the background." : "Preview shapes are illustrative overlays. Select an earring from Discover to preview that product."}</p>
+                <p className="max-w-sm text-xs leading-5 text-muted-foreground">{cutoutState === "ready" && productName ? arWidthMm && arHeightMm ? "Each earring is scaled from the brand’s measured width and height. Face-width calibration is approximate and can vary by person and camera distance." : "Each earring is tightly cropped and aligned to a separate earlobe. Ask the brand to enter its exact width and height for measured scale." : cutoutState === "loading" && productName ? "Creating a free product cutout on this device. The first use downloads the image model; the product photo is not sent to a cutout service." : cutoutState === "error" && productName ? "No generic earrings are shown. Try a clear product photo with the jewellery separated from the background." : "Preview shapes are illustrative overlays. Select an earring from Discover to preview that product."}</p>
 
               </div>
               {cameraError && <p role="alert" className="rounded-xl border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">{cameraError}</p>}
