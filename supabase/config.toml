@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.sale-notification-dispatch]
 verify_jwt = false
+
+[functions.generate-ar-cutout]
+verify_jwt = true
