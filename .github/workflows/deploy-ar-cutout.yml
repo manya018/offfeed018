@@ -1,0 +1,50 @@
+name: Deploy OFFFEED AR background removal
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_deploy:
+        description: "Type deploy to deploy the generate-ar-cutout Edge Function"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  deploy-generate-ar-cutout:
+    if: ${{ inputs.confirm_deploy == 'deploy' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Validate deployment configuration
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+          REMOVE_BG_API_KEY: ${{ secrets.REMOVE_BG_API_KEY }}
+        run: |
+          set -euo pipefail
+          test -n "$SUPABASE_ACCESS_TOKEN" || { echo "::error::Missing GitHub Actions secret SUPABASE_ACCESS_TOKEN"; exit 1; }
+          test -n "$SUPABASE_PROJECT_ID" || { echo "::error::Missing GitHub Actions secret SUPABASE_PROJECT_ID"; exit 1; }
+          test -n "$REMOVE_BG_API_KEY" || { echo "::error::Missing GitHub Actions secret REMOVE_BG_API_KEY"; exit 1; }
+
+      - name: Deploy Edge Function
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+          REMOVE_BG_API_KEY: ${{ secrets.REMOVE_BG_API_KEY }}
+        run: |
+          set -euo pipefail
+          supabase link --project-ref "$SUPABASE_PROJECT_ID"
+          supabase secrets set REMOVE_BG_API_KEY="$REMOVE_BG_API_KEY" --project-ref "$SUPABASE_PROJECT_ID"
+          supabase functions deploy generate-ar-cutout --project-ref "$SUPABASE_PROJECT_ID"
+
+      - name: Deployment summary
+        run: echo "generate-ar-cutout deployment command completed. Verify the function in the Supabase Dashboard before testing.";
