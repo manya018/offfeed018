@@ -150,7 +150,7 @@ export const getBrandWorkspace = createServerFn({ method: "GET" })
     if (error || !application) throw new Error("No brand application is connected to this account.");
 
     const { data: products, error: productError } = application.status === "approved"
-      ? await context.supabase.from("brand_products").select("id, product_name, description, category, price, product_url, image_path, image_paths, sizes, size_chart, colors, tags, audience, source, status, created_at").eq("user_id", context.userId).order("created_at", { ascending: false })
+      ? await context.supabase.from("brand_products").select("id, product_name, description, category, price, product_url, image_path, image_paths, ar_image_path, sizes, size_chart, colors, tags, audience, source, status, created_at").eq("user_id", context.userId).order("created_at", { ascending: false })
       : { data: [], error: null };
     if (productError) throw new Error("Your product list couldn't be loaded.");
     const productRows = products ?? [];
@@ -159,7 +159,7 @@ export const getBrandWorkspace = createServerFn({ method: "GET" })
       : { data: [], error: null };
     if (sizeGuideError) throw new Error("Your saved size guides could not be loaded.");
     const sizeGuideByCategory = new Map((sizeGuides ?? []).map((guide) => [guide.category, guide.size_chart]));
-    const paths = [...new Set(productRows.flatMap((product) => [product.image_path, ...(product.image_paths ?? [])]).filter((path): path is string => Boolean(path && !path.startsWith("https://"))))];
+    const paths = [...new Set(productRows.flatMap((product) => [product.image_path, product.ar_image_path, ...(product.image_paths ?? [])]).filter((path): path is string => Boolean(path && !path.startsWith("https://"))))];
     const { data: signedFiles, error: signedError } = paths.length
       ? await context.supabase.storage.from("brand-product-images").createSignedUrls(paths, 3600)
       : { data: [], error: null };
@@ -184,7 +184,7 @@ export const getBrandWorkspace = createServerFn({ method: "GET" })
       shippingProfile: safeShippingProfile,
       orders: safeOrderRows,
       sizeGuides: sizeGuides ?? [],
-      products: productRows.map((product) => ({ ...product, size_chart_override: product.size_chart, size_chart: product.size_chart ?? sizeGuideByCategory.get(product.category) ?? null, imageUrl: product.image_path?.startsWith("https://") ? product.image_path : imageUrls.get(product.image_path ?? "") ?? null, imageUrls: (product.image_paths?.length ? product.image_paths : product.image_path ? [product.image_path] : []).map((path) => path.startsWith("https://") ? path : imageUrls.get(path)).filter((url): url is string => Boolean(url)) })),
+      products: productRows.map((product) => ({ ...product, arImageUrl: imageUrls.get(product.ar_image_path ?? "") ?? null, size_chart_override: product.size_chart, size_chart: product.size_chart ?? sizeGuideByCategory.get(product.category) ?? null, imageUrl: product.image_path?.startsWith("https://") ? product.image_path : imageUrls.get(product.image_path ?? "") ?? null, imageUrls: (product.image_paths?.length ? product.image_paths : product.image_path ? [product.image_path] : []).map((path) => path.startsWith("https://") ? path : imageUrls.get(path)).filter((url): url is string => Boolean(url)) })),
     };
   });
 
@@ -488,5 +488,26 @@ export const updateBrandProductStatus = createServerFn({ method: "POST" })
     await getApprovedApplication(context);
     const { data: product, error } = await context.supabase.from("brand_products").update({ status: data.status }).eq("id", data.id).eq("user_id", context.userId).select("id, status").single();
     if (error || !product) throw new Error("That product couldn't be updated.");
+    return product;
+  });
+
+export const updateBrandProductArImage = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({
+    productId: z.string().uuid(),
+    arImagePath: z.string().min(1).max(2048),
+  }).parse(input))
+  .handler(async ({ context, data }) => {
+    await getApprovedApplication(context);
+    if (!data.arImagePath.startsWith(`${context.userId}/`) || !data.arImagePath.toLowerCase().endsWith(".png")) {
+      throw new Error("Upload a transparent PNG from your own brand account.");
+    }
+    const { data: product, error } = await context.supabase.from("brand_products")
+      .update({ ar_image_path: data.arImagePath })
+      .eq("id", data.productId)
+      .eq("user_id", context.userId)
+      .select("id, ar_image_path")
+      .maybeSingle();
+    if (error || !product) throw new Error("This product's AR image couldn't be saved.");
     return product;
   });
