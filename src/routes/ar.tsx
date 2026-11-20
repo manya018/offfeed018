@@ -118,6 +118,7 @@ function ARStudio() {
   const [cameraReady, setCameraReady] = useState(false);
   const [trackingState, setTrackingState] = useState<TrackingState>("idle");
   const [cutoutState, setCutoutState] = useState<"loading" | "ready" | "error">("loading");
+  const [cutoutError, setCutoutError] = useState("");
   const [earringStyle, setEarringStyle] = useState<EarringStyle>("hoop");
   const [metal, setMetal] = useState<Metal>("gold");
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -133,6 +134,7 @@ function ARStudio() {
 
   useEffect(() => {
     productEarringRef.current = null;
+    setCutoutError("");
     let cancelled = false;
     let objectUrl: string | null = null;
     const loadImage = (url: string) => new Promise<HTMLImageElement>((resolve, reject) => {
@@ -151,12 +153,16 @@ function ARStudio() {
             setCutoutState("ready");
           }
         } catch {
-          if (!cancelled) setCutoutState("error");
+          if (!cancelled) {
+            setCutoutState("error");
+            setCutoutError("The saved product cutout could not be loaded. Try refreshing this page.");
+          }
         }
         return;
       }
       if (!imageUrl) {
         setCutoutState("error");
+        setCutoutError("No product photo was provided for this AR preview.");
         return;
       }
       setCutoutState("loading");
@@ -171,8 +177,11 @@ function ARStudio() {
           productEarringRef.current = image;
           setCutoutState("ready");
         }
-      } catch {
-        if (!cancelled) setCutoutState("error");
+      } catch (error) {
+        if (!cancelled) {
+          setCutoutState("error");
+          setCutoutError(error instanceof Error ? error.message : "The free cutout could not be created. Try a clear product photo.");
+        }
       }
     };
     void prepareProductCutout();
@@ -430,7 +439,7 @@ function ARStudio() {
                   <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-primary">Selected jewellery</p>
                   <h3 className="mt-1 line-clamp-2 font-medium">{productName}</h3>
                   <p className="mt-1 text-xs text-muted-foreground">This is the product you selected from Discover.</p>
-                  <p className="mt-1 text-xs text-muted-foreground">{cutoutState === "loading" ? "Preparing this product’s free cutout on your device…" : cutoutState === "ready" ? "This product’s cutout is ready for the live preview." : "The cutout could not be prepared from this photo. The sample overlay is hidden."}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">{cutoutState === "loading" ? "Preparing this product’s free cutout on your device…" : cutoutState === "ready" ? "This product’s cutout is ready for the live preview." : cutoutError || "The cutout could not be prepared from this photo."}</p>
                 </div>
               </div>
             )}
