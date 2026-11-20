@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Camera, CameraOff, Glasses, Gem, House, Shirt, Sparkles, X, RotateCcw } from "lucide-react";
+import { Camera, CameraOff, Glasses, Gem, House, Shirt, Sparkles, X } from "lucide-react";
 import { FaceLandmarker, FilesetResolver } from "@mediapipe/tasks-vision";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -394,7 +394,7 @@ function ARStudio() {
               </div>
               <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
                 <p className="max-w-sm text-xs leading-5 text-muted-foreground">Preview shapes are illustrative overlays, not exact product renders. Product-specific 3D assets and fit calibration come next.</p>
-                {cameraOpen && <Button size="sm" variant="outline" onClick={() => { stopCamera(); void startCamera(); }}><RotateCcw className="mr-2 h-3.5 w-3.5" /> Restart camera</Button>}
+
               </div>
               {cameraError && <p role="alert" className="rounded-xl border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">{cameraError}</p>}
               <div className="flex items-start gap-3 rounded-xl bg-muted/60 p-4">
