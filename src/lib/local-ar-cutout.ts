@@ -13,7 +13,8 @@ declare global {
   interface Window { ort?: OrtRuntime }
 }
 
-const MODEL_BASE = "https://cdn.jsdelivr.net/gh/chenjindu/browser-remove-background@2d550542847cde6a8ba7c5128584de0fab32757b/model/";
+// ISNet background model by chenjindu/browser-remove-background (Apache-2.0), pinned to a commit.
+// ONNX Runtime Web is loaded from its npm distribution (MIT). Product photos stay in this browser.\nconst MODEL_BASE = "https://cdn.jsdelivr.net/gh/chenjindu/browser-remove-background@2d550542847cde6a8ba7c5128584de0fab32757b/model/";
 const ORT_BASE = "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.22.0/dist/";
 const modelParts = ["isnet-w8.part00", "isnet-w8.part01", "isnet-w8.part02"];
 let runtimePromise: Promise<OrtRuntime> | null = null;
@@ -117,8 +118,9 @@ export async function removeBackgroundLocally(source: Blob): Promise<Blob> {
     maskContext.putImageData(maskImage, 0, 0);
 
     const outputCanvas = document.createElement("canvas");
-    outputCanvas.width = bitmap.width;
-    outputCanvas.height = bitmap.height;
+    const outputScale = Math.min(1, 2048 / Math.max(bitmap.width, bitmap.height));
+    outputCanvas.width = Math.max(1, Math.round(bitmap.width * outputScale));
+    outputCanvas.height = Math.max(1, Math.round(bitmap.height * outputScale));
     const outputContext = outputCanvas.getContext("2d");
     if (!outputContext) throw new Error("Image processing is unavailable in this browser.");
     outputContext.drawImage(bitmap, 0, 0);
