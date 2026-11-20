@@ -1,4 +1,4 @@
-import { ImageOff, ShoppingBag, Check, Heart, Share2, ChevronLeft, ChevronRight } from "lucide-react";
+import { ImageOff, ShoppingBag, Check, Heart, Share2, ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -20,6 +20,8 @@ export function PublicProductCard({ product, spotlightCampaignId }: { product: P
   const [selectedColor, setSelectedColor] = useState("");
   const [imageIndex, setImageIndex] = useState(0);
   const [visitorId] = useState(() => { try { const key = "offfeed-analytics-visitor"; let id = localStorage.getItem(key); if (!id) { id = crypto.randomUUID(); localStorage.setItem(key, id); } return id; } catch { return crypto.randomUUID(); } });
+  const arSearchText = `${product.category} ${product.productName} ${(product.tags ?? []).join(" ")}`.toLowerCase();
+  const supportsEarringTryOn = /earring|earrings|studs?|hoops?|jhumkas?|drops?/.test(arSearchText);
 
   useEffect(() => { if (spotlightCampaignId) void recordSpotlightEvent({ data: { campaignId: spotlightCampaignId, productId: product.id, eventType: "view", visitorId } }); }, [spotlightCampaignId, product.id, visitorId]);
 
@@ -143,6 +145,11 @@ export function PublicProductCard({ product, spotlightCampaignId }: { product: P
           </Button>
           <Button variant="ghost" size="icon" aria-label={`Share ${product.productName}`} onClick={shareProduct}><Share2 /></Button>
         </div>
+        {supportsEarringTryOn && (
+          <Button asChild variant="outline" className="mt-2 w-full border-primary/40 text-primary hover:bg-primary/5">
+            <Link to="/ar"><Sparkles className="mr-2 size-4" /> Try in AR</Link>
+          </Button>
+        )}
         <ProductReviews productId={product.id} productName={product.productName} />
       </div>
       {showVariantPicker && (
