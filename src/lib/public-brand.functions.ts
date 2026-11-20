@@ -240,7 +240,7 @@ export const getShopTheLookProducts = createServerFn({ method: "GET" })
 
     const { data: rows, error } = await supabase
       .from("brand_products")
-      .select("id, brand_application_id, product_name, description, category, price, product_url, image_path, image_paths, ar_image_path, sizes, colors, tags, audience, created_at, size_chart")
+      .select("id, brand_application_id, product_name, description, category, price, product_url, image_path, image_paths, ar_image_path, ar_width_mm, ar_height_mm, sizes, colors, tags, audience, created_at, size_chart")
       .eq("status", "published")
       .eq("brand_approved", true)
       .contains("audience", [data.audience])
@@ -265,7 +265,7 @@ export const getShopTheLookProducts = createServerFn({ method: "GET" })
     // Keep the product feed visible when RLS correctly blocks anonymous guide access.
     if (sharedGuidesError) console.warn("[OFFFEED Lens] Optional size guides unavailable:", sharedGuidesError.message);
     const guideByBrandCategory = new Map((sharedGuidesError ? [] : sharedGuides ?? []).map((guide) => [`${guide.brand_application_id}:${guide.category}`, guide.size_chart]));
-    const productPaths = [...new Set((rows ?? []).flatMap((row) => [row.image_path, ...(row.image_paths ?? [])]).filter((path): path is string => Boolean(path && !path.startsWith("https://"))))];
+    .const productPaths = [...new Set((rows ?? []).flatMap((row) => [row.image_path, row.ar_image_path, ...(row.image_paths ?? [])]).filter((path): path is string => Boolean(path && !path.startsWith("https://"))))];
     // Product rows are public, but their image bucket is private. Sign images
     // with the server-only service-role client so anonymous storage RLS cannot
     // prevent Discover from rendering an approved product photo.
@@ -295,6 +295,8 @@ export const getShopTheLookProducts = createServerFn({ method: "GET" })
         imageUrl: getImageUrl(row.image_path, signedUrls),
         imageUrls: (row.image_paths?.length ? row.image_paths : row.image_path ? [row.image_path] : []).map((path) => getImageUrl(path, signedUrls)).filter((url): url is string => Boolean(url)),
         arImageUrl: getImageUrl(row.ar_image_path, signedUrls),
+        arWidthMm: row.ar_width_mm,
+        arHeightMm: row.ar_height_mm,
         sizes: row.sizes,
         sizeChart: normalizeProductSizeChart(row.size_chart) ?? normalizeProductSizeChart(guideByBrandCategory.get(`${row.brand_application_id}:${row.category}`)),
         colors: row.colors,
