@@ -5,6 +5,10 @@ import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/ar")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    productName: typeof search.productName === "string" ? search.productName : undefined,
+    imageUrl: typeof search.imageUrl === "string" && search.imageUrl.startsWith("https://") ? search.imageUrl : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "OFFFEED AR Studio — Jewellery Try-On" },
@@ -105,6 +109,7 @@ function drawEarring(
 }
 
 function ARStudio() {
+  const { productName, imageUrl } = Route.useSearch();
   const [active, setActive] = useState<(typeof experiences)[number]["id"]>("jewellery");
   const [cameraOpen, setCameraOpen] = useState(false);
   const [cameraError, setCameraError] = useState("");
@@ -341,6 +346,20 @@ function ARStudio() {
               </div>
               {cameraOpen && <Button variant="ghost" size="icon" onClick={stopCamera} aria-label="Close camera"><X /></Button>}
             </div>
+            {productName && (
+              <div className="flex items-center gap-4 border-b border-border bg-muted/30 p-4">
+                {imageUrl ? (
+                  <img src={imageUrl} alt={productName} className="h-24 w-24 shrink-0 rounded-xl bg-background object-contain p-2" />
+                ) : (
+                  <span className="grid h-24 w-24 shrink-0 place-items-center rounded-xl bg-background text-muted-foreground"><Gem className="h-8 w-8" /></span>
+                )}
+                <div className="min-w-0">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-primary">Selected jewellery</p>
+                  <h3 className="mt-1 line-clamp-2 font-medium">{productName}</h3>
+                  <p className="mt-1 text-xs text-muted-foreground">This is the product you selected from Discover.</p>
+                </div>
+              </div>
+            )}
             <div className="relative aspect-[4/3] overflow-hidden bg-[#241f20]">
               {cameraOpen ? (
                 <>
@@ -354,7 +373,7 @@ function ARStudio() {
               ) : (
                 <div className="absolute inset-0 flex flex-col items-center justify-center px-8 text-center text-white">
                   <span className="mb-5 grid h-16 w-16 place-items-center rounded-full border border-white/20 bg-white/10"><Camera className="h-7 w-7" /></span>
-                  <h3 className="font-display text-3xl">Find your next favourite.</h3>
+                  <h3 className="font-display text-3xl">{productName ? "Try this piece on." : "Find your next favourite."}</h3>
                   <p className="mt-3 max-w-sm text-sm leading-6 text-white/70">
                     Your camera preview stays on this device. Face landmarks are processed in your browser; OFFFEED does not upload your camera stream.
                   </p>
@@ -393,7 +412,7 @@ function ARStudio() {
                 </div>
               </div>
               <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
-                <p className="max-w-sm text-xs leading-5 text-muted-foreground">Preview shapes are illustrative overlays, not exact product renders. Product-specific 3D assets and fit calibration come next.</p>
+                <p className="max-w-sm text-xs leading-5 text-muted-foreground">{productName ? "Your selected product is shown above. The live face overlay is still an illustrative earring shape, not an exact 3D render of this item." : "Preview shapes are illustrative overlays, not exact product renders. Product-specific 3D assets and fit calibration come next."}</p>
 
               </div>
               {cameraError && <p role="alert" className="rounded-xl border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">{cameraError}</p>}
