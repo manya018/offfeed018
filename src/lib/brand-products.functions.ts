@@ -16,6 +16,8 @@ const productSchema = z.object({
   imagePaths: z.array(z.string().min(1).max(2048)).min(1).max(6).optional(),
   sizes: z.array(z.string().trim().min(1).max(40)).max(30),
   sizeChart: sizeChartSchema.optional(),
+  arWidthMm: z.number().positive().max(500).nullable().optional(),
+  arHeightMm: z.number().positive().max(500).nullable().optional(),
   colors: z.array(z.string().trim().min(1).max(60)).max(30),
   tags: z.array(z.string().trim().min(1).max(40)).max(30),
   audience: z.array(z.enum(audienceValues)).min(1),
@@ -150,7 +152,7 @@ export const getBrandWorkspace = createServerFn({ method: "GET" })
     if (error || !application) throw new Error("No brand application is connected to this account.");
 
     const { data: products, error: productError } = application.status === "approved"
-      ? await context.supabase.from("brand_products").select("id, product_name, description, category, price, product_url, image_path, image_paths, ar_image_path, sizes, size_chart, colors, tags, audience, source, status, created_at").eq("user_id", context.userId).order("created_at", { ascending: false })
+      ? await context.supabase.from("brand_products").select("id, product_name, description, category, price, product_url, image_path, image_paths, ar_image_path, ar_width_mm, ar_height_mm, sizes, size_chart, colors, tags, audience, source, status, created_at").eq("user_id", context.userId).order("created_at", { ascending: false })
       : { data: [], error: null };
     if (productError) throw new Error("Your product list couldn't be loaded.");
     const productRows = products ?? [];
@@ -362,6 +364,8 @@ export const createBrandProduct = createServerFn({ method: "POST" })
       image_paths: imagePaths,
       sizes: data.sizes,
       size_chart: data.sizeChart ?? null,
+      ar_width_mm: data.arWidthMm ?? null,
+      ar_height_mm: data.arHeightMm ?? null,
       colors: data.colors,
       tags: data.tags,
       audience: data.audience,
@@ -488,6 +492,25 @@ export const updateBrandProductStatus = createServerFn({ method: "POST" })
     await getApprovedApplication(context);
     const { data: product, error } = await context.supabase.from("brand_products").update({ status: data.status }).eq("id", data.id).eq("user_id", context.userId).select("id, status").single();
     if (error || !product) throw new Error("That product couldn't be updated.");
+    return product;
+  });
+
+export const updateBrandProductArDimensions = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({
+    productId: z.string().uuid(),
+    arWidthMm: z.number().positive().max(500),
+    arHeightMm: z.number().positive().max(500),
+  }).parse(input))
+  .handler(async ({ context, data }) => {
+    await getApprovedApplication(context);
+    const { data: product, error } = await context.supabase.from("brand_products")
+      .update({ ar_width_mm: data.arWidthMm, ar_height_mm: data.arHeightMm })
+      .eq("id", data.productId)
+      .eq("user_id", context.userId)
+      .select("id, ar_width_mm, ar_height_mm")
+      .maybeSingle();
+    if (error || !product) throw new Error("This earring's AR dimensions couldn't be saved.");
     return product;
   });
 
