@@ -8,6 +8,7 @@ export const Route = createFileRoute("/ar")({
   validateSearch: (search: Record<string, unknown>) => ({
     productName: typeof search.productName === "string" ? search.productName : undefined,
     imageUrl: typeof search.imageUrl === "string" && search.imageUrl.startsWith("https://") ? search.imageUrl : undefined,
+    arImageUrl: typeof search.arImageUrl === "string" && search.arImageUrl.startsWith("https://") ? search.arImageUrl : undefined,
   }),
   head: () => ({
     meta: [
@@ -109,7 +110,7 @@ function drawEarring(
 }
 
 function ARStudio() {
-  const { productName, imageUrl } = Route.useSearch();
+  const { productName, imageUrl, arImageUrl } = Route.useSearch();
   const [active, setActive] = useState<(typeof experiences)[number]["id"]>("jewellery");
   const [cameraOpen, setCameraOpen] = useState(false);
   const [cameraError, setCameraError] = useState("");
@@ -119,6 +120,7 @@ function ARStudio() {
   const [metal, setMetal] = useState<Metal>("gold");
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const productEarringRef = useRef<HTMLImageElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const styleRef = useRef<EarringStyle>(earringStyle);
   const metalRef = useRef<Metal>(metal);
@@ -126,6 +128,17 @@ function ARStudio() {
 
   styleRef.current = earringStyle;
   metalRef.current = metal;
+
+  useEffect(() => {
+    productEarringRef.current = null;
+    if (!arImageUrl) return;
+    const image = new Image();
+    image.crossOrigin = "anonymous";
+    image.onload = () => { productEarringRef.current = image; };
+    image.onerror = () => { productEarringRef.current = null; };
+    image.src = arImageUrl;
+    return () => { image.onload = null; image.onerror = null; productEarringRef.current = null; };
+  }, [arImageUrl]);
 
   const stopCamera = () => {
     streamRef.current?.getTracks().forEach((track) => track.stop());
@@ -253,8 +266,25 @@ function ARStudio() {
                 const size = Math.max(11, Math.min(27, faceWidth * 0.045));
                 const leftX = left.x + (left.x < rect.width / 2 ? -outward : outward);
                 const rightX = right.x + (right.x < rect.width / 2 ? -outward : outward);
-                drawEarring(ctx, leftX, left.y, size, styleRef.current, metalRef.current);
-                drawEarring(ctx, rightX, right.y, size, styleRef.current, metalRef.current);
+                const productEarring = productEarringRef.current;
+                if (productEarring?.complete && productEarring.naturalWidth > 0) {
+                  const overlayWidth = Math.max(22, Math.min(96, faceWidth * 0.16));
+                  const overlayHeight = overlayWidth * (productEarring.naturalHeight / productEarring.naturalWidth);
+                  const drawProductAt = (x: number, y: number, mirror: boolean) => {
+                    ctx.save();
+                    if (mirror) {
+                      ctx.translate(x * 2, 0);
+                      ctx.scale(-1, 1);
+                    }
+                    ctx.drawImage(productEarring, x - overlayWidth / 2, y - overlayHeight * 0.08, overlayWidth, overlayHeight);
+                    ctx.restore();
+                  };
+                  drawProductAt(leftX, left.y, false);
+                  drawProductAt(rightX, right.y, true);
+                } else {
+                  drawEarring(ctx, leftX, left.y, size, styleRef.current, metalRef.current);
+                  drawEarring(ctx, rightX, right.y, size, styleRef.current, metalRef.current);
+                }
               } else {
                 setTrackingState("searching");
               }
@@ -357,6 +387,7 @@ function ARStudio() {
                   <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-primary">Selected jewellery</p>
                   <h3 className="mt-1 line-clamp-2 font-medium">{productName}</h3>
                   <p className="mt-1 text-xs text-muted-foreground">This is the product you selected from Discover.</p>
+                  <p className="mt-1 text-xs text-muted-foreground">{arImageUrl ? "Product-specific cutout loaded for the live preview." : "A sample overlay is shown until this brand adds a transparent AR cutout."}</p>
                 </div>
               </div>
             )}
@@ -412,7 +443,7 @@ function ARStudio() {
                 </div>
               </div>
               <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
-                <p className="max-w-sm text-xs leading-5 text-muted-foreground">{productName ? "Your selected product is shown above. The live face overlay is still an illustrative earring shape, not an exact 3D render of this item." : "Preview shapes are illustrative overlays, not exact product renders. Product-specific 3D assets and fit calibration come next."}</p>
+                <p className="max-w-sm text-xs leading-5 text-muted-foreground">{arImageUrl ? "The uploaded transparent product cutout is positioned over both earlobes. Alignment is an approximate 2D preview and may vary by camera angle." : productName ? "Your selected product is shown above. This sample overlay is illustrative until the brand uploads a transparent AR cutout for this item." : "Preview shapes are illustrative overlays. Select a published jewellery product with an AR cutout for a product-specific preview."}</p>
 
               </div>
               {cameraError && <p role="alert" className="rounded-xl border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">{cameraError}</p>}
