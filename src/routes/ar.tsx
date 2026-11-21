@@ -634,7 +634,7 @@ function ARStudio() {
                   <span className="mb-5 grid h-16 w-16 place-items-center rounded-full border border-white/20 bg-white/10"><Camera className="h-7 w-7" /></span>
                   <h3 className="font-display text-3xl">{productName ? "Try this piece on." : "Find your next favourite."}</h3>
                   <p className="mt-3 max-w-sm text-sm leading-6 text-white/70">
-                    Your camera preview stays on this device. Face landmarks are processed in your browser; OFFFEED does not upload your camera stream.
+                    Your camera preview stays on this device. Body landmarks are processed in your browser; OFFFEED does not upload your camera stream.
                   </p>
                   <Button className="mt-6" onClick={startCamera}><Camera className="mr-2 h-4 w-4" /> Start try-on</Button>
                 </div>
@@ -642,8 +642,8 @@ function ARStudio() {
             </div>
             <div className="space-y-5 p-5">
               <div>
-                <p className="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Choose your earring</p>
-                <div className="grid grid-cols-3 gap-2">
+                <p className="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">{jewelleryKind === "earrings" ? "Choose your earring" : "Live product placement"}</p>
+                {jewelleryKind === "earrings" && <div className="grid grid-cols-3 gap-2">
                   {([
                     { id: "stud", label: "Studs" },
                     { id: "hoop", label: "Hoops" },
@@ -653,9 +653,9 @@ function ARStudio() {
                       {item.label}
                     </button>
                   ))}
-                </div>
+                </div>}
               </div>
-              <div>
+              {jewelleryKind === "earrings" && <div>
                 <p className="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Metal finish</p>
                 <div className="flex flex-wrap gap-2">
                   {([
@@ -669,16 +669,16 @@ function ARStudio() {
                     </button>
                   ))}
                 </div>
-              </div>
+              </div>}
               <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
-                <p className="max-w-sm text-xs leading-5 text-muted-foreground">{cutoutState === "ready" && productName ? arWidthMm && arHeightMm ? "Each earring is scaled from the brand’s measured width and height. Face-width calibration is approximate and can vary by person and camera distance." : "Each earring is tightly cropped and aligned to a separate earlobe. Ask the brand to enter its exact width and height for measured scale." : cutoutState === "loading" && productName ? "Creating a free product cutout on this device. The first use downloads the image model; the product photo is not sent to a cutout service." : cutoutState === "error" && productName ? "No generic earrings are shown. Try a clear product photo with the jewellery separated from the background." : "Preview shapes are illustrative overlays. Select an earring from Discover to preview that product."}</p>
+                <p className="max-w-sm text-xs leading-5 text-muted-foreground">{cutoutState === "ready" && productName ? arWidthMm && arHeightMm ? "The product uses the brand’s entered measurements. Landmark placement and on-screen scale are estimates and can vary with camera distance." : "The product cutout is aligned to a live body landmark. Ask the brand to enter its width and height to improve scale; camera distance still affects the preview." : cutoutState === "loading" && productName ? "Creating a free product cutout on this device. The first use downloads the image model; the product photo is not sent to a cutout service." : cutoutState === "error" && productName ? "No sample jewellery is shown for this product. Try a clear product photo with the jewellery separated from the background." : "Preview shapes are illustrative overlays. Select an earring from Discover to preview that product."}</p>
 
               </div>
               {cameraError && <p role="alert" className="rounded-xl border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">{cameraError}</p>}
               <div className="flex items-start gap-3 rounded-xl bg-muted/60 p-4">
                 <CameraOff className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
                 <p className="text-xs leading-5 text-muted-foreground">
-                  Face detection runs locally in the browser using MediaPipe. The model and browser runtime are downloaded from their public CDNs; camera frames are not sent to those servers. MediaPipe may send anonymous SDK usage metrics.
+                  Face, hand, and body tracking run locally in the browser using MediaPipe. Models are downloaded from public CDNs; camera frames are not sent to those servers.
                 </p>
               </div>
             </div>
