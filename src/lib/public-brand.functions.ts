@@ -252,7 +252,7 @@ export const getShopTheLookProducts = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const supabase = supabaseAdmin;
 
-    const { data: rows, error } = await supabase
+    let { data: rows, error } = await supabase
       .from("brand_products")
       .select("id, brand_application_id, product_name, description, category, price, product_url, image_path, image_paths, ar_image_path, ar_width_mm, ar_height_mm, sizes, colors, tags, audience, created_at, size_chart")
       .eq("status", "published")
@@ -260,6 +260,20 @@ export const getShopTheLookProducts = createServerFn({ method: "GET" })
       .contains("audience", [data.audience])
       .order("created_at", { ascending: false })
       .limit(60);
+    // The AR fields are optional. Keep published catalogue items visible while
+    // the connected Lovable database is still applying the AR migrations.
+    if (error && /ar_image_path|ar_width_mm|ar_height_mm|schema cache/i.test(error.message ?? "")) {
+      const fallback = await supabase.from("brand_products")
+        .select("id, brand_application_id, product_name, description, category, price, product_url, image_path, image_paths, sizes, colors, tags, audience, created_at, size_chart")
+        .eq("status", "published").eq("brand_approved", true).contains("audience", [data.audience])
+        .order("created_at", { ascending: false }).limit(60);
+      if (!fallback.error) {
+        rows = (fallback.data ?? []).map((row) => ({ ...row, ar_image_path: null, ar_width_mm: null, ar_height_mm: null })) as typeof rows;
+        error = null;
+      } else {
+        error = fallback.error;
+      }
+    }
     if (error) {
       console.error("[OFFFEED Lens] Published product query failed:", error.code, error.message, error.details);
       throw new Error("OFFFEED could not load published brand products. Please try again shortly.");
