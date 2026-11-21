@@ -404,7 +404,7 @@ function ARStudio() {
           catch { poseLandmarker = await PoseLandmarker.createFromOptions(vision, { ...poseOptions, baseOptions: { ...poseOptions.baseOptions, delegate: "CPU" as const } }); }
         }
         if (cancelled) {
-          landmarker?.close(); handLandmarker?.close(); poseLandmarker?.close(); handLandmarker?.close(); poseLandmarker?.close();
+          landmarker?.close(); handLandmarker?.close(); poseLandmarker?.close();
           return;
         }
         setTrackingState("searching");
@@ -430,15 +430,15 @@ function ARStudio() {
               ctx.clearRect(0, 0, rect.width, rect.height);
               const timestamp = performance.now();
               const face = landmarker?.detectForVideo(videoElement, timestamp).faceLandmarks[0];
+              const scale = Math.max(rect.width / videoElement.videoWidth, rect.height / videoElement.videoHeight);
+              const offsetX = (rect.width - videoElement.videoWidth * scale) / 2;
+              const offsetY = (rect.height - videoElement.videoHeight * scale) / 2;
+              const point = (index: number) => ({ x: face?.[index] ? (1 - face[index].x) * videoElement.videoWidth * scale + offsetX : 0, y: face?.[index] ? face[index].y * videoElement.videoHeight * scale + offsetY : 0 });
+              const faceWidth = face?.[234] && face?.[454] ? Math.abs(point(234).x - point(454).x) : 0;
+              const mapPoint = (p: { x: number; y: number }) => ({ x: (1 - p.x) * videoElement.videoWidth * scale + offsetX, y: p.y * videoElement.videoHeight * scale + offsetY });
               if (face && face[177] && face[401] && face[234] && face[454]) {
                 setTrackingState("found");
-                const scale = Math.max(rect.width / videoElement.videoWidth, rect.height / videoElement.videoHeight);
-                const offsetX = (rect.width - videoElement.videoWidth * scale) / 2;
-                const offsetY = (rect.height - videoElement.videoHeight * scale) / 2;
-                const point = (index: number) => ({
-                  x: (1 - face[index].x) * videoElement.videoWidth * scale + offsetX,
-                  y: face[index].y * videoElement.videoHeight * scale + offsetY,
-                });
+
                 const left = point(177);
                 const right = point(401);
                 const faceWidth = Math.abs(point(234).x - point(454).x);
@@ -464,7 +464,7 @@ function ARStudio() {
                   };
                   drawProductAt(productEarring.left, leftX, left.y, false);
                   drawProductAt(productEarring.right, rightX, right.y, productEarring.mirrorRight);
-                } else if (!productName || !imageUrl) {
+                } else if (jewelleryKind === "earrings" && (!productName || !imageUrl)) {
                   drawEarring(ctx, leftX, left.y, size, styleRef.current, metalRef.current);
                   drawEarring(ctx, rightX, right.y, size, styleRef.current, metalRef.current);
                 }
@@ -481,7 +481,6 @@ function ARStudio() {
                 if (jewelleryKind === "nose") drawFaceAsset(point(1).x, point(1).y, faceWidth * 0.12);
                 if (jewelleryKind === "forehead") drawFaceAsset((point(10).x + point(168).x) / 2, point(10).y + faceWidth * 0.1, faceWidth * 0.28);
               }
-              const mapPoint = (p: { x: number; y: number }) => ({ x: (1 - p.x) * videoElement.videoWidth * scale + offsetX, y: p.y * videoElement.videoHeight * scale + offsetY });
               const drawBodyAsset = (x: number, y: number, baseWidth: number, referenceMm: number) => {
                 const image = productOverlayRef.current;
                 if (!image?.complete || image.naturalWidth <= 0) return false;
