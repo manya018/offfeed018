@@ -1,7 +1,7 @@
 project_id = "wrqkpxvbbdsvfgvisyte"
 
 [functions.virtual-try-on]
-verify_jwt = false
+verify_jwt = true
 
 [functions.sale-notification-dispatch]
 verify_jwt = false
