@@ -299,10 +299,15 @@ export const updateBrandOrderTracking = createServerFn({ method: "POST" })
       dispatched_at: data.status === "shipped" ? now : undefined,
       delivered_at: data.status === "delivered" ? now : undefined,
     };
-    const { data: order, error } = await context.supabase.from("brand_orders")
+    // Tracking URLs are customer-facing links. Update them only through this
+    // authenticated server function after courier-host validation; direct
+    // authenticated REST updates are revoked by the companion migration.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: order, error } = await supabaseAdmin.from("brand_orders")
       .update(updates)
       .eq("id", data.orderId)
       .eq("brand_application_id", application.id)
+      .eq("brand_user_id", context.userId)
       .select("id, order_number, status, tracking_provider, tracking_number, tracking_url, estimated_delivery_start, estimated_delivery_end, dispatched_at, delivered_at")
       .maybeSingle();
     if (error || !order) throw new Error("Order tracking couldn't be updated. Please check that the database migration has been applied.");
