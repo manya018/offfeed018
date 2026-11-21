@@ -27,6 +27,19 @@ const productSchema = z.object({
 });
 
 const importSchema = z.object({ website: z.string().url().max(2048) });
+
+const trustedTrackingHosts = new Set(["delhivery.com", "bluedart.com", "dtdc.in", "dtdc.com", "shiprocket.in", "ecomexpress.in", "xpressbees.com", "shadowfax.in", "indiapost.gov.in"]);
+function validateTrackingUrl(value: string) {
+  if (!value) return "";
+  let url: URL;
+  try { url = new URL(value); } catch { throw new Error("Use a supported courier tracking link."); }
+  const host = url.hostname.toLowerCase().replace(/\\.$/, "");
+  const trusted = [...trustedTrackingHosts].some((domain) => host === domain || host.endsWith("." + domain));
+  if (url.protocol !== "https:" || !trusted || url.username || url.password || (url.port && url.port !== "443")) {
+    throw new Error("Use an HTTPS tracking link from a supported courier, such as Delhivery, Blue Dart, DTDC, Shiprocket, or India Post.");
+  }
+  return url.toString();
+}
 const importedProductsSchema = z.object({
   audience: z.array(z.enum(audienceValues)).min(1),
   products: z.array(z.object({
@@ -260,12 +273,13 @@ export const updateBrandOrderTracking = createServerFn({ method: "POST" })
       .eq("brand_application_id", application.id)
       .maybeSingle();
     if (previousOrderError || !previousOrder) throw new Error("This order could not be found.");
+    const trackingUrl = validateTrackingUrl(data.trackingUrl);
     const now = new Date().toISOString();
     const updates = {
       status: data.status,
       tracking_provider: data.trackingProvider,
       tracking_number: data.trackingNumber,
-      tracking_url: data.trackingUrl,
+      tracking_url: trackingUrl,
       estimated_delivery_start: data.estimatedDeliveryStart || null,
       estimated_delivery_end: data.estimatedDeliveryEnd || null,
       dispatched_at: data.status === "shipped" ? now : undefined,
