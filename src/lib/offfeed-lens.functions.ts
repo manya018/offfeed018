@@ -1,5 +1,16 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+
+async function consumeLensRequest(userId: string) {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data, error } = await (supabaseAdmin as any).rpc("consume_offfeed_lens_request", { p_user_id: userId });
+  if (error) {
+    console.error("[offfeed-lens] Usage limit check failed:", error);
+    throw new Error("OFFFEED Lens is temporarily unavailable. Please try again later.");
+  }
+  if (data !== true) throw new Error("OFFFEED Lens usage limit reached. Please try again later.");
+}
 
 const inputSchema = z.object({
   imageDataUrl: z.string()
@@ -25,8 +36,10 @@ const analysisSchema = z.object({
 export type OutfitImageAnalysis = z.infer<typeof analysisSchema>;
 
 export const analyzeOutfitImage = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((input) => inputSchema.parse(input))
-  .handler(async ({ data }) => {
+  .handler(async ({ context, data }) => {
+    await consumeLensRequest(context.userId);
     const apiKey = process.env["LOVABLE_API_KEY"];
     if (!apiKey) {
       throw new Error("OFFFEED Lens is not configured yet. Add the Lovable AI gateway key to the server environment.");
@@ -133,8 +146,10 @@ function isAllowedCandidateImage(imageUrl: string) {
 }
 
 export const rankOutfitImageMatches = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((input) => visualMatchInputSchema.parse(input))
-  .handler(async ({ data }) => {
+  .handler(async ({ context, data }) => {
+    await consumeLensRequest(context.userId);
     const apiKey = process.env["LOVABLE_API_KEY"];
     if (!apiKey) throw new Error("OFFFEED Lens is not configured yet.");
     if (data.candidates.some((candidate) => !isAllowedCandidateImage(candidate.imageUrl))) {
