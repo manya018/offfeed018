@@ -26,7 +26,6 @@ const productSchema = z.object({
   path: ["arHeightMm"],
 });
 
-const importSchema = z.object({ website: z.string().url().max(2048) });
 
 const trustedTrackingHosts = new Set(["delhivery.com", "bluedart.com", "dtdc.in", "dtdc.com", "shiprocket.in", "ecomexpress.in", "xpressbees.com", "shadowfax.in", "indiapost.gov.in"]);
 function validateTrackingUrl(value: string) {
@@ -140,7 +139,7 @@ function mapShopifyProduct(product: ShopifyProduct, origin: string) {
   const image = product.images?.find((item) => item.src.startsWith("https://") && (() => {
     try {
       const host = new URL(item.src).hostname.toLowerCase();
-      return host === "cdn.shopify.com" || host.endsWith(".myshopify.com") || host.endsWith(".shopifycdn.net");
+      return host === "cdn.shopify.com";
     } catch { return false; }
   })())?.src ?? null;
 
@@ -335,12 +334,12 @@ export const updateBrandOrderTracking = createServerFn({ method: "POST" })
 
 export const importShopifyCatalog = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input) => importSchema.parse(input))
-  .handler(async ({ context, data }) => {
+  .handler(async ({ context }) => {
     const application = await getApprovedApplication(context);
-    const registered = normalizedHost(application.website_url);
-    const requested = normalizedHost(data.website);
-    if (registered.host !== requested.host) throw new Error("For your safety, import only works with the website on your approved brand application.");
+    if (!application.website_url) throw new Error("Add an approved website to your brand application before importing.");
+    // Never accept a fetch destination from the browser. The destination is
+    // derived exclusively from the brand website approved and stored by OFFFEED.
+    const requested = normalizedHost(application.website_url);
 
     const collected = new Map<string, NonNullable<ReturnType<typeof mapShopifyProduct>>>();
     for (let page = 1; page <= 10; page += 1) {
