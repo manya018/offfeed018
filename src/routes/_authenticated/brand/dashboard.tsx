@@ -545,7 +545,10 @@ function BrandDashboard() {
         cacheControl: "3600",
         upsert: false,
       });
-      if (uploadError) throw new Error("The cutout couldn't be saved to OFFFEED Cloud. Please retry.");
+      if (uploadError) {
+        console.error("[brand-ar-image] Cutout upload failed:", uploadError.message);
+        throw new Error("The cutout couldn't be saved to OFFFEED Cloud. Check the latest OFFFEED storage migration and retry.");
+      }
       await updateBrandProductArImage({ data: { productId, arImagePath: uploadedPath } });
       toast.success("Free, on-device AR cutout created and saved.");
       await refresh();
@@ -593,7 +596,10 @@ function BrandDashboard() {
         cacheControl: "3600",
         upsert: false,
       });
-      if (uploadError) throw new Error("The AR image couldn't be uploaded. Please try again.");
+      if (uploadError) {
+        console.error("[brand-ar-image] Storage upload failed:", uploadError.message);
+        throw new Error("The AR image couldn't be uploaded. Check that the latest OFFFEED storage migration is applied and retry.");
+      }
       await updateBrandProductArImage({ data: { productId, arImagePath: uploadedPath } });
       toast.success("Product AR image saved.");
       await refresh();
