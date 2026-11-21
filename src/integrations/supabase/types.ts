@@ -190,10 +190,8 @@ export type Database = {
       }
       brand_products: {
         Row: {
-          audience: string[]
           ar_image_path: string | null
-          ar_width_mm: number | null
-          ar_height_mm: number | null
+          audience: string[]
           brand_application_id: string
           brand_approved: boolean
           category: string
@@ -216,10 +214,8 @@ export type Database = {
           user_id: string
         }
         Insert: {
-          audience: string[]
           ar_image_path?: string | null
-          ar_width_mm?: number | null
-          ar_height_mm?: number | null
+          audience: string[]
           brand_application_id: string
           brand_approved?: boolean
           category: string
@@ -242,10 +238,8 @@ export type Database = {
           user_id: string
         }
         Update: {
-          audience?: string[]
           ar_image_path?: string | null
-          ar_width_mm?: number | null
-          ar_height_mm?: number | null
+          audience?: string[]
           brand_application_id?: string
           brand_approved?: boolean
           category?: string
@@ -270,6 +264,89 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "brand_products_brand_application_id_fkey"
+            columns: ["brand_application_id"]
+            isOneToOne: false
+            referencedRelation: "brand_applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      brand_sale_products: {
+        Row: {
+          product_id: string
+          sale_id: string
+        }
+        Insert: {
+          product_id: string
+          sale_id: string
+        }
+        Update: {
+          product_id?: string
+          sale_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brand_sale_products_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "brand_products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brand_sale_products_sale_id_fkey"
+            columns: ["sale_id"]
+            isOneToOne: false
+            referencedRelation: "brand_sales"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      brand_sales: {
+        Row: {
+          brand_application_id: string
+          created_at: string
+          discount_type: string
+          discount_value: number
+          ends_at: string
+          id: string
+          name: string
+          product_scope: string
+          starts_at: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          brand_application_id: string
+          created_at?: string
+          discount_type: string
+          discount_value: number
+          ends_at: string
+          id?: string
+          name: string
+          product_scope: string
+          starts_at: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          brand_application_id?: string
+          created_at?: string
+          discount_type?: string
+          discount_value?: number
+          ends_at?: string
+          id?: string
+          name?: string
+          product_scope?: string
+          starts_at?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brand_sales_brand_application_id_fkey"
             columns: ["brand_application_id"]
             isOneToOne: false
             referencedRelation: "brand_applications"
@@ -421,6 +498,108 @@ export type Database = {
           pin_code?: string
           state?: string
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      customer_notification_preferences: {
+        Row: {
+          account_type: string
+          created_at: string
+          email: string | null
+          in_app_enabled: boolean
+          push_enabled: boolean
+          sale_email_enabled: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          account_type?: string
+          created_at?: string
+          email?: string | null
+          in_app_enabled?: boolean
+          push_enabled?: boolean
+          sale_email_enabled?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          account_type?: string
+          created_at?: string
+          email?: string | null
+          in_app_enabled?: boolean
+          push_enabled?: boolean
+          sale_email_enabled?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      customer_notifications: {
+        Row: {
+          body: string
+          created_at: string
+          data: Json
+          dedupe_key: string
+          id: string
+          notification_type: string
+          read_at: string | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          data?: Json
+          dedupe_key: string
+          id?: string
+          notification_type: string
+          read_at?: string | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          data?: Json
+          dedupe_key?: string
+          id?: string
+          notification_type?: string
+          read_at?: string | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      customer_push_subscriptions: {
+        Row: {
+          auth: string
+          created_at: string
+          endpoint: string
+          id: string
+          p256dh: string
+          updated_at: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          auth: string
+          created_at?: string
+          endpoint: string
+          id?: string
+          p256dh: string
+          updated_at?: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          auth?: string
+          created_at?: string
+          endpoint?: string
+          id?: string
+          p256dh?: string
+          updated_at?: string
+          user_agent?: string | null
           user_id?: string
         }
         Relationships: []
@@ -627,11 +806,216 @@ export type Database = {
           },
         ]
       }
+      sale_notification_jobs: {
+        Row: {
+          attempts: number
+          claimed_at: string | null
+          created_at: string
+          event_type: string
+          id: string
+          last_error: string | null
+          sale_id: string
+          scheduled_for: string
+          sent_at: string | null
+          status: string
+        }
+        Insert: {
+          attempts?: number
+          claimed_at?: string | null
+          created_at?: string
+          event_type: string
+          id?: string
+          last_error?: string | null
+          sale_id: string
+          scheduled_for: string
+          sent_at?: string | null
+          status?: string
+        }
+        Update: {
+          attempts?: number
+          claimed_at?: string | null
+          created_at?: string
+          event_type?: string
+          id?: string
+          last_error?: string | null
+          sale_id?: string
+          scheduled_for?: string
+          sent_at?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sale_notification_jobs_sale_id_fkey"
+            columns: ["sale_id"]
+            isOneToOne: false
+            referencedRelation: "brand_sales"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      spotlight_analytics_events: {
+        Row: {
+          campaign_id: string
+          created_at: string
+          event_type: string
+          id: string
+          product_id: string
+          visitor_id: string
+        }
+        Insert: {
+          campaign_id: string
+          created_at?: string
+          event_type: string
+          id?: string
+          product_id: string
+          visitor_id: string
+        }
+        Update: {
+          campaign_id?: string
+          created_at?: string
+          event_type?: string
+          id?: string
+          product_id?: string
+          visitor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "spotlight_analytics_events_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "spotlight_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "spotlight_analytics_events_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "brand_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      spotlight_campaign_products: {
+        Row: {
+          campaign_id: string
+          position: number
+          product_id: string
+        }
+        Insert: {
+          campaign_id: string
+          position?: number
+          product_id: string
+        }
+        Update: {
+          campaign_id?: string
+          position?: number
+          product_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "spotlight_campaign_products_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "spotlight_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "spotlight_campaign_products_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "brand_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      spotlight_campaigns: {
+        Row: {
+          admin_note: string
+          audience: string
+          brand_application_id: string
+          campaign_price: number
+          created_at: string
+          duration_days: number
+          ends_at: string | null
+          id: string
+          payment_reference: string | null
+          payment_status: string
+          scheduled_week: string | null
+          starts_at: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_note?: string
+          audience: string
+          brand_application_id: string
+          campaign_price?: number
+          created_at?: string
+          duration_days: number
+          ends_at?: string | null
+          id?: string
+          payment_reference?: string | null
+          payment_status?: string
+          scheduled_week?: string | null
+          starts_at?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_note?: string
+          audience?: string
+          brand_application_id?: string
+          campaign_price?: number
+          created_at?: string
+          duration_days?: number
+          ends_at?: string | null
+          id?: string
+          payment_reference?: string | null
+          payment_status?: string
+          scheduled_week?: string | null
+          starts_at?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "spotlight_campaigns_brand_application_id_fkey"
+            columns: ["brand_application_id"]
+            isOneToOne: false
+            referencedRelation: "brand_applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      claim_due_sale_notification_jobs: {
+        Args: { p_limit?: number }
+        Returns: {
+          attempts: number
+          claimed_at: string | null
+          created_at: string
+          event_type: string
+          id: string
+          last_error: string | null
+          sale_id: string
+          scheduled_for: string
+          sent_at: string | null
+          status: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "sale_notification_jobs"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       create_offfeed_cod_orders: {
         Args: {
           p_customer_email: string
@@ -649,6 +1033,15 @@ export type Database = {
           product_name: string
           quantity: number
         }[]
+      }
+      create_spotlight_booking: {
+        Args: {
+          p_audience: string
+          p_duration_days: number
+          p_start_week: string
+          p_user_id: string
+        }
+        Returns: string
       }
       request_offfeed_return: {
         Args: {
