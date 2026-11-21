@@ -575,3 +575,30 @@ export const updateBrandProductArImage = createServerFn({ method: "POST" })
     if (error || !product) throw new Error("This product's AR image couldn't be saved.");
     return product;
   });
+
+export const removeBrandProductArImage = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({ productId: z.string().uuid() }).parse(input))
+  .handler(async ({ context, data }) => {
+    await getApprovedApplication(context);
+    const { data: product, error } = await context.supabase.from("brand_products")
+      .select("id, ar_image_path")
+      .eq("id", data.productId)
+      .eq("user_id", context.userId)
+      .maybeSingle();
+    if (error || !product) throw new Error("This product's AR image couldn't be found.");
+
+    const { error: updateError } = await context.supabase.from("brand_products")
+      .update({ ar_image_path: null })
+      .eq("id", data.productId)
+      .eq("user_id", context.userId);
+    if (updateError) throw new Error("This product's AR image couldn't be removed.");
+
+    if (product.ar_image_path?.startsWith(`${context.userId}/`)) {
+      const { error: removeError } = await context.supabase.storage
+        .from("brand-product-images")
+        .remove([product.ar_image_path]);
+      if (removeError) console.warn("The AR cutout was unlinked but its stored file could not be removed:", removeError);
+    }
+    return { productId: product.id };
+  });
