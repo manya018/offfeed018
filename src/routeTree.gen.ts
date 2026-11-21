@@ -10,9 +10,9 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as ARRouteImport } from './routes/ar'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AboutRouteImport } from './routes/about'
+import { Route as ArRouteImport } from './routes/ar'
 import { Route as BrandReviewRouteImport } from './routes/brand-review'
 import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as CreateRouteImport } from './routes/create'
@@ -22,24 +22,21 @@ import { Route as EditRouteImport } from './routes/edit'
 import { Route as ExploreRouteImport } from './routes/explore'
 import { Route as ForBrandsRouteImport } from './routes/for-brands'
 import { Route as MoodboardsRouteImport } from './routes/moodboards'
+import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as SaleRouteImport } from './routes/sale'
 import { Route as WishlistRouteImport } from './routes/wishlist'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as BrandBrandHandleRouteImport } from './routes/brand.$brandHandle'
 import { Route as ForBrandsApplyRouteImport } from './routes/for-brands.apply'
 import { Route as LookLookIdRouteImport } from './routes/look.$lookId'
 import { Route as AuthenticatedBrandDashboardRouteImport } from './routes/_authenticated/brand/dashboard'
-import { Route as AuthenticatedBrandSpotlightRouteImport } from './routes/_authenticated/brand/spotlight'
 import { Route as AuthenticatedBrandSalesRouteImport } from './routes/_authenticated/brand/sales'
+import { Route as AuthenticatedBrandSpotlightRouteImport } from './routes/_authenticated/brand/spotlight'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ARRoute = ARRouteImport.update({
-  id: '/ar',
-  path: '/ar',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
@@ -49,6 +46,11 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const AboutRoute = AboutRouteImport.update({
   id: '/about',
   path: '/about',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ArRoute = ArRouteImport.update({
+  id: '/ar',
+  path: '/ar',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BrandReviewRoute = BrandReviewRouteImport.update({
@@ -96,9 +98,19 @@ const MoodboardsRoute = MoodboardsRouteImport.update({
   path: '/moodboards',
   getParentRoute: () => rootRouteImport,
 } as any)
+const NotificationsRoute = NotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SaleRoute = SaleRouteImport.update({
+  id: '/sale',
+  path: '/sale',
   getParentRoute: () => rootRouteImport,
 } as any)
 const WishlistRoute = WishlistRouteImport.update({
@@ -132,20 +144,22 @@ const AuthenticatedBrandDashboardRoute =
     path: '/brand/dashboard',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedBrandSalesRoute = AuthenticatedBrandSalesRouteImport.update({
+  id: '/brand/sales',
+  path: '/brand/sales',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedBrandSpotlightRoute =
   AuthenticatedBrandSpotlightRouteImport.update({
     id: '/brand/spotlight',
     path: '/brand/spotlight',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedBrandSalesRoute = AuthenticatedBrandSalesRouteImport.update({
-  id: '/brand/sales', path: '/brand/sales', getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/ar': typeof ARRoute
   '/about': typeof AboutRoute
+  '/ar': typeof ArRoute
   '/brand-review': typeof BrandReviewRoute
   '/checkout': typeof CheckoutRoute
   '/create': typeof CreateRoute
@@ -155,19 +169,22 @@ export interface FileRoutesByFullPath {
   '/explore': typeof ExploreRoute
   '/for-brands': typeof ForBrandsRouteWithChildren
   '/moodboards': typeof MoodboardsRoute
+  '/notifications': typeof NotificationsRoute
   '/profile': typeof ProfileRoute
+  '/sale': typeof SaleRoute
   '/wishlist': typeof WishlistRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/brand/$brandHandle': typeof BrandBrandHandleRoute
   '/for-brands/apply': typeof ForBrandsApplyRoute
   '/look/$lookId': typeof LookLookIdRoute
   '/brand/dashboard': typeof AuthenticatedBrandDashboardRoute
-  '/brand/spotlight': typeof AuthenticatedBrandSpotlightRoute
   '/brand/sales': typeof AuthenticatedBrandSalesRoute
+  '/brand/spotlight': typeof AuthenticatedBrandSpotlightRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/ar': typeof ArRoute
   '/brand-review': typeof BrandReviewRoute
   '/checkout': typeof CheckoutRoute
   '/create': typeof CreateRoute
@@ -177,22 +194,24 @@ export interface FileRoutesByTo {
   '/explore': typeof ExploreRoute
   '/for-brands': typeof ForBrandsRouteWithChildren
   '/moodboards': typeof MoodboardsRoute
+  '/notifications': typeof NotificationsRoute
   '/profile': typeof ProfileRoute
+  '/sale': typeof SaleRoute
   '/wishlist': typeof WishlistRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/brand/$brandHandle': typeof BrandBrandHandleRoute
   '/for-brands/apply': typeof ForBrandsApplyRoute
   '/look/$lookId': typeof LookLookIdRoute
   '/brand/dashboard': typeof AuthenticatedBrandDashboardRoute
-  '/brand/spotlight': typeof AuthenticatedBrandSpotlightRoute
   '/brand/sales': typeof AuthenticatedBrandSalesRoute
+  '/brand/spotlight': typeof AuthenticatedBrandSpotlightRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/ar': typeof ARRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/about': typeof AboutRoute
+  '/ar': typeof ArRoute
   '/brand-review': typeof BrandReviewRoute
   '/checkout': typeof CheckoutRoute
   '/create': typeof CreateRoute
@@ -202,22 +221,24 @@ export interface FileRoutesById {
   '/explore': typeof ExploreRoute
   '/for-brands': typeof ForBrandsRouteWithChildren
   '/moodboards': typeof MoodboardsRoute
+  '/notifications': typeof NotificationsRoute
   '/profile': typeof ProfileRoute
+  '/sale': typeof SaleRoute
   '/wishlist': typeof WishlistRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/brand/$brandHandle': typeof BrandBrandHandleRoute
   '/for-brands/apply': typeof ForBrandsApplyRoute
   '/look/$lookId': typeof LookLookIdRoute
   '/_authenticated/brand/dashboard': typeof AuthenticatedBrandDashboardRoute
-  '/_authenticated/brand/spotlight': typeof AuthenticatedBrandSpotlightRoute
   '/_authenticated/brand/sales': typeof AuthenticatedBrandSalesRoute
+  '/_authenticated/brand/spotlight': typeof AuthenticatedBrandSpotlightRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/ar'
     | '/about'
+    | '/ar'
     | '/brand-review'
     | '/checkout'
     | '/create'
@@ -227,19 +248,22 @@ export interface FileRouteTypes {
     | '/explore'
     | '/for-brands'
     | '/moodboards'
+    | '/notifications'
     | '/profile'
+    | '/sale'
     | '/wishlist'
     | '/admin'
     | '/brand/$brandHandle'
     | '/for-brands/apply'
     | '/look/$lookId'
     | '/brand/dashboard'
+    | '/brand/sales'
     | '/brand/spotlight'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/ar'
     | '/about'
+    | '/ar'
     | '/brand-review'
     | '/checkout'
     | '/create'
@@ -249,19 +273,23 @@ export interface FileRouteTypes {
     | '/explore'
     | '/for-brands'
     | '/moodboards'
+    | '/notifications'
     | '/profile'
+    | '/sale'
     | '/wishlist'
     | '/admin'
     | '/brand/$brandHandle'
     | '/for-brands/apply'
     | '/look/$lookId'
     | '/brand/dashboard'
+    | '/brand/sales'
+    | '/brand/spotlight'
   id:
     | '__root__'
     | '/'
-    | '/ar'
     | '/_authenticated'
     | '/about'
+    | '/ar'
     | '/brand-review'
     | '/checkout'
     | '/create'
@@ -271,21 +299,24 @@ export interface FileRouteTypes {
     | '/explore'
     | '/for-brands'
     | '/moodboards'
+    | '/notifications'
     | '/profile'
+    | '/sale'
     | '/wishlist'
     | '/_authenticated/admin'
     | '/brand/$brandHandle'
     | '/for-brands/apply'
     | '/look/$lookId'
     | '/_authenticated/brand/dashboard'
+    | '/_authenticated/brand/sales'
     | '/_authenticated/brand/spotlight'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  ARRoute: typeof ARRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AboutRoute: typeof AboutRoute
+  ArRoute: typeof ArRoute
   BrandReviewRoute: typeof BrandReviewRoute
   CheckoutRoute: typeof CheckoutRoute
   CreateRoute: typeof CreateRoute
@@ -295,7 +326,9 @@ export interface RootRouteChildren {
   ExploreRoute: typeof ExploreRoute
   ForBrandsRoute: typeof ForBrandsRouteWithChildren
   MoodboardsRoute: typeof MoodboardsRoute
+  NotificationsRoute: typeof NotificationsRoute
   ProfileRoute: typeof ProfileRoute
+  SaleRoute: typeof SaleRoute
   WishlistRoute: typeof WishlistRoute
   BrandBrandHandleRoute: typeof BrandBrandHandleRoute
   LookLookIdRoute: typeof LookLookIdRoute
@@ -310,13 +343,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/ar': {
-      id: '/ar'
-      path: '/ar'
-      fullPath: '/ar'
-      preLoaderRoute: typeof ARRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/_authenticated': {
       id: '/_authenticated'
       path: ''
@@ -329,6 +355,13 @@ declare module '@tanstack/react-router' {
       path: '/about'
       fullPath: '/about'
       preLoaderRoute: typeof AboutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ar': {
+      id: '/ar'
+      path: '/ar'
+      fullPath: '/ar'
+      preLoaderRoute: typeof ArRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/brand-review': {
@@ -394,11 +427,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MoodboardsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/notifications': {
+      id: '/notifications'
+      path: '/notifications'
+      fullPath: '/notifications'
+      preLoaderRoute: typeof NotificationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/profile': {
       id: '/profile'
       path: '/profile'
       fullPath: '/profile'
       preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sale': {
+      id: '/sale'
+      path: '/sale'
+      fullPath: '/sale'
+      preLoaderRoute: typeof SaleRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/wishlist': {
@@ -443,18 +490,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedBrandDashboardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/brand/spotlight': {
-      id: '/_authenticated/brand/spotlight'
-      path: '/brand/spotlight'
-      fullPath: '/brand/spotlight'
-      preLoaderRoute: typeof AuthenticatedBrandSpotlightRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/brand/sales': {
       id: '/_authenticated/brand/sales'
       path: '/brand/sales'
       fullPath: '/brand/sales'
       preLoaderRoute: typeof AuthenticatedBrandSalesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/brand/spotlight': {
+      id: '/_authenticated/brand/spotlight'
+      path: '/brand/spotlight'
+      fullPath: '/brand/spotlight'
+      preLoaderRoute: typeof AuthenticatedBrandSpotlightRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
   }
@@ -463,15 +510,15 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
   AuthenticatedBrandDashboardRoute: typeof AuthenticatedBrandDashboardRoute
-  AuthenticatedBrandSpotlightRoute: typeof AuthenticatedBrandSpotlightRoute
   AuthenticatedBrandSalesRoute: typeof AuthenticatedBrandSalesRoute
+  AuthenticatedBrandSpotlightRoute: typeof AuthenticatedBrandSpotlightRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRoute,
   AuthenticatedBrandDashboardRoute: AuthenticatedBrandDashboardRoute,
-  AuthenticatedBrandSpotlightRoute: AuthenticatedBrandSpotlightRoute,
   AuthenticatedBrandSalesRoute: AuthenticatedBrandSalesRoute,
+  AuthenticatedBrandSpotlightRoute: AuthenticatedBrandSpotlightRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
@@ -491,9 +538,9 @@ const ForBrandsRouteWithChildren = ForBrandsRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  ARRoute: ARRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AboutRoute: AboutRoute,
+  ArRoute: ArRoute,
   BrandReviewRoute: BrandReviewRoute,
   CheckoutRoute: CheckoutRoute,
   CreateRoute: CreateRoute,
@@ -503,7 +550,9 @@ const rootRouteChildren: RootRouteChildren = {
   ExploreRoute: ExploreRoute,
   ForBrandsRoute: ForBrandsRouteWithChildren,
   MoodboardsRoute: MoodboardsRoute,
+  NotificationsRoute: NotificationsRoute,
   ProfileRoute: ProfileRoute,
+  SaleRoute: SaleRoute,
   WishlistRoute: WishlistRoute,
   BrandBrandHandleRoute: BrandBrandHandleRoute,
   LookLookIdRoute: LookLookIdRoute,
