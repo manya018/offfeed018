@@ -22,7 +22,7 @@ const productSchema = z.object({
   tags: z.array(z.string().trim().min(1).max(40)).max(30),
   audience: z.array(z.enum(audienceValues)).min(1),
 }).refine((product) => (product.arWidthMm == null) === (product.arHeightMm == null), {
-  message: "Enter both earring dimensions or leave both blank.",
+  message: "Enter both product dimensions or leave both blank.",
   path: ["arHeightMm"],
 });
 

@@ -21,7 +21,7 @@ export function PublicProductCard({ product, spotlightCampaignId }: { product: P
   const [imageIndex, setImageIndex] = useState(0);
   const [visitorId] = useState(() => { try { const key = "offfeed-analytics-visitor"; let id = localStorage.getItem(key); if (!id) { id = crypto.randomUUID(); localStorage.setItem(key, id); } return id; } catch { return crypto.randomUUID(); } });
   const arSearchText = `${product.category} ${product.productName} ${(product.tags ?? []).join(" ")}`.toLowerCase();
-  const supportsEarringTryOn = /earring|earrings|studs?|hoops?|jhumkas?|drops?/.test(arSearchText);
+  const supportsJewelleryTryOn = /jewellery|jewelry|earring|studs?|hoops?|jhumkas?|drops?|necklace|pendant|rings?|bracelets?|bangles?|anklets?|maang.?tikka|nose.?pins?|brooch|jewellery sets?|jewelry sets?/.test(arSearchText);
 
   useEffect(() => { if (spotlightCampaignId) void recordSpotlightEvent({ data: { campaignId: spotlightCampaignId, productId: product.id, eventType: "view", visitorId } }); }, [spotlightCampaignId, product.id, visitorId]);
 
@@ -145,9 +145,9 @@ export function PublicProductCard({ product, spotlightCampaignId }: { product: P
           </Button>
           <Button variant="ghost" size="icon" aria-label={`Share ${product.productName}`} onClick={shareProduct}><Share2 /></Button>
         </div>
-        {supportsEarringTryOn && (
+        {supportsJewelleryTryOn && (
           <Button asChild variant="outline" className="mt-2 w-full border-primary/40 text-primary hover:bg-primary/5">
-            <Link to="/ar" search={{ productName: product.productName, imageUrl: product.imageUrl ?? product.imageUrls?.[0] ?? "", arImageUrl: product.arImageUrl ?? "", arWidthMm: product.arWidthMm ?? undefined, arHeightMm: product.arHeightMm ?? undefined }}><Sparkles className="mr-2 size-4" /> Try in AR</Link>
+            <Link to="/ar" search={{ productName: product.productName, productCategory: product.category, imageUrl: product.imageUrl ?? product.imageUrls?.[0] ?? "", arImageUrl: product.arImageUrl ?? "", arWidthMm: product.arWidthMm ?? undefined, arHeightMm: product.arHeightMm ?? undefined }}><Sparkles className="mr-2 size-4" /> Try in AR</Link>
           </Button>
         )}
         <ProductReviews productId={product.id} productName={product.productName} />
