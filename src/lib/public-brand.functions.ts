@@ -265,7 +265,7 @@ export const getShopTheLookProducts = createServerFn({ method: "GET" })
     // Keep the product feed visible when RLS correctly blocks anonymous guide access.
     if (sharedGuidesError) console.warn("[OFFFEED Lens] Optional size guides unavailable:", sharedGuidesError.message);
     const guideByBrandCategory = new Map((sharedGuidesError ? [] : sharedGuides ?? []).map((guide) => [`${guide.brand_application_id}:${guide.category}`, guide.size_chart]));
-    .const productPaths = [...new Set((rows ?? []).flatMap((row) => [row.image_path, row.ar_image_path, ...(row.image_paths ?? [])]).filter((path): path is string => Boolean(path && !path.startsWith("https://"))))];
+    const productPaths = [...new Set((rows ?? []).flatMap((row) => [row.image_path, row.ar_image_path, ...(row.image_paths ?? [])]).filter((path): path is string => Boolean(path && !path.startsWith("https://"))))];
     // Product rows are public, but their image bucket is private. Sign images
     // with the server-only service-role client so anonymous storage RLS cannot
     // prevent Discover from rendering an approved product photo.
