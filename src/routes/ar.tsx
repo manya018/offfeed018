@@ -24,7 +24,7 @@ export const Route = createFileRoute("/ar")({
 });
 
 const experiences = [
-  { id: "jewellery", title: "Jewellery", description: "Try earrings with live face tracking and on-screen placement.", icon: Gem, status: "Live preview" },
+  { id: "jewellery", title: "Jewellery", description: "Try jewellery with live face, hand, and body tracking.", icon: Gem, status: "Live preview" },
   { id: "accessories", title: "Accessories", description: "Explore sunglasses, watches and everyday finishing touches.", icon: Glasses, status: "Coming next" },
   { id: "living", title: "Home & Living", description: "See how decor and furniture could look in your own space.", icon: House, status: "Coming next" },
   { id: "clothing", title: "Clothing", description: "Explore AI-powered outfit previews using a photo you choose.", icon: Shirt, status: "Coming next" },
@@ -524,7 +524,7 @@ function ARStudio() {
       } catch (error) {
         if (!cancelled) {
           setTrackingState("error");
-          setCameraError(error instanceof Error ? error.message : "Face tracking could not be loaded. Check your internet connection and try again.");
+          setCameraError(error instanceof Error ? error.message : "Jewellery tracking could not be loaded. Check your internet connection and try again.");
         }
       }
     };
@@ -533,7 +533,7 @@ function ARStudio() {
     return () => {
       cancelled = true;
       cancelAnimationFrame(animationFrame);
-      landmarker?.close();
+      landmarker?.close(); handLandmarker?.close(); poseLandmarker?.close();
       const canvas = canvasRef.current;
       if (canvas) canvas.getContext("2d")?.clearRect(0, 0, canvas.width, canvas.height);
     };
