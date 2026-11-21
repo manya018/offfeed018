@@ -403,7 +403,13 @@ export const createBrandProduct = createServerFn({ method: "POST" })
       source: remoteImage ? "shopify" : "manual",
       status: "draft",
     }).select("id, product_name, status").single();
-    if (error || !product) throw new Error("This product couldn't be saved. Please check the details and try again.");
+    if (error || !product) {
+      if (error?.code === "42703" || /ar_image_path.*(does not exist|schema cache)|column.*ar_image_path/i.test(error?.message ?? "")) {
+        throw new Error("The AR image database setup is missing. Sync and apply the latest OFFFEED database migration, then retry.");
+      }
+      console.error("[brand-ar-image] Could not save product AR image:", error?.code, error?.message);
+      throw new Error("This product's AR image couldn't be saved. Please retry.");
+    }
     return product;
   });
 
