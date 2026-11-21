@@ -136,6 +136,20 @@ function relevanceScore(product: ProductWithBrand, aesthetic: string) {
   return tokens.reduce((score, token) => score + (searchable.includes(token) ? 1 : 0), 0);
 }
 
+function matchesCategoryFeed(product: ProductWithBrand, aesthetic: string) {
+  const category = product.category.toLowerCase();
+  if (aesthetic === "jewellery") {
+    return /earring|necklace|pendant|chain|ring|bracelet|anklet|jewellery|jewelry|bangle|maang.?tikka|nose.?pin|brooch/.test(category);
+  }
+  if (aesthetic === "accessories") {
+    return /bag|clutch|tote|backpack|belt|sunglass|watch|hat|cap|hair accessory|scarf|wallet/.test(category);
+  }
+  if (aesthetic === "clothing") {
+    return /tops|t-shirt|polo|shirt|blouse|dress|skirt|denim|jean|trouser|pant|short|co.?ord|jumpsuit|jacket|outerwear|knitwear|hoodie|sweatshirt|activewear|lingerie|loungewear|saree|lehenga|kurta|suit|anarkali|sharara|dupatta|indo.?western|sherwani|nehru|bandhgala|dhoti|waistcoat|sneaker|heel|flat|sandal|boot|loafer|footwear|complete look|mixed look/.test(category);
+  }
+  return false;
+}
+
 export const getPublicBrandProfile = createServerFn({ method: "GET" })
   .inputValidator((input) => profileInput.parse(input))
   .handler(async ({ data }) => {
@@ -310,7 +324,7 @@ export const getShopTheLookProducts = createServerFn({ method: "GET" })
       .filter((product) => data.minPrice === undefined || product.price >= data.minPrice)
       .filter((product) => data.maxPrice === undefined || product.price <= data.maxPrice)
       .map((product) => ({ product, score: relevanceScore(product, data.aesthetic) }))
-      .filter(({ product, score }) => (!data.categoryOnly || data.aesthetic === "home" || score > 0 || (data.aesthetic === "clothing" && /tops|t-shirt|polo|shirt|blouse|dress|skirt|denim|jean|trouser|pant|short|co.?ord|jumpsuit|jacket|outerwear|knitwear|hoodie|sweatshirt|activewear|lingerie|loungewear|saree|lehenga|kurta|suit|anarkali|sharara|dupatta|indo.?western|sherwani|nehru|bandhgala|dhoti|waistcoat|sneaker|heel|flat|sandal|boot|loafer|footwear|complete look|mixed look/i.test(product.category))) && (!data.requireMatch || score > 0))
+      .filter(({ product, score }) => (!data.categoryOnly || data.aesthetic === "home" || score > 0 || matchesCategoryFeed(product, data.aesthetic)) && (!data.requireMatch || score > 0))
       .sort((left, right) => right.score - left.score);
     return attachActiveSalePrices(supabase, ranked
       .slice(0, data.resultLimit ?? (data.categoryOnly ? 60 : 8))
