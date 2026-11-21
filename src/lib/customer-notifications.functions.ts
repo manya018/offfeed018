@@ -46,8 +46,17 @@ export const markCustomerNotificationRead = createServerFn({ method: "POST" }).m
 
 export const saveCustomerPushSubscription = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).inputValidator((v) => z.object({ endpoint: z.string().url().max(2048), p256dh: z.string().min(20).max(256), auth: z.string().min(10).max(256), userAgent: z.string().max(500).optional() }).parse(v)).handler(async ({ context, data }) => {
   const db = await dbFor();
-  const { error } = await db.from("customer_push_subscriptions").upsert({ user_id: context.userId, endpoint: data.endpoint, p256dh: data.p256dh, auth: data.auth, user_agent: data.userAgent ?? null, updated_at: new Date().toISOString() }, { onConflict: "endpoint" });
-  if (error) throw new Error("This device could not be registered for push notifications.");
+  const subscription = { user_id: context.userId, endpoint: data.endpoint, p256dh: data.p256dh, auth: data.auth, user_agent: data.userAgent ?? null, updated_at: new Date().toISOString() };
+  const { error: insertError } = await db.from("customer_push_subscriptions").insert(subscription);
+  if (insertError?.code === "23505") {
+    const { data: owner, error: ownerError } = await db.from("customer_push_subscriptions").select("user_id").eq("endpoint", data.endpoint).maybeSingle();
+    if (ownerError || !owner) throw new Error("This device could not be verified for push notifications.");
+    if (owner.user_id !== context.userId) throw new Error("This device is already registered to another account.");
+    const { error: refreshError } = await db.from("customer_push_subscriptions").update({ p256dh: data.p256dh, auth: data.auth, user_agent: data.userAgent ?? null, updated_at: new Date().toISOString() }).eq("endpoint", data.endpoint).eq("user_id", context.userId);
+    if (refreshError) throw new Error("This device could not be refreshed for push notifications.");
+  } else if (insertError) {
+    throw new Error("This device could not be registered for push notifications.");
+  }
   const { data: existingPreferences, error: preferenceLookupError } = await db.from("customer_notification_preferences").select("user_id").eq("user_id", context.userId).maybeSingle();
   if (preferenceLookupError) throw new Error("Push notification preferences could not be loaded.");
   if (existingPreferences) {
