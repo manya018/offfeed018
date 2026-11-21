@@ -947,7 +947,7 @@ function BrandReturnsSection() {
         p_response: (responses[item.id] ?? "").trim(),
       });
       if (error) throw error;
-      toast.success(decision === "approved" ? "Return request approved." : "Return request rejected.");
+      toast.success(decision === "approved" ? "Return request approved." : "Return request sent to OFFFEED for admin review.");
       await loadReturns();
     } catch (error) {
       console.error("Return review failed:", error);
