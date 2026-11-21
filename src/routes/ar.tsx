@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Camera, CameraOff, Glasses, Gem, House, Shirt, Sparkles, X } from "lucide-react";
-import { FaceLandmarker, FilesetResolver } from "@mediapipe/tasks-vision";
+import { FaceLandmarker, FilesetResolver, HandLandmarker, PoseLandmarker } from "@mediapipe/tasks-vision";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { removeBackgroundLocally } from "@/lib/local-ar-cutout";
@@ -8,6 +8,7 @@ import { removeBackgroundLocally } from "@/lib/local-ar-cutout";
 export const Route = createFileRoute("/ar")({
   validateSearch: (search: Record<string, unknown>) => ({
     productName: typeof search.productName === "string" ? search.productName : undefined,
+    productCategory: typeof search.productCategory === "string" ? search.productCategory.slice(0, 80) : undefined,
     imageUrl: typeof search.imageUrl === "string" && search.imageUrl.startsWith("https://") ? search.imageUrl : undefined,
     arImageUrl: typeof search.arImageUrl === "string" && search.arImageUrl.startsWith("https://") ? search.arImageUrl : undefined,
     arWidthMm: parsePositiveDimension(search.arWidthMm),
@@ -198,13 +199,27 @@ async function createEarringPairAssets(source: HTMLImageElement): Promise<Earrin
   return { left: left.image, right: right.image, mirrorRight: !hasPairGap, urls: hasPairGap ? [left.url, right.url] : [left.url] };
 }
 
+function getJewelleryKind(category: string, name: string): "earrings" | "neck" | "ring" | "wrist" | "ankle" | "nose" | "forehead" | "brooch" | "other" {
+  const value = `${category} ${name}`.toLowerCase();
+  if (/earring|stud|hoop|jhumka|drop/.test(value)) return "earrings";
+  if (/nose.?pin|nose.?ring/.test(value)) return "nose";
+  if (/maang.?tikka|forehead/.test(value)) return "forehead";
+  if (/anklet/.test(value)) return "ankle";
+  if (/ring/.test(value)) return "ring";
+  if (/bracelet|bangle|wrist/.test(value)) return "wrist";
+  if (/brooch/.test(value)) return "brooch";
+  if (/necklace|pendant|jewellery set|jewelry set|set/.test(value)) return "neck";
+  return "other";
+}
+
 function parsePositiveDimension(value: unknown): number | undefined {
   const number = typeof value === "number" ? value : typeof value === "string" ? Number(value) : NaN;
   return Number.isFinite(number) && number > 0 && number <= 500 ? number : undefined;
 }
 
 function ARStudio() {
-  const { productName, imageUrl, arImageUrl, arWidthMm, arHeightMm } = Route.useSearch();
+  const { productName, productCategory, imageUrl, arImageUrl, arWidthMm, arHeightMm } = Route.useSearch();
+  const jewelleryKind = getJewelleryKind(productCategory ?? "", productName ?? "");
   const [active, setActive] = useState<(typeof experiences)[number]["id"]>("jewellery");
   const [cameraOpen, setCameraOpen] = useState(false);
   const [cameraError, setCameraError] = useState("");
@@ -217,6 +232,7 @@ function ARStudio() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const productEarringRef = useRef<EarringPairAssets | null>(null);
+  const productOverlayRef = useRef<HTMLImageElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const styleRef = useRef<EarringStyle>(earringStyle);
   const metalRef = useRef<Metal>(metal);
@@ -227,6 +243,7 @@ function ARStudio() {
 
   useEffect(() => {
     productEarringRef.current = null;
+    productOverlayRef.current = null;
     setCutoutError("");
     let cancelled = false;
     const objectUrls: string[] = [];
@@ -237,13 +254,15 @@ function ARStudio() {
       image.onerror = () => reject(new Error("The product image couldn't be loaded."));
       image.src = url;
     });
-    const finishPair = async (image: HTMLImageElement) => {
-      const pair = await createEarringPairAssets(image);
-      objectUrls.push(...pair.urls);
-      if (!cancelled) {
-        productEarringRef.current = pair;
-        setCutoutState("ready");
+    const finishProductAsset = async (image: HTMLImageElement) => {
+      if (jewelleryKind === "earrings") {
+        const pair = await createEarringPairAssets(image);
+        objectUrls.push(...pair.urls);
+        if (!cancelled) productEarringRef.current = pair;
+      } else if (!cancelled) {
+        productOverlayRef.current = image;
       }
+      if (!cancelled) setCutoutState("ready");
     };
     const prepareProductCutout = async () => {
       if (arImageUrl) {
@@ -252,7 +271,7 @@ function ARStudio() {
           if (!response.ok) throw new Error("The saved product cutout could not be downloaded.");
           const url = URL.createObjectURL(await response.blob());
           objectUrls.push(url);
-          await finishPair(await loadImage(url));
+          await finishProductAsset(await loadImage(url));
         } catch (error) {
           if (!cancelled) {
             setCutoutState("error");
@@ -288,7 +307,7 @@ function ARStudio() {
       objectUrls.forEach((url) => URL.revokeObjectURL(url));
       productEarringRef.current = null;
     };
-  }, [arImageUrl, imageUrl]);
+  }, [arImageUrl, imageUrl, jewelleryKind]);
 
   const stopCamera = () => {
     streamRef.current?.getTracks().forEach((track) => track.stop());
@@ -351,6 +370,8 @@ function ARStudio() {
     let animationFrame = 0;
     let lastVideoTime = -1;
     let landmarker: FaceLandmarker | null = null;
+    let handLandmarker: HandLandmarker | null = null;
+    let poseLandmarker: PoseLandmarker | null = null;
 
     const initialise = async () => {
       setTrackingState("loading");
@@ -365,16 +386,25 @@ function ARStudio() {
           minFacePresenceConfidence: 0.55,
           minTrackingConfidence: 0.55,
         };
-        try {
-          landmarker = await FaceLandmarker.createFromOptions(vision, options);
-        } catch {
-          landmarker = await FaceLandmarker.createFromOptions(vision, {
-            ...options,
-            baseOptions: { modelAssetPath: MODEL_URL, delegate: "CPU" as const },
-          });
+        const needsFace = ["earrings", "nose", "forehead"].includes(jewelleryKind);
+        const needsHands = ["ring", "wrist"].includes(jewelleryKind);
+        const needsPose = ["neck", "ankle", "brooch", "other"].includes(jewelleryKind);
+        if (needsFace) {
+          try { landmarker = await FaceLandmarker.createFromOptions(vision, options); }
+          catch { landmarker = await FaceLandmarker.createFromOptions(vision, { ...options, baseOptions: { modelAssetPath: MODEL_URL, delegate: "CPU" as const } }); }
+        }
+        if (needsHands) {
+          const handOptions = { baseOptions: { modelAssetPath: "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task", delegate: "GPU" as const }, runningMode: "VIDEO" as const, numHands: 2, minHandDetectionConfidence: 0.5, minHandPresenceConfidence: 0.5, minTrackingConfidence: 0.5 };
+          try { handLandmarker = await HandLandmarker.createFromOptions(vision, handOptions); }
+          catch { handLandmarker = await HandLandmarker.createFromOptions(vision, { ...handOptions, baseOptions: { ...handOptions.baseOptions, delegate: "CPU" as const } }); }
+        }
+        if (needsPose) {
+          const poseOptions = { baseOptions: { modelAssetPath: "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task", delegate: "GPU" as const }, runningMode: "VIDEO" as const, numPoses: 1, minPoseDetectionConfidence: 0.5, minPosePresenceConfidence: 0.5, minTrackingConfidence: 0.5 };
+          try { poseLandmarker = await PoseLandmarker.createFromOptions(vision, poseOptions); }
+          catch { poseLandmarker = await PoseLandmarker.createFromOptions(vision, { ...poseOptions, baseOptions: { ...poseOptions.baseOptions, delegate: "CPU" as const } }); }
         }
         if (cancelled) {
-          landmarker.close();
+          landmarker?.close(); handLandmarker?.close(); poseLandmarker?.close(); handLandmarker?.close(); poseLandmarker?.close();
           return;
         }
         setTrackingState("searching");
@@ -383,7 +413,7 @@ function ARStudio() {
           if (cancelled) return;
           const videoElement = videoRef.current;
           const canvas = canvasRef.current;
-          if (!videoElement || !canvas || !landmarker) return;
+          if (!videoElement || !canvas || (!landmarker && !handLandmarker && !poseLandmarker)) return;
           if (videoElement.readyState >= 2 && videoElement.videoWidth > 0 && videoElement.currentTime !== lastVideoTime) {
             lastVideoTime = videoElement.currentTime;
             const rect = canvas.getBoundingClientRect();
@@ -398,8 +428,8 @@ function ARStudio() {
             if (ctx) {
               ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
               ctx.clearRect(0, 0, rect.width, rect.height);
-              const result = landmarker.detectForVideo(videoElement, performance.now());
-              const face = result.faceLandmarks[0];
+              const timestamp = performance.now();
+              const face = landmarker?.detectForVideo(videoElement, timestamp).faceLandmarks[0];
               if (face && face[177] && face[401] && face[234] && face[454]) {
                 setTrackingState("found");
                 const scale = Math.max(rect.width / videoElement.videoWidth, rect.height / videoElement.videoHeight);
@@ -417,7 +447,7 @@ function ARStudio() {
                 const leftX = left.x + (left.x < rect.width / 2 ? -outward : outward);
                 const rightX = right.x + (right.x < rect.width / 2 ? -outward : outward);
                 const productEarring = productEarringRef.current;
-                if (productEarring?.left.complete && productEarring.left.naturalWidth > 0 && productEarring.right.complete && productEarring.right.naturalWidth > 0) {
+                if (jewelleryKind === "earrings" && productEarring?.left.complete && productEarring.left.naturalWidth > 0 && productEarring.right.complete && productEarring.right.naturalWidth > 0) {
                   const referenceFaceWidthMm = 145;
                   const measuredWidth = arWidthMm && arHeightMm ? (faceWidth * arWidthMm) / referenceFaceWidthMm : faceWidth * 0.10;
                   const measuredHeight = arWidthMm && arHeightMm ? (faceWidth * arHeightMm) / referenceFaceWidthMm : measuredWidth * (productEarring.left.naturalHeight / productEarring.left.naturalWidth);
@@ -438,9 +468,55 @@ function ARStudio() {
                   drawEarring(ctx, leftX, left.y, size, styleRef.current, metalRef.current);
                   drawEarring(ctx, rightX, right.y, size, styleRef.current, metalRef.current);
                 }
-              } else {
+              } else if (jewelleryKind === "earrings") {
                 setTrackingState("searching");
               }
+              const productOverlay = productOverlayRef.current;
+              if (face && productOverlay?.complete && productOverlay.naturalWidth > 0) {
+                const drawFaceAsset = (x: number, y: number, width: number) => {
+                  const drawWidth = Math.max(8, Math.min(faceWidth * 0.6, arWidthMm ? faceWidth * arWidthMm / 145 : width));
+                  const drawHeight = drawWidth * productOverlay.naturalHeight / productOverlay.naturalWidth;
+                  ctx.drawImage(productOverlay, x - drawWidth / 2, y - drawHeight / 2, drawWidth, drawHeight);
+                };
+                if (jewelleryKind === "nose") drawFaceAsset(point(1).x, point(1).y, faceWidth * 0.12);
+                if (jewelleryKind === "forehead") drawFaceAsset((point(10).x + point(168).x) / 2, point(10).y + faceWidth * 0.1, faceWidth * 0.28);
+              }
+              const mapPoint = (p: { x: number; y: number }) => ({ x: (1 - p.x) * videoElement.videoWidth * scale + offsetX, y: p.y * videoElement.videoHeight * scale + offsetY });
+              const drawBodyAsset = (x: number, y: number, baseWidth: number, referenceMm: number) => {
+                const image = productOverlayRef.current;
+                if (!image?.complete || image.naturalWidth <= 0) return false;
+                const drawWidth = Math.max(8, Math.min(baseWidth * 0.9, arWidthMm ? baseWidth * arWidthMm / referenceMm : baseWidth * 0.55));
+                const drawHeight = Math.max(8, Math.min(rect.height * 0.65, drawWidth * image.naturalHeight / image.naturalWidth));
+                ctx.drawImage(image, x - drawWidth / 2, y - drawHeight / 2, drawWidth, drawHeight);
+                return true;
+              };
+              let bodyTracked = false;
+              if (handLandmarker) {
+                const hand = handLandmarker.detectForVideo(videoElement, timestamp).landmarks[0];
+                if (hand?.[0] && hand?.[5] && hand?.[13] && hand?.[14] && hand?.[17]) {
+                  const wrist = mapPoint(hand[0]); const mcp = mapPoint(hand[13]); const pip = mapPoint(hand[14]);
+                  const palmWidth = Math.hypot(mapPoint(hand[5]).x - mapPoint(hand[17]).x, mapPoint(hand[5]).y - mapPoint(hand[17]).y);
+                  const atRing = jewelleryKind === "ring";
+                  bodyTracked = drawBodyAsset(atRing ? (mcp.x + pip.x) / 2 : wrist.x, atRing ? (mcp.y + pip.y) / 2 : wrist.y, Math.max(14, palmWidth * (atRing ? 0.24 : 0.72)), atRing ? 18 : 65);
+                }
+              }
+              if (poseLandmarker && !bodyTracked) {
+                const pose = poseLandmarker.detectForVideo(videoElement, timestamp).landmarks[0];
+                if (pose) {
+                  if (jewelleryKind === "ankle" && pose[27] && pose[28]) {
+                    const ankle = mapPoint((pose[27].visibility ?? 0) >= (pose[28].visibility ?? 0) ? pose[27] : pose[28]);
+                    bodyTracked = drawBodyAsset(ankle.x, ankle.y, Math.max(20, rect.width * 0.065), 65);
+                  } else if ((jewelleryKind === "neck" || jewelleryKind === "brooch" || jewelleryKind === "other") && pose[11] && pose[12] && (pose[11].visibility ?? 0) > 0.35 && (pose[12].visibility ?? 0) > 0.35) {
+                    const left = mapPoint(pose[11]); const right = mapPoint(pose[12]);
+                    const shoulderWidth = Math.hypot(left.x - right.x, left.y - right.y);
+                    const x = jewelleryKind === "brooch" ? left.x : (left.x + right.x) / 2;
+                    const y = jewelleryKind === "brooch" ? left.y : (left.y + right.y) / 2 + shoulderWidth * 0.22;
+                    bodyTracked = drawBodyAsset(x, y, jewelleryKind === "brooch" ? shoulderWidth * 0.2 : shoulderWidth * 0.9, 380);
+                  }
+                }
+              }
+              if (bodyTracked) setTrackingState("found");
+              else if (!face) setTrackingState("searching");
             }
           }
           animationFrame = requestAnimationFrame(render);
@@ -462,7 +538,7 @@ function ARStudio() {
       const canvas = canvasRef.current;
       if (canvas) canvas.getContext("2d")?.clearRect(0, 0, canvas.width, canvas.height);
     };
-  }, [cameraReady]);
+  }, [cameraReady, jewelleryKind]);
 
   useEffect(() => () => {
     streamRef.current?.getTracks().forEach((track) => track.stop());
@@ -470,9 +546,9 @@ function ARStudio() {
 
   const statusText: Record<TrackingState, string> = {
     idle: "Camera off",
-    loading: "Preparing face tracking…",
-    searching: "Move into the frame",
-    found: "Face detected · earrings aligned",
+    loading: "Preparing jewellery tracking…",
+    searching: jewelleryKind === "ring" || jewelleryKind === "wrist" ? "Show your hand and wrist" : jewelleryKind === "ankle" ? "Move your ankle into the frame" : "Move into the frame",
+    found: jewelleryKind === "earrings" ? "Face detected · earrings aligned" : "Jewellery aligned to live landmarks",
     error: "Tracking unavailable",
   };
 
@@ -487,7 +563,7 @@ function ARStudio() {
             Jewellery, <em className="text-primary">your way.</em>
           </h1>
           <p className="mx-auto mt-5 max-w-xl text-base leading-7 text-muted-foreground sm:text-lg">
-            Try a look before you make it yours. Turn on your camera and see earrings follow your face in real time.
+            Try earrings, necklaces, rings, bracelets, anklets and more with live face, hand and body tracking.
           </p>
         </div>
 
