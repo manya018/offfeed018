@@ -694,7 +694,7 @@ function BrandDashboard() {
     if (!application?.website_url) { setError("Add a website to your brand application before importing."); return; }
     setImportBusy(true); setError(""); setImported([]); setSelectedImports([]);
     try {
-      const result = await importShopifyCatalog({ data: { website: application.website_url } });
+      const result = await importShopifyCatalog();
       const productsWithImages = result.products.filter((product) => product.imagePath);
       setImported(productsWithImages as ImportedProduct[]);
       setSelectedImports(productsWithImages.map((product) => product.externalId));
