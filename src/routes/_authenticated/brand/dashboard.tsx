@@ -947,7 +947,7 @@ function BrandReturnsSection() {
         p_response: (responses[item.id] ?? "").trim(),
       });
       if (error) throw error;
-      toast.success(decision === "approved" ? "Return request approved." : "Return request rejected.");
+      toast.success(decision === "approved" ? "Return request approved." : "Return request sent to OFFFEED for admin review.");
       await loadReturns();
     } catch (error) {
       console.error("Return review failed:", error);
@@ -971,7 +971,7 @@ function BrandReturnsSection() {
         <ReturnDisputeViewer orderId={item.order_id} open={viewerOrderId === item.order_id} onToggle={() => setViewerOrderId((current) => (current === item.order_id ? "" : item.order_id))} />
 
         {item.brand_response && <p className="mt-3 text-sm text-muted-foreground">Your response: {item.brand_response}</p>}
-        {item.status === "requested" && <div className="mt-4 space-y-3"><label className="block text-sm font-medium" htmlFor={`return-response-${item.id}`}>Response to customer (optional)</label><Textarea id={`return-response-${item.id}`} value={responses[item.id] ?? ""} onChange={(event) => setResponses((old) => ({ ...old, [item.id]: event.target.value }))} maxLength={2000} placeholder="Add a short explanation…" /><div className="flex flex-wrap gap-2"><Button disabled={busyId === item.id} onClick={() => void review(item, "approved")}>{busyId === item.id ? <LoaderCircle className="animate-spin"/> : <Check/>}Approve return</Button><Button variant="outline" disabled={busyId === item.id} onClick={() => void review(item, "rejected")}>Reject request</Button></div></div>}
+        {item.status === "requested" && <div className="mt-4 space-y-3"><label className="block text-sm font-medium" htmlFor={`return-response-${item.id}`}>Response to customer (optional)</label><Textarea id={`return-response-${item.id}`} value={responses[item.id] ?? ""} onChange={(event) => setResponses((old) => ({ ...old, [item.id]: event.target.value }))} maxLength={2000} placeholder="Add a short explanation…" /><div className="flex flex-wrap gap-2"><Button disabled={busyId === item.id} onClick={() => void review(item, "approved")}>{busyId === item.id ? <LoaderCircle className="animate-spin"/> : <Check/>}Approve return</Button><Button variant="outline" disabled={busyId === item.id} onClick={() => void review(item, "rejected")}>Request admin review</Button></div></div>}
       </article>)}
     </div>}
   </section>;
