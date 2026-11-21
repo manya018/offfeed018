@@ -167,11 +167,25 @@ export const getBrandWorkspace = createServerFn({ method: "GET" })
       .maybeSingle();
     if (error || !application) throw new Error("No brand application is connected to this account.");
 
-    const { data: products, error: productError } = application.status === "approved"
+    let { data: products, error: productError } = application.status === "approved"
       ? await context.supabase.from("brand_products").select("id, product_name, description, category, price, product_url, image_path, image_paths, ar_image_path, ar_width_mm, ar_height_mm, sizes, size_chart, colors, tags, audience, source, status, created_at").eq("user_id", context.userId).order("created_at", { ascending: false })
       : { data: [], error: null };
-    if (productError) throw new Error("Your product list couldn't be loaded.");
-    const productRows = products ?? [];
+    let productRows: Array<any> = products ?? [];
+
+    // Keep the brand workspace available when the recent AR columns have not yet
+    // reached the connected database. AR editing becomes available after its migration.
+    if (productError && application.status === "approved" && /ar_image_path|ar_width_mm|ar_height_mm|schema cache/i.test(productError.message ?? "")) {
+      const fallback = await context.supabase.from("brand_products")
+        .select("id, product_name, description, category, price, product_url, image_path, image_paths, sizes, size_chart, colors, tags, audience, source, status, created_at")
+        .eq("user_id", context.userId).order("created_at", { ascending: false });
+      if (!fallback.error) {
+        productRows = (fallback.data ?? []).map((product) => ({ ...product, ar_image_path: null, ar_width_mm: null, ar_height_mm: null }));
+        productError = null;
+      } else {
+        productError = fallback.error;
+      }
+    }
+    if (productError) throw new Error("Your product list could not be loaded.");
     const { data: sizeGuides, error: sizeGuideError } = application.status === "approved"
       ? await context.supabase.from("brand_size_guides").select("id, category, size_chart, updated_at").eq("user_id", context.userId).order("category")
       : { data: [], error: null };
