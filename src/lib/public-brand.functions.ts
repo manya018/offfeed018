@@ -53,6 +53,7 @@ type ProductWithBrand = {
   arImageUrl: string | null;
   arWidthMm: number | null;
   arHeightMm: number | null;
+  inStock?: boolean;
   sizes: string[];
   sizeChart: ProductSizeChart | null;
   colors: string[];
@@ -176,14 +177,22 @@ export const getPublicBrandProfile = createServerFn({ method: "GET" })
     // Keep storefronts available if the shipping migration has not run yet.
     const safeShippingProfile = shippingError ? null : shippingProfile;
 
-    const { data: rows, error: productsError } = await supabase
+    let { data: rows, error: productsError } = await supabase
       .from("brand_products")
-      .select("id, product_name, description, category, price, product_url, image_path, image_paths, ar_image_path, ar_width_mm, ar_height_mm, sizes, size_chart, colors, tags, audience, created_at")
+      .select("id, product_name, description, category, price, product_url, image_path, image_paths, ar_image_path, ar_width_mm, ar_height_mm, in_stock, sizes, size_chart, colors, tags, audience, created_at")
       .eq("brand_application_id", brand.id)
       .eq("status", "published")
       .eq("brand_approved", true)
       .order("created_at", { ascending: false })
       .limit(120);
+    if (productsError && /in_stock|schema cache/i.test(productsError.message ?? "")) {
+      const fallback = await supabase.from("brand_products")
+        .select("id, product_name, description, category, price, product_url, image_path, image_paths, ar_image_path, ar_width_mm, ar_height_mm, sizes, size_chart, colors, tags, audience, created_at")
+        .eq("brand_application_id", brand.id).eq("status", "published").eq("brand_approved", true)
+        .order("created_at", { ascending: false }).limit(120);
+      rows = fallback.data as typeof rows;
+      productsError = fallback.error;
+    }
     if (productsError) throw new Error("This brand’s products could not be loaded.");
     // The published product query already selects size_chart. Use that exact
     // row value as the source of truth; avoid a second lookup that can diverge
@@ -234,6 +243,7 @@ export const getPublicBrandProfile = createServerFn({ method: "GET" })
         arImageUrl: getImageUrl(row.ar_image_path, productSigned),
         arWidthMm: row.ar_width_mm,
         arHeightMm: row.ar_height_mm,
+        inStock: row.in_stock !== false,
         sizes: row.sizes,
         sizeChart: normalizeProductSizeChart(row.size_chart) ?? normalizeProductSizeChart(sizeGuideByCategory.get(row.category)),
         colors: row.colors,
@@ -254,7 +264,7 @@ export const getShopTheLookProducts = createServerFn({ method: "GET" })
 
     let { data: rows, error } = await supabase
       .from("brand_products")
-      .select("id, brand_application_id, product_name, description, category, price, product_url, image_path, image_paths, ar_image_path, ar_width_mm, ar_height_mm, sizes, colors, tags, audience, created_at, size_chart")
+      .select("id, brand_application_id, product_name, description, category, price, product_url, image_path, image_paths, ar_image_path, ar_width_mm, ar_height_mm, in_stock, sizes, colors, tags, audience, created_at, size_chart")
       .eq("status", "published")
       .eq("brand_approved", true)
       .contains("audience", [data.audience])
@@ -262,13 +272,13 @@ export const getShopTheLookProducts = createServerFn({ method: "GET" })
       .limit(60);
     // The AR fields are optional. Keep published catalogue items visible while
     // the connected Lovable database is still applying the AR migrations.
-    if (error && /ar_image_path|ar_width_mm|ar_height_mm|schema cache/i.test(error.message ?? "")) {
+    if (error && /ar_image_path|ar_width_mm|ar_height_mm|in_stock|schema cache/i.test(error.message ?? "")) {
       const fallback = await supabase.from("brand_products")
         .select("id, brand_application_id, product_name, description, category, price, product_url, image_path, image_paths, sizes, colors, tags, audience, created_at, size_chart")
         .eq("status", "published").eq("brand_approved", true).contains("audience", [data.audience])
         .order("created_at", { ascending: false }).limit(60);
       if (!fallback.error) {
-        rows = (fallback.data ?? []).map((row) => ({ ...row, ar_image_path: null, ar_width_mm: null, ar_height_mm: null })) as typeof rows;
+        rows = (fallback.data ?? []).map((row) => ({ ...row, ar_image_path: null, ar_width_mm: null, ar_height_mm: null, in_stock: true })) as typeof rows;
         error = null;
       } else {
         error = fallback.error;
@@ -325,6 +335,7 @@ export const getShopTheLookProducts = createServerFn({ method: "GET" })
         arImageUrl: getImageUrl(row.ar_image_path, signedUrls),
         arWidthMm: row.ar_width_mm,
         arHeightMm: row.ar_height_mm,
+        inStock: row.in_stock !== false,
         sizes: row.sizes,
         sizeChart: normalizeProductSizeChart(row.size_chart) ?? normalizeProductSizeChart(guideByBrandCategory.get(`${row.brand_application_id}:${row.category}`)),
         colors: row.colors,
