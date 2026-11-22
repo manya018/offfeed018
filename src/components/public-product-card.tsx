@@ -60,8 +60,9 @@ export function PublicProductCard({ product, spotlightCampaignId }: { product: P
   return (
     <article className="min-w-0 border-b border-border/70 pb-4">
       <div className="group relative overflow-hidden bg-secondary/30">
+        {product.inStock === false && <span className="absolute left-2 top-2 z-20 rounded-full bg-foreground/85 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-background shadow">Sold out</span>}
         {product.salePrice != null && product.salePrice > 0 && product.salePrice < product.price && (
-          <span className="absolute left-2 top-2 z-20 rounded-full bg-primary px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-primary-foreground shadow">On sale · {product.saleDiscountLabel ?? "Offer"}</span>
+          <span className={`absolute left-2 ${product.inStock === false ? "top-11" : "top-2"} z-20 rounded-full bg-primary px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-primary-foreground shadow`}>On sale · {product.saleDiscountLabel ?? "Offer"}</span>
         )}
         <Link to="/brand/$brandHandle" params={{ brandHandle: product.brand.handle }} className="block w-full" onClick={() => { if (spotlightCampaignId) void recordSpotlightEvent({ data: { campaignId: spotlightCampaignId, productId: product.id, eventType: "click", visitorId } }); }}>
           {((product.imageUrls?.length ? product.imageUrls : product.imageUrl ? [product.imageUrl] : [])[imageIndex]) ? (
@@ -126,7 +127,7 @@ export function PublicProductCard({ product, spotlightCampaignId }: { product: P
         )}
         <FindMySize chart={product.sizeChart} productName={product.productName} category={product.category} availableSizes={product.sizes} />
         <div className="mt-3 flex items-center gap-1">
-          <Button variant="outline" size="sm" className="min-w-0 flex-1" onClick={() => {
+          <Button variant="outline" size="sm" className="min-w-0 flex-1" disabled={product.inStock === false} onClick={() => {
             if (product.sizes.length > 0 || product.colors.length > 0) {
               setSelectedSize(product.sizes.length === 1 ? product.sizes[0] : "");
               setSelectedColor(product.colors.length === 1 ? product.colors[0] : "");
@@ -137,7 +138,7 @@ export function PublicProductCard({ product, spotlightCampaignId }: { product: P
             setAdded(true);
             toast.success("Added to your bag");
           }}>
-            {added ? <Check /> : <ShoppingBag />}{added ? "Added" : "Save"}
+            {product.inStock === false ? "Sold out" : added ? <><Check />Added</> : <><ShoppingBag />Save</>}
           </Button>
           <MoodboardSaveButton item={{ id: product.id, type: "product", title: product.productName, image: product.imageUrl ?? product.imageUrls[0] ?? "", subtitle: product.brand.name, href: `/brand/${product.brand.handle}`, price: product.price }} />
           <Button variant="ghost" size="icon" aria-label={liked ? "Remove product from wishlist" : "Like product"} onClick={toggleWishlist}>

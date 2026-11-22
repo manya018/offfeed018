@@ -167,18 +167,18 @@ export const getBrandWorkspace = createServerFn({ method: "GET" })
     if (error || !application) throw new Error("No brand application is connected to this account.");
 
     let { data: products, error: productError } = application.status === "approved"
-      ? await context.supabase.from("brand_products").select("id, product_name, description, category, price, product_url, image_path, image_paths, ar_image_path, ar_width_mm, ar_height_mm, sizes, size_chart, colors, tags, audience, source, status, created_at").eq("user_id", context.userId).order("created_at", { ascending: false })
+      ? await context.supabase.from("brand_products").select("id, product_name, description, category, price, product_url, image_path, image_paths, ar_image_path, ar_width_mm, ar_height_mm, in_stock, sizes, size_chart, colors, tags, audience, source, status, created_at").eq("user_id", context.userId).order("created_at", { ascending: false })
       : { data: [], error: null };
     let productRows: Array<any> = products ?? [];
 
     // Keep the brand workspace available when the recent AR columns have not yet
     // reached the connected database. AR editing becomes available after its migration.
-    if (productError && application.status === "approved" && /ar_image_path|ar_width_mm|ar_height_mm|schema cache/i.test(productError.message ?? "")) {
+    if (productError && application.status === "approved" && /ar_image_path|ar_width_mm|ar_height_mm|in_stock|schema cache/i.test(productError.message ?? "")) {
       const fallback = await context.supabase.from("brand_products")
         .select("id, product_name, description, category, price, product_url, image_path, image_paths, sizes, size_chart, colors, tags, audience, source, status, created_at")
         .eq("user_id", context.userId).order("created_at", { ascending: false });
       if (!fallback.error) {
-        productRows = (fallback.data ?? []).map((product) => ({ ...product, ar_image_path: null, ar_width_mm: null, ar_height_mm: null }));
+        productRows = (fallback.data ?? []).map((product) => ({ ...product, ar_image_path: null, ar_width_mm: null, ar_height_mm: null, in_stock: true }));
         productError = null;
       } else {
         productError = fallback.error;
@@ -533,6 +533,21 @@ export const updateBrandProductStatus = createServerFn({ method: "POST" })
     await getApprovedApplication(context);
     const { data: product, error } = await context.supabase.from("brand_products").update({ status: data.status }).eq("id", data.id).eq("user_id", context.userId).select("id, status").single();
     if (error || !product) throw new Error("That product couldn't be updated.");
+    return product;
+  });
+
+export const updateBrandProductAvailability = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({ productId: z.string().uuid(), inStock: z.boolean() }).parse(input))
+  .handler(async ({ context, data }) => {
+    await getApprovedApplication(context);
+    const { data: product, error } = await context.supabase.from("brand_products")
+      .update({ in_stock: data.inStock })
+      .eq("id", data.productId)
+      .eq("user_id", context.userId)
+      .select("id, in_stock")
+      .single();
+    if (error || !product) throw new Error("Product availability could not be updated. Apply the latest database migration, then try again.");
     return product;
   });
 
