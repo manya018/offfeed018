@@ -514,7 +514,7 @@ function ARStudio() {
                 if (jewelleryKind === "nose") drawFaceAsset(point(1).x, point(1).y, faceWidth * 0.12);
                 if (jewelleryKind === "forehead") drawFaceAsset((point(10).x + point(168).x) / 2, point(10).y + faceWidth * 0.1, faceWidth * 0.28);
               }
-              const drawBodyAsset = (x: number, y: number, baseWidth: number, referenceMm: number, rotation = 0) => {
+              const drawBodyAsset = (x: number, y: number, baseWidth: number, referenceMm: number, rotation = 0, alignTop = false) => {
                 const image = productOverlayRef.current;
                 if (!image?.complete || image.naturalWidth <= 0) return false;
                 const ringScale = jewelleryKind === "ring" ? 0.95 : 0.55;
@@ -525,7 +525,7 @@ function ARStudio() {
                 ctx.save();
                 ctx.translate(x, y);
                 if (rotation) ctx.rotate(rotation);
-                ctx.drawImage(image, -drawWidth / 2, -drawHeight / 2, drawWidth, drawHeight);
+                ctx.drawImage(image, -drawWidth / 2, alignTop ? 0 : -drawHeight / 2, drawWidth, drawHeight);
                 ctx.restore();
                 return true;
               };
@@ -552,8 +552,9 @@ function ARStudio() {
                     const left = mapPoint(pose[11]); const right = mapPoint(pose[12]);
                     const shoulderWidth = Math.hypot(left.x - right.x, left.y - right.y);
                     const x = jewelleryKind === "brooch" ? left.x : (left.x + right.x) / 2;
-                    const y = jewelleryKind === "brooch" ? left.y : (left.y + right.y) / 2 + shoulderWidth * 0.22;
-                    bodyTracked = drawBodyAsset(x, y, jewelleryKind === "brooch" ? shoulderWidth * 0.2 : shoulderWidth * 0.9, 380);
+                    const isNecklace = jewelleryKind === "neck";
+                    const y = jewelleryKind === "brooch" ? left.y : isNecklace ? (left.y + right.y) / 2 - shoulderWidth * 0.12 : (left.y + right.y) / 2 + shoulderWidth * 0.22;
+                    bodyTracked = drawBodyAsset(x, y, jewelleryKind === "brooch" ? shoulderWidth * 0.2 : shoulderWidth * 0.9, 380, 0, isNecklace);
                   }
                 }
               }
