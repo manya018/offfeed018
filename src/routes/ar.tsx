@@ -212,6 +212,37 @@ function getJewelleryKind(category: string, name: string): "earrings" | "neck" |
   return "other";
 }
 
+async function trimTransparentImage(source: HTMLImageElement): Promise<{ image: HTMLImageElement; url: string }> {
+  const width = source.naturalWidth;
+  const height = source.naturalHeight;
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  const context = canvas.getContext("2d", { willReadFrequently: true });
+  if (!context || !width || !height) throw new Error("The jewellery cutout could not be read.");
+  context.drawImage(source, 0, 0);
+  const alpha = context.getImageData(0, 0, width, height).data;
+  let minX = width, minY = height, maxX = -1, maxY = -1;
+  for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) {
+    if (alpha[(y * width + x) * 4 + 3] <= 16) continue;
+    minX = Math.min(minX, x); minY = Math.min(minY, y); maxX = Math.max(maxX, x); maxY = Math.max(maxY, y);
+  }
+  if (maxX < minX || maxY < minY) throw new Error("The jewellery cutout is transparent or empty.");
+  const padding = Math.max(2, Math.round(Math.max(maxX - minX + 1, maxY - minY + 1) * 0.025));
+  const left = Math.max(0, minX - padding), top = Math.max(0, minY - padding);
+  const cropWidth = Math.min(width, maxX + padding + 1) - left;
+  const cropHeight = Math.min(height, maxY + padding + 1) - top;
+  const crop = document.createElement("canvas"); crop.width = cropWidth; crop.height = cropHeight;
+  const cropContext = crop.getContext("2d");
+  if (!cropContext) throw new Error("The jewellery cutout could not be trimmed.");
+  cropContext.drawImage(canvas, left, top, cropWidth, cropHeight, 0, 0, cropWidth, cropHeight);
+  const blob = await new Promise<Blob>((resolve, reject) => crop.toBlob((value) => value ? resolve(value) : reject(new Error("The jewellery cutout could not be saved.")), "image/png"));
+  const url = URL.createObjectURL(blob);
+  const image = new Image();
+  await new Promise<void>((resolve, reject) => { image.onload = () => resolve(); image.onerror = () => reject(new Error("The trimmed jewellery cutout could not be loaded.")); image.src = url; });
+  return { image, url };
+}
+
 function parsePositiveDimension(value: unknown): number | undefined {
   const number = typeof value === "number" ? value : typeof value === "string" ? Number(value) : NaN;
   return Number.isFinite(number) && number > 0 && number <= 500 ? number : undefined;
@@ -260,7 +291,9 @@ function ARStudio() {
         objectUrls.push(...pair.urls);
         if (!cancelled) productEarringRef.current = pair;
       } else if (!cancelled) {
-        productOverlayRef.current = image;
+        const trimmed = await trimTransparentImage(image);
+        objectUrls.push(trimmed.url);
+        productOverlayRef.current = trimmed.image;
       }
       if (!cancelled) setCutoutState("ready");
     };
@@ -293,7 +326,7 @@ function ARStudio() {
         if (cancelled) return;
         const url = URL.createObjectURL(cutout);
         objectUrls.push(url);
-        await finishPair(await loadImage(url));
+        await finishProductAsset(await loadImage(url));
       } catch (error) {
         if (!cancelled) {
           setCutoutState("error");
@@ -481,12 +514,19 @@ function ARStudio() {
                 if (jewelleryKind === "nose") drawFaceAsset(point(1).x, point(1).y, faceWidth * 0.12);
                 if (jewelleryKind === "forehead") drawFaceAsset((point(10).x + point(168).x) / 2, point(10).y + faceWidth * 0.1, faceWidth * 0.28);
               }
-              const drawBodyAsset = (x: number, y: number, baseWidth: number, referenceMm: number) => {
+              const drawBodyAsset = (x: number, y: number, baseWidth: number, referenceMm: number, rotation = 0) => {
                 const image = productOverlayRef.current;
                 if (!image?.complete || image.naturalWidth <= 0) return false;
-                const drawWidth = Math.max(8, Math.min(baseWidth * 0.9, arWidthMm ? baseWidth * arWidthMm / referenceMm : baseWidth * 0.55));
-                const drawHeight = Math.max(8, Math.min(rect.height * 0.65, drawWidth * image.naturalHeight / image.naturalWidth));
-                ctx.drawImage(image, x - drawWidth / 2, y - drawHeight / 2, drawWidth, drawHeight);
+                const ringScale = jewelleryKind === "ring" ? 0.95 : 0.55;
+                const drawWidth = Math.max(8, Math.min(baseWidth * 1.2, arWidthMm ? baseWidth * arWidthMm / referenceMm : baseWidth * ringScale));
+                const aspectHeight = drawWidth * image.naturalHeight / image.naturalWidth;
+                const measuredHeight = arHeightMm ? baseWidth * arHeightMm / referenceMm : aspectHeight;
+                const drawHeight = Math.max(8, Math.min(rect.height * 0.65, measuredHeight));
+                ctx.save();
+                ctx.translate(x, y);
+                if (rotation) ctx.rotate(rotation);
+                ctx.drawImage(image, -drawWidth / 2, -drawHeight / 2, drawWidth, drawHeight);
+                ctx.restore();
                 return true;
               };
               let bodyTracked = false;
@@ -496,7 +536,10 @@ function ARStudio() {
                   const wrist = mapPoint(hand[0]); const mcp = mapPoint(hand[13]); const pip = mapPoint(hand[14]);
                   const palmWidth = Math.hypot(mapPoint(hand[5]).x - mapPoint(hand[17]).x, mapPoint(hand[5]).y - mapPoint(hand[17]).y);
                   const atRing = jewelleryKind === "ring";
-                  bodyTracked = drawBodyAsset(atRing ? (mcp.x + pip.x) / 2 : wrist.x, atRing ? (mcp.y + pip.y) / 2 : wrist.y, Math.max(14, palmWidth * (atRing ? 0.24 : 0.72)), atRing ? 18 : 65);
+                  const ringX = mcp.x + (pip.x - mcp.x) * 0.35;
+                  const ringY = mcp.y + (pip.y - mcp.y) * 0.35;
+                  const fingerAngle = Math.atan2(pip.y - mcp.y, pip.x - mcp.x) + Math.PI / 2;
+                  bodyTracked = drawBodyAsset(atRing ? ringX : wrist.x, atRing ? ringY : wrist.y, Math.max(18, palmWidth * (atRing ? 0.30 : 0.72)), atRing ? 18 : 65, atRing ? fingerAngle : 0);
                 }
               }
               if (poseLandmarker && !bodyTracked) {
