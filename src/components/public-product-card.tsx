@@ -62,7 +62,7 @@ export function PublicProductCard({ product, spotlightCampaignId }: { product: P
       <div className="group relative overflow-hidden bg-secondary/30">
         {product.inStock === false && <span className="absolute left-2 top-2 z-20 rounded-full bg-foreground/85 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-background shadow">Sold out</span>}
         {product.salePrice != null && product.salePrice > 0 && product.salePrice < product.price && (
-          <span className="absolute left-2 top-2 z-20 rounded-full bg-primary px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-primary-foreground shadow">On sale · {product.saleDiscountLabel ?? "Offer"}</span>
+          <span className={`absolute left-2 ${product.inStock === false ? "top-11" : "top-2"} z-20 rounded-full bg-primary px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-primary-foreground shadow`}>On sale · {product.saleDiscountLabel ?? "Offer"}</span>
         )}
         <Link to="/brand/$brandHandle" params={{ brandHandle: product.brand.handle }} className="block w-full" onClick={() => { if (spotlightCampaignId) void recordSpotlightEvent({ data: { campaignId: spotlightCampaignId, productId: product.id, eventType: "click", visitorId } }); }}>
           {((product.imageUrls?.length ? product.imageUrls : product.imageUrl ? [product.imageUrl] : [])[imageIndex]) ? (
