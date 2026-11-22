@@ -200,6 +200,7 @@ export type Database = {
           currency: string
           description: string
           id: string
+          in_stock: boolean
           image_path: string | null
           image_paths: string[]
           price: number
@@ -224,6 +225,7 @@ export type Database = {
           currency?: string
           description: string
           id?: string
+          in_stock?: boolean
           image_path?: string | null
           image_paths?: string[]
           price: number
@@ -248,6 +250,7 @@ export type Database = {
           currency?: string
           description?: string
           id?: string
+          in_stock?: boolean
           image_path?: string | null
           image_paths?: string[]
           price?: number
