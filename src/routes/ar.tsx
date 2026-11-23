@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Camera, CameraOff, Glasses, Gem, House, Shirt, Sparkles, X } from "lucide-react";
+import { Camera, CameraOff, Glasses, Gem, House, RotateCw, Shirt, Sparkles, X } from "lucide-react";
 import { FaceLandmarker, FilesetResolver, HandLandmarker, PoseLandmarker } from "@mediapipe/tasks-vision";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -259,6 +259,7 @@ function ARStudio() {
   const [cameraOpen, setCameraOpen] = useState(false);
   const [cameraError, setCameraError] = useState("");
   const [cameraReady, setCameraReady] = useState(false);
+  const [previewRotated, setPreviewRotated] = useState(false);
   const [trackingState, setTrackingState] = useState<TrackingState>("idle");
   const [cutoutState, setCutoutState] = useState<"loading" | "ready" | "error">("loading");
   const [cutoutError, setCutoutError] = useState("");
@@ -700,11 +701,14 @@ function ARStudio() {
             <div className="relative aspect-[4/3] overflow-hidden bg-[#241f20]">
               {cameraOpen ? (
                 <>
-                  <video ref={videoRef} autoPlay muted playsInline className="absolute inset-0 h-full w-full object-cover [transform:scaleX(-1)]" />
-                  <canvas ref={canvasRef} className="pointer-events-none absolute inset-0 h-full w-full" aria-label="Virtual earring preview" />
+                  <div className={`absolute inset-0 ${previewRotated ? "rotate-180" : ""}`}>
+                    <video ref={videoRef} autoPlay muted playsInline className="absolute inset-0 h-full w-full object-cover [transform:scaleX(-1)]" />
+                    <canvas ref={canvasRef} className="pointer-events-none absolute inset-0 h-full w-full" aria-label="Virtual accessory preview" />
+                  </div>
                   <div className="absolute inset-x-3 top-3 flex justify-center">
                     <span className="rounded-full border border-white/20 bg-black/55 px-3 py-1.5 text-xs font-medium text-white backdrop-blur">{statusText[trackingState]}</span>
                   </div>
+                  <Button type="button" size="sm" variant="secondary" aria-pressed={previewRotated} aria-label={previewRotated ? "Restore camera orientation" : "Rotate camera view 180 degrees"} className="absolute bottom-3 right-3 z-10" onClick={() => setPreviewRotated((current) => !current)}><RotateCw className="size-4"/> {previewRotated ? "Reset view" : "Rotate view"}</Button>
                   {trackingState === "searching" && <div className="pointer-events-none absolute inset-0 grid place-items-center"><span className="rounded-full bg-black/55 px-4 py-2 text-sm text-white backdrop-blur">{["ring", "wrist", "watch"].includes(jewelleryKind) ? "Keep your hand and wrist visible" : jewelleryKind === "handbag" ? "Keep your upper body visible" : "Keep your face visible"}</span></div>}
                 </>
               ) : (
