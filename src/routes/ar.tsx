@@ -593,7 +593,7 @@ function ARStudio() {
                 }
               }
               if (bodyTracked) setTrackingState("found");
-              else if (!face) setTrackingState("searching");
+              else if (!face && !bodyTracked) setTrackingState("searching");
             }
           }
           animationFrame = requestAnimationFrame(render);
