@@ -16,8 +16,8 @@ export const Route = createFileRoute("/ar")({
   }),
   head: () => ({
     meta: [
-      { title: "OFFFEED AR Studio — Jewellery Try-On" },
-      { name: "description", content: "Preview earrings with OFFFEED's on-device camera try-on." },
+      { title: "OFFFEED AR Studio — Jewellery & Accessories Try-On" },
+      { name: "description", content: "Preview jewellery, sunglasses, watches and handbags with OFFFEED's on-device AR try-on." },
     ],
   }),
   component: ARStudio,
@@ -25,7 +25,7 @@ export const Route = createFileRoute("/ar")({
 
 const experiences = [
   { id: "jewellery", title: "Jewellery", description: "Try jewellery with live face, hand, and body tracking.", icon: Gem, status: "Live preview" },
-  { id: "accessories", title: "Accessories", description: "Explore sunglasses, watches and everyday finishing touches.", icon: Glasses, status: "Coming next" },
+  { id: "accessories", title: "Accessories", description: "Try sunglasses, watches and handbags with live camera tracking.", icon: Glasses, status: "Live preview" },
   { id: "living", title: "Home & Living", description: "See how decor and furniture could look in your own space.", icon: House, status: "Coming next" },
   { id: "clothing", title: "Clothing", description: "Explore AI-powered outfit previews using a photo you choose.", icon: Shirt, status: "Coming next" },
 ] as const;
@@ -199,8 +199,11 @@ async function createEarringPairAssets(source: HTMLImageElement): Promise<Earrin
   return { left: left.image, right: right.image, mirrorRight: !hasPairGap, urls: hasPairGap ? [left.url, right.url] : [left.url] };
 }
 
-function getJewelleryKind(category: string, name: string): "earrings" | "neck" | "ring" | "wrist" | "ankle" | "nose" | "forehead" | "brooch" | "other" {
+function getJewelleryKind(category: string, name: string): "earrings" | "neck" | "ring" | "wrist" | "ankle" | "nose" | "forehead" | "brooch" | "sunglasses" | "watch" | "handbag" | "other" {
   const value = `${category} ${name}`.toLowerCase();
+  if (/sunglasses|sun glasses|eyewear|spectacles|shades/.test(value)) return "sunglasses";
+  if (/handbag|hand bag|purse|tote|crossbody|cross body|sling bag|shoulder bag/.test(value)) return "handbag";
+  if (/watch|timepiece/.test(value)) return "watch";
   if (/earring|stud|hoop|jhumka|drop/.test(value)) return "earrings";
   if (/nose.?pin|nose.?ring/.test(value)) return "nose";
   if (/maang.?tikka|forehead/.test(value)) return "forehead";
@@ -251,7 +254,8 @@ function parsePositiveDimension(value: unknown): number | undefined {
 function ARStudio() {
   const { productName, productCategory, imageUrl, arImageUrl, arWidthMm, arHeightMm } = Route.useSearch();
   const jewelleryKind = getJewelleryKind(productCategory ?? "", productName ?? "");
-  const [active, setActive] = useState<(typeof experiences)[number]["id"]>("jewellery");
+  const accessoryProduct = ["sunglasses", "watch", "handbag"].includes(jewelleryKind);
+  const [active, setActive] = useState<(typeof experiences)[number]["id"]>(accessoryProduct ? "accessories" : "jewellery");
   const [cameraOpen, setCameraOpen] = useState(false);
   const [cameraError, setCameraError] = useState("");
   const [cameraReady, setCameraReady] = useState(false);
@@ -419,9 +423,9 @@ function ARStudio() {
           minFacePresenceConfidence: 0.55,
           minTrackingConfidence: 0.55,
         };
-        const needsFace = ["earrings", "nose", "forehead"].includes(jewelleryKind);
-        const needsHands = ["ring", "wrist"].includes(jewelleryKind);
-        const needsPose = ["neck", "ankle", "brooch", "other"].includes(jewelleryKind);
+        const needsFace = ["earrings", "nose", "forehead", "sunglasses"].includes(jewelleryKind);
+        const needsHands = ["ring", "wrist", "watch"].includes(jewelleryKind);
+        const needsPose = ["neck", "ankle", "brooch", "handbag", "other"].includes(jewelleryKind);
         if (needsFace) {
           try { landmarker = await FaceLandmarker.createFromOptions(vision, options); }
           catch { landmarker = await FaceLandmarker.createFromOptions(vision, { ...options, baseOptions: { modelAssetPath: MODEL_URL, delegate: "CPU" as const } }); }
@@ -505,6 +509,21 @@ function ARStudio() {
                 setTrackingState("searching");
               }
               const productOverlay = productOverlayRef.current;
+              if (jewelleryKind === "sunglasses" && face && productOverlay?.complete && productOverlay.naturalWidth > 0) {
+                const leftEye = point(33);
+                const rightEye = point(263);
+                const eyeDistance = Math.hypot(rightEye.x - leftEye.x, rightEye.y - leftEye.y);
+                if (eyeDistance > 0) {
+                  const width = eyeDistance * 1.48;
+                  const height = width * productOverlay.naturalHeight / productOverlay.naturalWidth;
+                  const angle = Math.atan2(rightEye.y - leftEye.y, rightEye.x - leftEye.x);
+                  ctx.save();
+                  ctx.translate((leftEye.x + rightEye.x) / 2, (leftEye.y + rightEye.y) / 2);
+                  ctx.rotate(angle);
+                  ctx.drawImage(productOverlay, -width / 2, -height * 0.48, width, height);
+                  ctx.restore();
+                }
+              }
               if (face && productOverlay?.complete && productOverlay.naturalWidth > 0) {
                 const drawFaceAsset = (x: number, y: number, width: number) => {
                   const drawWidth = Math.max(8, Math.min(faceWidth * 0.6, arWidthMm ? faceWidth * arWidthMm / 145 : width));
@@ -539,7 +558,14 @@ function ARStudio() {
                   const ringX = mcp.x + (pip.x - mcp.x) * 0.35;
                   const ringY = mcp.y + (pip.y - mcp.y) * 0.35;
                   const fingerAngle = Math.atan2(pip.y - mcp.y, pip.x - mcp.x) + Math.PI / 2;
-                  bodyTracked = drawBodyAsset(atRing ? ringX : wrist.x, atRing ? ringY : wrist.y, Math.max(18, palmWidth * (atRing ? 0.30 : 0.72)), atRing ? 18 : 65, atRing ? fingerAngle : 0);
+                  const wristAngle = Math.atan2(mcp.y - wrist.y, mcp.x - wrist.x);
+                  bodyTracked = drawBodyAsset(
+                    atRing ? ringX : wrist.x,
+                    atRing ? ringY : wrist.y,
+                    Math.max(18, palmWidth * (atRing ? 0.30 : jewelleryKind === "watch" ? 0.9 : 0.72)),
+                    atRing ? 18 : jewelleryKind === "watch" ? 85 : 65,
+                    atRing ? fingerAngle : jewelleryKind === "watch" ? wristAngle : 0,
+                  );
                 }
               }
               if (poseLandmarker && !bodyTracked) {
@@ -548,6 +574,14 @@ function ARStudio() {
                   if (jewelleryKind === "ankle" && pose[27] && pose[28]) {
                     const ankle = mapPoint((pose[27].visibility ?? 0) >= (pose[28].visibility ?? 0) ? pose[27] : pose[28]);
                     bodyTracked = drawBodyAsset(ankle.x, ankle.y, Math.max(20, rect.width * 0.065), 65);
+                  } else if (jewelleryKind === "handbag" && pose[11] && pose[12] && pose[23] && (pose[11].visibility ?? 0) > 0.35 && (pose[23].visibility ?? 0) > 0.35) {
+                    const shoulder = mapPoint(pose[11]);
+                    const hip = mapPoint(pose[23]);
+                    const oppositeShoulder = mapPoint(pose[12]);
+                    const shoulderWidth = Math.hypot(shoulder.x - oppositeShoulder.x, shoulder.y - oppositeShoulder.y);
+                    const bagX = hip.x + shoulderWidth * 0.42;
+                    const bagY = hip.y - shoulderWidth * 0.02;
+                    bodyTracked = drawBodyAsset(bagX, bagY, Math.max(28, shoulderWidth * 0.48), 300, 0.04);
                   } else if ((jewelleryKind === "neck" || jewelleryKind === "brooch" || jewelleryKind === "other") && pose[11] && pose[12] && (pose[11].visibility ?? 0) > 0.35 && (pose[12].visibility ?? 0) > 0.35) {
                     const left = mapPoint(pose[11]); const right = mapPoint(pose[12]);
                     const shoulderWidth = Math.hypot(left.x - right.x, left.y - right.y);
@@ -559,7 +593,7 @@ function ARStudio() {
                 }
               }
               if (bodyTracked) setTrackingState("found");
-              else if (!face) setTrackingState("searching");
+              else if (!face && !bodyTracked) setTrackingState("searching");
             }
           }
           animationFrame = requestAnimationFrame(render);
@@ -589,9 +623,9 @@ function ARStudio() {
 
   const statusText: Record<TrackingState, string> = {
     idle: "Camera off",
-    loading: "Preparing jewellery tracking…",
-    searching: jewelleryKind === "ring" || jewelleryKind === "wrist" ? "Show your hand and wrist" : jewelleryKind === "ankle" ? "Move your ankle into the frame" : "Move into the frame",
-    found: jewelleryKind === "earrings" ? "Face detected · earrings aligned" : "Jewellery aligned to live landmarks",
+    loading: "Preparing AR tracking…",
+    searching: ["ring", "wrist", "watch"].includes(jewelleryKind) ? "Show your hand and wrist" : jewelleryKind === "ankle" ? "Move your ankle into the frame" : jewelleryKind === "handbag" ? "Show your upper body and hips" : "Move your face into the frame",
+    found: jewelleryKind === "sunglasses" ? "Face detected · sunglasses aligned" : jewelleryKind === "watch" ? "Wrist detected · watch aligned" : jewelleryKind === "handbag" ? "Body detected · bag positioned" : jewelleryKind === "earrings" ? "Face detected · earrings aligned" : "Product aligned to live landmarks",
     error: "Tracking unavailable",
   };
 
@@ -603,10 +637,10 @@ function ARStudio() {
             <Sparkles className="h-4 w-4" /> OFFFEED AR Studio
           </div>
           <h1 className="font-display text-5xl font-medium leading-[0.98] sm:text-7xl">
-            Jewellery, <em className="text-primary">your way.</em>
+            Try it on, <em className="text-primary">your way.</em>
           </h1>
           <p className="mx-auto mt-5 max-w-xl text-base leading-7 text-muted-foreground sm:text-lg">
-            Try earrings, necklaces, rings, bracelets, anklets and more with live face, hand and body tracking.
+            Try jewellery, sunglasses, watches and handbags with live face, hand and body tracking.
           </p>
         </div>
 
@@ -615,7 +649,7 @@ function ARStudio() {
             {experiences.map((experience) => {
               const Icon = experience.icon;
               const selected = active === experience.id;
-              const available = experience.id === "jewellery";
+              const available = experience.id === "jewellery" || experience.id === "accessories";
               return (
                 <button
                   key={experience.id}
@@ -656,7 +690,7 @@ function ARStudio() {
                   <span className="grid h-24 w-24 shrink-0 place-items-center rounded-xl bg-background text-muted-foreground"><Gem className="h-8 w-8" /></span>
                 )}
                 <div className="min-w-0">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-primary">Selected jewellery</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-primary">Selected {accessoryProduct ? "accessory" : "jewellery"}</p>
                   <h3 className="mt-1 line-clamp-2 font-medium">{productName}</h3>
                   <p className="mt-1 text-xs text-muted-foreground">This is the product you selected from Discover.</p>
                   <p className="mt-1 text-xs text-muted-foreground">{cutoutState === "loading" ? "Preparing this product’s free cutout on your device…" : cutoutState === "ready" ? arWidthMm && arHeightMm ? `Measured size: ${arWidthMm} × ${arHeightMm} mm per earring.` : "Cutout ready. Add exact earring measurements in Brand Workspace for measured scale." : cutoutError || "The cutout could not be prepared from this photo."}</p>
@@ -671,22 +705,24 @@ function ARStudio() {
                   <div className="absolute inset-x-3 top-3 flex justify-center">
                     <span className="rounded-full border border-white/20 bg-black/55 px-3 py-1.5 text-xs font-medium text-white backdrop-blur">{statusText[trackingState]}</span>
                   </div>
-                  {trackingState === "searching" && <div className="pointer-events-none absolute inset-0 grid place-items-center"><span className="rounded-full bg-black/55 px-4 py-2 text-sm text-white backdrop-blur">Keep your face visible</span></div>}
+                  {trackingState === "searching" && <div className="pointer-events-none absolute inset-0 grid place-items-center"><span className="rounded-full bg-black/55 px-4 py-2 text-sm text-white backdrop-blur">{["ring", "wrist", "watch"].includes(jewelleryKind) ? "Keep your hand and wrist visible" : jewelleryKind === "handbag" ? "Keep your upper body visible" : "Keep your face visible"}</span></div>}
                 </>
               ) : (
                 <div className="absolute inset-0 flex flex-col items-center justify-center px-8 text-center text-white">
                   <span className="mb-5 grid h-16 w-16 place-items-center rounded-full border border-white/20 bg-white/10"><Camera className="h-7 w-7" /></span>
-                  <h3 className="font-display text-3xl">{productName ? "Try this piece on." : "Find your next favourite."}</h3>
+                  <h3 className="font-display text-3xl">{productName ? "Try this piece on." : active === "accessories" ? "Choose an accessory to try on." : "Find your next favourite."}</h3>
                   <p className="mt-3 max-w-sm text-sm leading-6 text-white/70">
-                    Your camera preview stays on this device. Body landmarks are processed in your browser; OFFFEED does not upload your camera stream.
+                    {active === "accessories" && !productName
+                      ? "Open a sunglasses, watch or handbag product in Discover and tap Try in AR. Its product photo will be placed on your live camera preview."
+                      : "Your camera preview stays on this device. Body landmarks are processed in your browser; OFFFEED does not upload your camera stream."}
                   </p>
-                  <Button className="mt-6" onClick={startCamera}><Camera className="mr-2 h-4 w-4" /> Start try-on</Button>
+                  {!(active === "accessories" && !productName) && <Button className="mt-6" onClick={startCamera}><Camera className="mr-2 h-4 w-4" /> Start try-on</Button>}
                 </div>
               )}
             </div>
             <div className="space-y-5 p-5">
               <div>
-                <p className="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">{jewelleryKind === "earrings" ? "Choose your earring" : "Live product placement"}</p>
+                <p className="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">{jewelleryKind === "earrings" ? "Choose your earring" : accessoryProduct ? "Live accessory placement" : "Live product placement"}</p>
                 {jewelleryKind === "earrings" && <div className="grid grid-cols-3 gap-2">
                   {([
                     { id: "stud", label: "Studs" },
