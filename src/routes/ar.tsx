@@ -637,7 +637,7 @@ function ARStudio() {
             <Sparkles className="h-4 w-4" /> OFFFEED AR Studio
           </div>
           <h1 className="font-display text-5xl font-medium leading-[0.98] sm:text-7xl">
-            Jewellery, <em className="text-primary">your way.</em>
+            Try it on, <em className="text-primary">your way.</em>
           </h1>
           <p className="mx-auto mt-5 max-w-xl text-base leading-7 text-muted-foreground sm:text-lg">
             Try jewellery, sunglasses, watches and handbags with live face, hand and body tracking.
@@ -710,11 +710,13 @@ function ARStudio() {
               ) : (
                 <div className="absolute inset-0 flex flex-col items-center justify-center px-8 text-center text-white">
                   <span className="mb-5 grid h-16 w-16 place-items-center rounded-full border border-white/20 bg-white/10"><Camera className="h-7 w-7" /></span>
-                  <h3 className="font-display text-3xl">{productName ? "Try this piece on." : "Find your next favourite."}</h3>
+                  <h3 className="font-display text-3xl">{productName ? "Try this piece on." : active === "accessories" ? "Choose an accessory to try on." : "Find your next favourite."}</h3>
                   <p className="mt-3 max-w-sm text-sm leading-6 text-white/70">
-                    Your camera preview stays on this device. Body landmarks are processed in your browser; OFFFEED does not upload your camera stream.
+                    {active === "accessories" && !productName
+                      ? "Open a sunglasses, watch or handbag product in Discover and tap Try in AR. Its product photo will be placed on your live camera preview."
+                      : "Your camera preview stays on this device. Body landmarks are processed in your browser; OFFFEED does not upload your camera stream."}
                   </p>
-                  <Button className="mt-6" onClick={startCamera}><Camera className="mr-2 h-4 w-4" /> Start try-on</Button>
+                  {!(active === "accessories" && !productName) && <Button className="mt-6" onClick={startCamera}><Camera className="mr-2 h-4 w-4" /> Start try-on</Button>}
                 </div>
               )}
             </div>
