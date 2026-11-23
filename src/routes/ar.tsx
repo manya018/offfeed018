@@ -709,7 +709,9 @@ function ARStudio() {
                 </>
               ) : (
                 <div className="absolute inset-0 flex flex-col items-center justify-center px-8 text-center text-white">
-                  <span className="mb-5 grid h-16 w-16 place-items-center rounded-full border border-white/20 bg-white/10"><Camera className="h-7 w-7" /></span>
+                  {active === "accessories" && !productName
+                    ? <span className="mb-5 grid h-16 w-16 place-items-center rounded-full border border-white/20 bg-white/10"><Camera className="h-7 w-7" /></span>
+                    : <button type="button" aria-label="Start camera try-on" title="Start camera try-on" onClick={() => void startCamera()} className="mb-5 grid h-16 w-16 place-items-center rounded-full border border-white/20 bg-white/10 transition hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"><Camera className="h-7 w-7" /></button>}
                   <h3 className="font-display text-3xl">{productName ? "Try this piece on." : active === "accessories" ? "Choose an accessory to try on." : "Find your next favourite."}</h3>
                   <p className="mt-3 max-w-sm text-sm leading-6 text-white/70">
                     {active === "accessories" && !productName
