@@ -215,7 +215,7 @@ function getJewelleryKind(category: string, name: string): "earrings" | "neck" |
   return "other";
 }
 
-async function trimTransparentImage(source: HTMLImageElement): Promise<{ image: HTMLImageElement; url: string }> {
+async function trimTransparentImage(source: HTMLImageElement, requireTransparency = false): Promise<{ image: HTMLImageElement; url: string }> {
   const width = source.naturalWidth;
   const height = source.naturalHeight;
   const canvas = document.createElement("canvas");
@@ -226,11 +226,17 @@ async function trimTransparentImage(source: HTMLImageElement): Promise<{ image: 
   context.drawImage(source, 0, 0);
   const alpha = context.getImageData(0, 0, width, height).data;
   let minX = width, minY = height, maxX = -1, maxY = -1;
+  let transparentPixels = 0;
   for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) {
-    if (alpha[(y * width + x) * 4 + 3] <= 16) continue;
+    const alphaValue = alpha[(y * width + x) * 4 + 3];
+    if (alphaValue < 248) transparentPixels++;
+    if (alphaValue <= 16) continue;
     minX = Math.min(minX, x); minY = Math.min(minY, y); maxX = Math.max(maxX, x); maxY = Math.max(maxY, y);
   }
-  if (maxX < minX || maxY < minY) throw new Error("The jewellery cutout is transparent or empty.");
+  if (maxX < minX || maxY < minY) throw new Error("The transparent product cutout is empty.");
+  if (requireTransparency && transparentPixels === 0) {
+    throw new Error("Upload a transparent PNG containing only the accessory, with no model or background.");
+  }
   const padding = Math.max(2, Math.round(Math.max(maxX - minX + 1, maxY - minY + 1) * 0.025));
   const left = Math.max(0, minX - padding), top = Math.max(0, minY - padding);
   const cropWidth = Math.min(width, maxX + padding + 1) - left;
@@ -296,13 +302,18 @@ function ARStudio() {
         objectUrls.push(...pair.urls);
         if (!cancelled) productEarringRef.current = pair;
       } else if (!cancelled) {
-        const trimmed = await trimTransparentImage(image);
+        const trimmed = await trimTransparentImage(image, accessoryProduct);
         objectUrls.push(trimmed.url);
         productOverlayRef.current = trimmed.image;
       }
       if (!cancelled) setCutoutState("ready");
     };
     const prepareProductCutout = async () => {
+      if (accessoryProduct && !arImageUrl) {
+        setCutoutState("error");
+        setCutoutError("This photo includes the model. To show only the accessory, the brand must upload a transparent PNG cutout containing just the product.");
+        return;
+      }
       if (arImageUrl) {
         try {
           const response = await fetch(arImageUrl, { mode: "cors", credentials: "omit" });
@@ -335,7 +346,7 @@ function ARStudio() {
       } catch (error) {
         if (!cancelled) {
           setCutoutState("error");
-          setCutoutError(error instanceof Error ? error.message : "The free cutout could not be created. Try a clear product photo.");
+          setCutoutError(error instanceof Error ? error.message : "The free cutout could not be created. Try a clear product photo or upload an accessory-only transparent PNG.");
         }
       }
     };
