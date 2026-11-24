@@ -53,6 +53,7 @@ function CheckoutPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [orders, setOrders] = useState<OfffeedCheckoutResult[]>([]);
+  const [shippingCharge, setShippingCharge] = useState(0);
   const [addresses, setAddresses] = useState<SavedAddress[]>([]);
   const [addressLabel, setAddressLabel] = useState("Home");
   const [selectedAddressId, setSelectedAddressId] = useState("");
@@ -220,6 +221,25 @@ function CheckoutPage() {
           items: items.map((item) => ({ productId: item.productId, quantity: item.quantity, size: item.size, color: item.color })),
         },
       });
+      const productSubtotal = checkout.productSubtotalPaise / 100;
+      const customerShipping = checkout.customerShippingPaise / 100;
+      const paymentTotal = checkout.amount / 100;
+      const quoteLines = checkout.shippingQuotes.map((quote) => `• ${quote.brand_name}: ₹${(quote.rate_paise / 100).toLocaleString("en-IN")} via ${quote.courier_name}`).join("\\n");
+      const paymentSummary = [
+        "Shiprocket delivery estimate:",
+        quoteLines,
+        "",
+        `Products: ₹${productSubtotal.toLocaleString("en-IN")}`,
+        customerShipping > 0 ? `Shipping: ₹${customerShipping.toLocaleString("en-IN")}` : "Shipping: Free for you (the brand covers the quoted courier cost).",
+        `Total to pay: ₹${paymentTotal.toLocaleString("en-IN")}`,
+        "",
+        "Continue to Razorpay payment?",
+      ].join("\\n");
+      if (!window.confirm(paymentSummary)) {
+        setError("Payment was cancelled. Your bag is unchanged.");
+        return;
+      }
+      setShippingCharge(customerShipping);
       await loadRazorpayCheckout();
       if (!window.Razorpay) throw new Error("Razorpay Checkout is unavailable. Please try again.");
       const paymentWindow = new window.Razorpay({
@@ -269,7 +289,8 @@ function CheckoutPage() {
   }
 
   if (orders.length) {
-    const grandTotal = orders.reduce((sum, order) => sum + Number(order.line_total), 0);
+    const productSubtotal = orders.reduce((sum, order) => sum + Number(order.line_total), 0);
+    const grandTotal = productSubtotal + shippingCharge;
     return (
       <main className="mx-auto max-w-3xl px-5 py-12 sm:px-8">
         <div className="border border-border/70 p-7 sm:p-10">
@@ -288,8 +309,10 @@ function CheckoutPage() {
               </div>
             ))}
           </div>
-          <div className="mt-5 flex justify-between font-medium"><span>Product subtotal</span><span>₹{grandTotal.toLocaleString("en-IN")}</span></div>
-          <p className="mt-4 text-xs leading-5 text-muted-foreground">Save your order numbers for reference. OFFFEED’s shipping policy uses the combined checkout subtotal: orders of ₹999 or more qualify for customer-free shipping, with each brand bearing its own parcel’s actual courier cost. Orders below ₹999 are intended to use actual courier quotes. Live courier-rate calculation and automated brand settlement still need to be connected before these charges can be collected automatically.</p>
+          <div className="mt-5 flex justify-between text-sm"><span>Product subtotal</span><span>₹{productSubtotal.toLocaleString("en-IN")}</span></div>
+          <div className="mt-2 flex justify-between text-sm"><span>Shipping</span><span>{shippingCharge > 0 ? `₹${shippingCharge.toLocaleString("en-IN")}` : "Free for you"}</span></div>
+          <div className="mt-3 flex justify-between border-t border-border/70 pt-3 font-semibold"><span>Total paid</span><span>₹{grandTotal.toLocaleString("en-IN")}</span></div>
+          <p className="mt-4 text-xs leading-5 text-muted-foreground">Save your order numbers for reference. Shiprocket calculated a courier quote for each brand parcel. Orders below ₹999 include actual courier charges; at ₹999 or more, shipping is free for you and the brand bears its parcel’s courier cost.</p>
           <Button className="mt-7" asChild><Link to="/discover">Continue discovering</Link></Button>
         </div>
       </main>
@@ -364,7 +387,7 @@ function CheckoutPage() {
                 <div className="flex items-center justify-between text-sm"><span>Items subtotal</span><span>₹{total.toLocaleString("en-IN")}</span></div>
                 <div className="mt-2 flex items-center justify-between gap-3 text-sm"><span>Shipping policy</span><span className="text-right font-medium">{shippingPolicy.customerGetsFreeShipping ? "Free for customer" : "Actual courier rate"}</span></div>
                 <p className="mt-2 text-sm leading-6">{shippingPolicy.customerMessage}</p>
-                <p className="mt-2 text-xs leading-5 text-muted-foreground">The ₹{OFFFEED_FREE_SHIPPING_THRESHOLD} threshold applies to the combined product subtotal across all brands. This checkout currently displays the policy only: live courier quotes and automated brand-cost settlement are not connected yet, so no exact shipping amount is being calculated or charged here.</p>
+                <p className="mt-2 text-xs leading-5 text-muted-foreground">Shiprocket will quote each brand parcel before payment. The ₹{OFFFEED_FREE_SHIPPING_THRESHOLD} threshold uses the combined product subtotal across the whole bag. You will review the courier, estimate, and exact total before opening Razorpay.</p>
               </div>
               <div className="flex items-center justify-between text-base font-semibold"><span>Product subtotal</span><span>₹{total.toLocaleString("en-IN")}</span></div>
               <Button type="submit" className="w-full" disabled={!items.length || loading}>{loading ? "Placing order…" : "Pay securely with Razorpay"}</Button>
